@@ -6,7 +6,7 @@
 /*   By: St.Krivtsov <1987stanislav@gmail.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/28 21:26:32 by St.Krivtsov       #+#    #+#             */
-/*   Updated: 2022/01/28 23:34:50 by St.Krivtsov      ###   ########.fr       */
+/*   Updated: 2022/01/29 01:40:31 by St.Krivtsov      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ int	main(void)
 	*/
 	sockaddr_in socketAddr;
 	socketAddr.sin_family = AF_INET; 
-	socketAddr.sin_addr.s_addr = INADDR_ANY;
+	socketAddr.sin_addr.s_addr = INADDR_ANY;// todo или inet_addr("127.0.0.1");
 	socketAddr.sin_port = htons(8088);
 	if (bind(socket_fd, (struct sockaddr *)&socketAddr, sizeof(socketAddr)) < 0)
 	{
@@ -68,7 +68,8 @@ int	main(void)
 		/* Read from the connection
 		*/
 		char buffer[100];
-		read(connection, buffer, 100);
+		int bytesRead = read(connection, buffer, 100);
+		buffer[bytesRead] = '\n';
 		std::cout << buffer;
 
 		// Send a message to the connection

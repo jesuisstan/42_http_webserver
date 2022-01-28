@@ -5,6 +5,7 @@
 #include <netinet/in.h> // For sockaddr_in
 #include <unistd.h> // For read
 #include <cstdlib> // For exit() and EXIT_FAILURE
+#include <arpa/inet.h> // For inet_addr("127.0.0.1")
 
 # define RED "\033[31m"
 # define RESET "\033[0m"
