@@ -2,6 +2,7 @@
 *.d
 .DS_Store
 .vscode
+webserv
 
 # Compiled Object files
 *.slo
