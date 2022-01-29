@@ -13,3 +13,5 @@
 # define YELLOW "\033[33m"
 
 # define BACKLOG 7 // the maximum number of connections that will be queued
+# define PORT 8888
+# define BUFFER_SIZE 1024

@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   server.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: St.Krivtsov <1987stanislav@gmail.com>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/01/28 21:26:32 by St.Krivtsov       #+#    #+#             */
-/*   Updated: 2022/01/29 01:40:31 by St.Krivtsov      ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../inc/webserv.hpp"
 
 int	main(void)
@@ -32,10 +20,10 @@ int	main(void)
 	sockaddr_in socketAddr;
 	socketAddr.sin_family = AF_INET; 
 	socketAddr.sin_addr.s_addr = INADDR_ANY;// todo или inet_addr("127.0.0.1");
-	socketAddr.sin_port = htons(8088);
+	socketAddr.sin_port = htons(PORT);
 	if (bind(socket_fd, (struct sockaddr *)&socketAddr, sizeof(socketAddr)) < 0)
 	{
-		std::cout << "Failed to bind to port 8080 with errno " << errno << std::endl;
+		std::cout << "Failed to bind to port 8888 with errno " << errno << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	
@@ -67,13 +55,18 @@ int	main(void)
 		
 		/* Read from the connection
 		*/
-		char buffer[100];
-		int bytesRead = read(connection, buffer, 100);
+		char buffer[BUFFER_SIZE];
+		memset(buffer, 0, strlen(buffer));
+		int bytesRead = read(connection, buffer, BUFFER_SIZE);
 		buffer[bytesRead] = '\n';
 		std::cout << buffer;
 
 		// Send a message to the connection
-		std::string response = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\nSURPRISE MOTHERF@CKER!\nCyberpunk ain't dead!!!\n";
+		std::string headers = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\n";
+		std::string body = "SURPRISE MOTHERF@CKER!\n\nCyberpunk ain't dead!!!\n";
+		std::string response = headers + body;
+		//std::string response = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\nSURPRISE MOTHERF@CKER!\nCyberpunk ain't dead!!!\n";
+		std::cout << response;
 		send(connection, response.c_str(), response.size(), 0);
 		close(connection);
 	}
@@ -81,3 +74,4 @@ int	main(void)
 	close(socket_fd);
 	return 0;
 }
+
