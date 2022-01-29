@@ -6,7 +6,9 @@
 #include <unistd.h> // For read
 #include <cstdlib> // For exit() and EXIT_FAILURE
 #include <arpa/inet.h> // For inet_addr("127.0.0.1")
-
+#include <fcntl.h>// for open
+#include <sys/stat.h> // for struct stat
+#include "utils.hpp"
 # define RED "\033[31m"
 # define RESET "\033[0m"
 # define GREEN "\033[32m"

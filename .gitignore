@@ -2,6 +2,8 @@
 *.d
 .DS_Store
 .vscode
+.idea/
+src/client
 webserv
 
 # Compiled Object files

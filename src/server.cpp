@@ -10,7 +10,46 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+
 #include "../inc/webserv.hpp"
+
+void	fillLength(char *header, long size)
+{
+    int		i = 0;
+
+    while (header[i])
+        i++;
+    char *len = ft_itoa(size);
+    size_t lenSize = ft_strlen(len);
+    for (size_t j = 0; j <= lenSize; j++ )
+        header[i++] = len[j];
+}
+
+char *createResponse(char *buffer, const char *file) {
+    struct stat	buf = {};
+    const char *str = "HTTP/1.1 200 OK\\nContent-Type: text/html; charset UTF-8\\nContent-Length: ";
+    char tmp[10000];
+    for ( int i = 0 ; i < 75 ; i++)
+        buffer[i] = str[i];
+
+    std::cout << file << std::endl;
+    int fd = open(file, O_RDONLY);
+    fstat(fd, &buf);
+    long indexSize = buf.st_size;
+    fillLength(buffer, indexSize);
+    read(fd, tmp, 10000);
+
+    close(fd);
+    int j = 0;
+    int i = 0;
+    while(buffer[i])
+        i++;
+    buffer[i++] = '\n';
+    buffer[i] = '\n';
+    while (tmp[j])
+        buffer[i++] = tmp[j++];
+    return buffer;
+}
 
 int	main(void)
 {
@@ -29,10 +68,10 @@ int	main(void)
 	/* use bind to assign an IP address and port to the socket
 	int bind(int sockfd, const sockaddr *addr, socklen_t addrlen);
 	*/
-	sockaddr_in socketAddr;
+	sockaddr_in socketAddr = {};
 	socketAddr.sin_family = AF_INET; 
 	socketAddr.sin_addr.s_addr = INADDR_ANY;// todo или inet_addr("127.0.0.1");
-	socketAddr.sin_port = htons(8088);
+	socketAddr.sin_port = htons(8080);
 	if (bind(socket_fd, (struct sockaddr *)&socketAddr, sizeof(socketAddr)) < 0)
 	{
 		std::cout << "Failed to bind to port 8080 with errno " << errno << std::endl;
@@ -67,14 +106,17 @@ int	main(void)
 		
 		/* Read from the connection
 		*/
-		char buffer[100];
-		int bytesRead = read(connection, buffer, 100);
+		char buffer[10024];
+        ft_memset(buffer, 0, 10024);
+        ssize_t bytesRead = ::recv(connection, buffer, 10024, 0);
 		buffer[bytesRead] = '\n';
 		std::cout << buffer;
 
-		// Send a message to the connection
-		std::string response = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\nSURPRISE MOTHERF@CKER!\nCyberpunk ain't dead!!!\n";
-		send(connection, response.c_str(), response.size(), 0);
+        ft_memset(buffer, 0, 10024);
+        char *response = createResponse(buffer, "index.html");
+        std::cout << buffer;
+        // Send a message to the connection
+        send(connection, response, ft_strlen(response), 0);
 		close(connection);
 	}
 	// Clean up!

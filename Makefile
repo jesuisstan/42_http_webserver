@@ -12,7 +12,7 @@
 
 NAME			= webserv
 
-SRCS			= server.cpp
+SRCS			= server.cpp utils.cpp
 SRCS_DIR		= ./src/
 
 INC				= webserv.hpp
