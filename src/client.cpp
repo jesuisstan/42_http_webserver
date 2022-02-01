@@ -1,6 +1,6 @@
 #include "webserv.hpp"
 
-int main ()
+int	main(void)
 {
 	while (42)
 	{	
