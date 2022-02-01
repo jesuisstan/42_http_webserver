@@ -1,6 +1,6 @@
 #include "webserv.hpp"
 
-int	main(void)
+int main ()
 {
 	while (42)
 	{	
@@ -26,7 +26,6 @@ int	main(void)
 		std::cout << "Client sends the following msg: ";
 		std::string response;
 		std::cin >> response;
-		std::cout << response;
 		send(socket_fd, response.c_str(), response.size(), 0);
 		response.clear();
 	}
