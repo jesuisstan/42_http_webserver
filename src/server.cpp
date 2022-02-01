@@ -1,4 +1,4 @@
-#include "../inc/webserv.hpp"
+#include "webserv.hpp"
 
 int	main(void)
 {
@@ -14,29 +14,21 @@ int	main(void)
 		std::cout << "Failed to create socket with errno " << errno << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	/* use bind to assign an IP address and port to the socket
-	int bind(int sockfd, const sockaddr *addr, socklen_t addrlen);
-	*/
 	sockaddr_in socketAddr;
 	socketAddr.sin_family = AF_INET; 
-	socketAddr.sin_addr.s_addr = INADDR_ANY;// todo или inet_addr("127.0.0.1");
+	socketAddr.sin_addr.s_addr = inet_addr("10.21.21.74"); //INADDR_ANY;// todo или inet_addr("127.0.0.1");
 	socketAddr.sin_port = htons(PORT);
 	if (bind(socket_fd, (struct sockaddr *)&socketAddr, sizeof(socketAddr)) < 0)
 	{
-		std::cout << "Failed to bind to port 8888 with errno " << errno << std::endl;
+		std::cout << RED << "Failed to bind to port with errno " << errno << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	
-	/* start listening to socket_fd
-	listen marks a socket as passive (socket will be used to accept connections)
-	int listen(int sockfd, int backlog);
-	*/
 	if (listen(socket_fd, BACKLOG) < 0)
 	{
-		std::cout << "Failed to listen on socket with errno " << errno << std::endl;
+		std::cout << RED << "Failed to listen on socket with errno " << errno << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	
+
 	while (true)
 	{
 		/* start accepting requests
@@ -57,7 +49,8 @@ int	main(void)
 		*/
 		char buffer[BUFFER_SIZE];
 		memset(buffer, 0, strlen(buffer));
-		int bytesRead = read(connection, buffer, BUFFER_SIZE);
+		//int bytesRead = read(connection, buffer, BUFFER_SIZE);
+		int bytesRead = recv(connection, buffer, BUFFER_SIZE - 1, 0);
 		buffer[bytesRead] = '\n';
 		std::cout << buffer;
 
