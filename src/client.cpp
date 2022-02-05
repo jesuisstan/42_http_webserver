@@ -2,8 +2,8 @@
 
 int	main(void)
 {
-	while (42)
-	{	
+	//while (42)
+	//{	
 		int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 		if (socket_fd == -1)
 		{
@@ -23,11 +23,14 @@ int	main(void)
 			std::cout << "Failed to get data with errno " << errno << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		std::cout << "Client sends the following msg: ";
-		std::string response;
-		std::cin >> response;
-		send(socket_fd, response.c_str(), response.size(), 0);
-		response.clear();
-	}
+		while (1) //todo
+		{	
+			std::cout << "Client sends the following msg: ";
+			std::string response;
+			std::cin >> response;
+			send(socket_fd, response.c_str(), response.size(), 0);
+			response.clear();
+		}
+	//}
 	return 0;
 }

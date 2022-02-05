@@ -34,7 +34,7 @@ $(OBJS_DIR)%.o:	$(SRCS_DIR)%.cpp $(INCS)
 				$(CXX) $(FLAGS) -I$(INCS_DIR) -c -g $< -o $@
 
 $(NAME):		$(OBJS) $(INCS)
-				$(CXX) $(FLAGS) -I$(INCS_DIR) $(OBJS) -o $(NAME)
+				$(CXX) $(FLAGS) -I$(INCS_DIR) $(OBJS) -o $(NAME) 
 
 clean:
 				$(RM) $(OBJS) $(OBJS_DIR)
