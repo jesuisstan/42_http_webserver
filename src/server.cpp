@@ -181,13 +181,13 @@ int main()
 						}
 						std::cout << bytes_read << " bytes received" << std::endl;
 
-						std::string headers = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\n";
-						std::string body = "SURPRISE MOTHERF@CKER!\n\nCyberpunk ain't dead!!!\n";
-						std::string response = headers + body;
-						rc = send(fds[i].fd, response.c_str(), response.length(), 0);
-						// memset(buffer, 0, BUFFER_SIZE);
-						// char *response = createResponse(buffer, "index.html");
-						// rc = send(fds[i].fd, response, ft_strlen(response), 0);
+						//std::string headers = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\n";
+						//std::string body = "SURPRISE MOTHERF@CKER!\n\nCyberpunk ain't dead!!!\n";
+						//std::string response = headers + body;
+						//rc = send(fds[i].fd, response.c_str(), response.length(), 0);
+						memset(buffer, 0, BUFFER_SIZE);
+						char *response = createResponse(buffer, "index.html");
+						rc = send(fds[i].fd, response, ft_strlen(response), 0);
 						if (rc < 0)
 						{
 							perror("send() failed");
