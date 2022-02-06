@@ -4,9 +4,11 @@
 .editorconfig
 .vscode/
 .idea/
+.editorconfig
 src/client
 webserv
 client
+
 
 
 # Compiled Object files
@@ -39,4 +41,6 @@ obj
 *.exe
 *.out
 *.app
-© 2022 GitHub, Inc.
+
+
+
