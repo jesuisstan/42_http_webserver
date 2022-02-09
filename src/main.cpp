@@ -15,7 +15,7 @@ void fillLength(char *header, long size)
 char *createResponse(char *buffer, const char *file)
 {
 	struct stat buf = {};
-	const char *str = "HTTP/1.1 200 OK\\nContent-Type: text/html; charset UTF-8\\nContent-Length: ";
+	const char *str = "HTTP/1.1 200 OK\\nContent-Type: text/html; charset UTF-8\\nContent-Length: 1778";
 	char tmp[BUFFER_SIZE];
 	for (int i = 0; i < 75; i++)
 		buffer[i] = str[i];
@@ -37,6 +37,27 @@ char *createResponse(char *buffer, const char *file)
 	while (tmp[j])
 		buffer[i++] = tmp[j++];
 	return buffer;
+}
+
+int g_server_onAir = true;
+
+static void	close_connections(struct pollfd *fds, int number_fds)
+{
+	for (int i = 0; i < number_fds; i++)
+	{
+		if (fds[i].fd >= 0)
+		{
+			std::cout << "Connection " << fds[i].fd << " successfully closed" << std::endl;
+			close(fds[i].fd);
+		}
+	}
+}
+
+static void	interruptHandler(int sig_int)
+{
+	(void)sig_int;
+	std::cout << "\nAttention! Interruption signal caught\n";
+	g_server_onAir = false;
 }
 
 int main()
@@ -93,9 +114,9 @@ int main()
 	char buffer[BUFFER_SIZE];
 	int nfds = 1;
 	int current_size = 0;
-	int end_server = false;
-	while (end_server == false)
+	while (g_server_onAir != false)
 	{
+		signal(SIGINT, interruptHandler);
 		std::cout << "Waiting on poll()...\n";
 		rc = poll(fds, nfds, timeout);
 		if (rc < 0)
@@ -134,7 +155,7 @@ int main()
 							if (errno != EWOULDBLOCK)
 							{
 								perror("accept() failed");
-								end_server = true;
+								g_server_onAir = false;
 							}
 							break;
 						}
@@ -183,8 +204,9 @@ int main()
 
 						//std::string headers = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\n";
 						//std::string body = "SURPRISE MOTHERF@CKER!\n\nCyberpunk ain't dead!!!\n";
-						//std::string response = headers + body;
-						//rc = send(fds[i].fd, response.c_str(), response.length(), 0);
+						//std::string resp = headers + body;
+						//rc = send(fds[i].fd, resp.c_str(), resp.length(), 0);
+						//std::cout << resp.length() << " - resp len\n";
 						memset(buffer, 0, BUFFER_SIZE);
 						char *response = createResponse(buffer, "index.html");
 						rc = send(fds[i].fd, response, ft_strlen(response), 0);
@@ -228,9 +250,5 @@ int main()
 			}
 		}
 	}
-	for (int i = 0; i < nfds; i++)
-	{
-		if (fds[i].fd >= 0)
-			close(fds[i].fd);
-	}
+	close_connections(fds, nfds);
 }
