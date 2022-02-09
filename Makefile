@@ -1,4 +1,6 @@
 NAME			= webserv
+ 
+SRCS			= main.cpp utils.cpp Server.cpp RequestParser.cpp Response.cpp Config.cpp
 
 CXX				= g++
 
