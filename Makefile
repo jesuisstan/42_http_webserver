@@ -1,9 +1,9 @@
 NAME			= webserv
 
-SRCS			= main.cpp utils.cpp
+SRCS			= main.cpp utils.cpp Server.cpp
 SRCS_DIR		= ./src/
 
-INC				= webserv.hpp utils.hpp
+INC				= webserv.hpp utils.hpp Server.hpp
 INCS_DIR		= ./inc/
 INCS			= $(addprefix $(INCS_DIR), $(INC))
 
@@ -11,7 +11,7 @@ OBJ 			= $(SRCS:.cpp=.o)
 OBJS_DIR		= ./obj/
 OBJS 			= $(addprefix $(OBJS_DIR), $(OBJ))
 
-SRCS_SR			= main.cpp utils.cpp
+SRCS_SR			= main.cpp utils.cpp Server.cpp
 OBJ_SR 			= $(SRCS_SR:.cpp=.o)
 OBJS_SR 		= $(addprefix $(OBJS_DIR), $(OBJ_SR))
 
