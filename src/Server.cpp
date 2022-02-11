@@ -1,85 +1,58 @@
 #include "Server.hpp"
 
-static void fillLength(char *header, long size)
-{
-	int i = 0;
+bool	g_serverOnAir;
 
-	while (header[i])
-		i++;
-	char *len = ft_itoa(size);
-	size_t lenSize = ft_strlen(len);
-	for (size_t j = 0; j <= lenSize; j++)
-		header[i++] = len[j];
+Server::Server() {
+	g_serverOnAir = true;
+	memset(&_servAddr, 0, sizeof(_servAddr));
+	memset(_fds, 0, sizeof(_fds));
 }
 
-char *createResponse(char *buffer, const char *file)
-{
-	struct stat buf = {};
-	const char *str = "HTTP/1.1 200 OK\\nContent-Type: text/html; charset UTF-8\\nContent-Length: 1778";
-	char tmp[BUFFER_SIZE];
-	for (int i = 0; i < 75; i++)
-		buffer[i] = str[i];
-
-	std::cout << file << std::endl;
-	int fd = open(file, O_RDONLY);
-	fstat(fd, &buf);
-	long indexSize = buf.st_size;
-	fillLength(buffer, indexSize);
-	read(fd, tmp, BUFFER_SIZE);
-
-	close(fd);
-	int j = 0;
-	int i = 0;
-	while (buffer[i])
-		i++;
-	buffer[i++] = '\n';
-	buffer[i] = '\n';
-	while (tmp[j])
-		buffer[i++] = tmp[j++];
-	return buffer;
-}
-
-Server::Server(){}
-
-//Server::Server(const char *ipAddr, int port)
-//{
-//	this->_serverOnAir = true;
-//	this->_servAddr = {};
-//	this->_fds[AMMOUNT_FDS] = {};
-//}
-
-Server::Server(const std::string &name)
-{
-	this->_serverName = name;
-	this->_serverOnAir = true;
-	//this->_servAddr = {};
-	//this->_fds[AMMOUNT_FDS] = {};
-}
-
-Server::~Server()
-{
+Server::~Server() {
 	for (int i = 0; i < _numberFds; i++)
 	{
 		if (_fds[i].fd >= 0)
 		{
-			std::cout << "Connection " << _fds[i].fd << " successfully closed" << std::endl;
 			close(_fds[i].fd);
+			std::cout << "Connection successfully closed:\t" << _fds[i].fd << " (D)" << std::endl;
 		}
 	}
 }
-
-void	Server::setServerOnAir(bool status)
-{
-	this->_serverOnAir = status;
+Server::Server(const Server &other) {
+	*this = other;
+	return ;
 }
 
-void	Server::setTimeout(int timeout)
-{
+Server	&Server::operator = (const Server &other) {
+	if (this == &other)
+		return (*this);
+	this->_listenSocket = other._listenSocket;
+	this->_numberFds = other._numberFds;
+	this->_servAddr = other._servAddr;
+	this->_timeout = other._timeout;
+	for (int i = 0; i < _numberFds; i++) {
+		this->_fds[i].fd = other._fds[i].fd;
+	}
+	return (*this);
+}
+
+void	Server::setTimeout(int timeout) {
 	this->_timeout = timeout;
 }
 
-void	Server::initiate(const char *ipAddr, int port)
-{
+int		Server::getListenSocket(void) const {
+	return (this->_listenSocket);
+}
+
+int		Server::getTimeout(void) const {
+	return (this->_timeout);
+}
+
+int		Server::getNumberFds(void) const {
+	return (this->_numberFds);
+}
+
+void	Server::initiate(const char *ipAddr, int port) {
 	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (_listenSocket < 0)
 	{
@@ -120,18 +93,17 @@ void	Server::initiate(const char *ipAddr, int port)
 	}
 }
 
-void	Server::runServer(int timeout)
-{
+void	Server::runServer(int timeout) {
 	_fds[0].fd = _listenSocket;
 	_fds[0].events = POLLIN;
 	this->setTimeout(timeout);
 
 	char buffer[BUFFER_SIZE];
 	this->_numberFds = 1;
-	int current_size = 0;
-	while (_serverOnAir)
+	int currentSize = 0;
+	while (g_serverOnAir != false)
 	{
-		//signal(SIGINT, interruptHandler); // todo
+		signal(SIGINT, interruptHandler);
 		std::cout << "Waiting on poll()...\n";
 		int ret = poll(_fds, _numberFds, _timeout);
 		if (ret < 0)
@@ -144,9 +116,9 @@ void	Server::runServer(int timeout)
 			std::cout << "poll() timed out. End program.\n";
 			break;
 		}
-		current_size = _numberFds;
-		bool compress_array = false;
-		for (int i = 0; i < current_size; i++)
+		currentSize = _numberFds;
+		bool compressArray = false;
+		for (int i = 0; i < currentSize; i++)
 		{
 			if (_fds[i].revents == 0)
 				continue;
@@ -167,7 +139,7 @@ void	Server::runServer(int timeout)
 							close(_listenSocket);
 							exit(-1);
 						}
-						std::cout << "New incoming connection - " << new_sd << std::endl;
+						std::cout << "New incoming connection:\t" << new_sd << std::endl;
 						_fds[_numberFds].fd = new_sd;
 						_fds[_numberFds].events = POLLIN;
 						_numberFds++;
@@ -175,48 +147,47 @@ void	Server::runServer(int timeout)
 				}
 				else
 				{
-					std::cout << "Event on descriptor # " << _fds[i].fd << std::endl;
-					int close_conn = false;
+					std::cout << "Event detected on descriptor:\t" << _fds[i].fd << std::endl;
+					int closeConnection = false;
 					while (true)
 					{
-						int bytes_read = recv(_fds[i].fd, buffer, sizeof(buffer), 0);
-						if (bytes_read < 0)
+						ret = recv(_fds[i].fd, buffer, sizeof(buffer), 0);
+						if (ret < 0)
 							break;
-						if (bytes_read == 0)
+						if (ret == 0)
 						{
-							close_conn = true;
+							closeConnection = true;
 							break;
 						}
-						std::cout << bytes_read << " bytes received" << std::endl;
+						std::cout << ret << " bytes received from sd:\t" << _fds[i].fd <<  std::endl;
 
 						//std::string headers = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\n";
 						//std::string body = "SURPRISE MOTHERF@CKER!\n\nCyberpunk ain't dead!!!\n";
 						//std::string resp = headers + body;
 						//ret = send(_fds[i].fd, resp.c_str(), resp.length(), 0);
-						//std::cout << resp.length() << " - resp len\n";
 						memset(buffer, 0, BUFFER_SIZE);
 						char *response = createResponse(buffer, "index.html");
 						ret = send(_fds[i].fd, response, ft_strlen(response), 0);
 						if (ret < 0)
 						{
 							perror("send() failed");
-							close_conn = true;
+							closeConnection = true;
 							break;
 						}
 					}
-					if (close_conn)
+					if (closeConnection)
 					{
 						close(_fds[i].fd);
-						std::cout << "Connection " << _fds[i].fd << " closed\n";
+						std::cout << "Connection has been closed:\t" << _fds[i].fd << std::endl;
 						_fds[i].fd = -1;
-						compress_array = true;
+						compressArray = true;
 					}
 				}
 			}
 		}
-		if (compress_array)
+		if (compressArray)
 		{
-			compress_array = false;
+			compressArray = false;
 			for (int i = 0; i < _numberFds; i++)
 			{
 				if (_fds[i].fd == -1)
@@ -227,27 +198,64 @@ void	Server::runServer(int timeout)
 					}
 					i--;
 					_numberFds--;
+					std::cout << "Array of client's descriptors compressed" << std::endl;
 				}
 			}
 		}
 	}
 }
 
-void	Server::closeConnections(void)
-{
+void	Server::closeConnections(void) {
 	for (int i = 0; i < _numberFds; i++)
 	{
 		if (_fds[i].fd >= 0)
 		{
-			std::cout << "Connection " << _fds[i].fd << " successfully closed" << std::endl;
 			close(_fds[i].fd);
+			std::cout << "Connection successfully closed:\t" << _fds[i].fd << std::endl;
 		}
 	}
 }
 
-//void	interruptHandler(int sig_int) //todo
-//{
-//	(void)sig_int;
-//	std::cout << "\nAttention! Interruption signal caught\n";
-//	Server::setServerOnAir(false);
-//}
+void	interruptHandler(int sig_int) {
+	(void)sig_int;
+	std::cout << "\nAttention! Interruption signal caught\n";
+	g_serverOnAir = false;
+}
+
+static void	fillLength(char *header, long size)
+{
+	int		i = 0;
+
+	while (header[i])
+		i++;
+	char *len = ft_itoa(size);
+	size_t lenSize = ft_strlen(len);
+	for (size_t j = 0; j <= lenSize; j++ )
+		header[i++] = len[j];
+}
+
+char *createResponse(char *buffer, const char *file) {
+	struct stat	buf = {};
+	const char *str = "HTTP/1.1 200 OK\\nContent-Type: text/html; charset UTF-8\\nContent-Length: ";
+	char tmp[BUFFER_SIZE];
+	for ( int i = 0 ; i < 75 ; i++)
+		buffer[i] = str[i];
+
+	std::cout << file << std::endl;
+	int fd = open(file, O_RDONLY);
+	fstat(fd, &buf);
+	long indexSize = buf.st_size;
+	fillLength(buffer, indexSize);
+	read(fd, tmp, BUFFER_SIZE);
+
+	close(fd);
+	int j = 0;
+	int i = 0;
+	while(buffer[i])
+		i++;
+	buffer[i++] = '\n';
+	buffer[i] = '\n';
+	while (tmp[j])
+		buffer[i++] = tmp[j++];
+	return buffer;
+}

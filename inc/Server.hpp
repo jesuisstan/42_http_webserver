@@ -2,34 +2,27 @@
 
 # include "webserv.hpp"
 
-class Server
-{
+class Server {
 private:
-	std::string		_serverName;
-	bool			_serverOnAir;
 	int 			_listenSocket;
 	sockaddr_in		_servAddr;
-	struct pollfd	_fds[AMMOUNT_FDS];
+	struct pollfd	_fds[BACKLOG];
 	int				_timeout;
 	int				_numberFds;
-	Server();
 
 public:
-	Server(const std::string &name);
-	//Server(const char *ipAddr, int port);
+	Server();
 	~Server();
 	Server(const Server &other);
 	Server	&operator = (const Server &other);
-	void	setServerOnAir(bool status);
 	void	setTimeout(int timeout);
 	int		getListenSocket(void) const;
 	int		getTimeout(void) const;
-	//void	interruptHandler(int sig_int);
+	int		getNumberFds(void) const;
 	void	initiate(const char *ipAddr, int port);
 	void	runServer(int timeout);
 	void	closeConnections(void);
-
 };
 
+void	interruptHandler(int sig_int);
 char 	*createResponse(char *buffer, const char *file);
-//void	interruptHandler(int sig_int);
