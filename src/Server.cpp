@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "RequestParser.hpp"
 
 bool	g_serverOnAir;
 
@@ -152,6 +153,7 @@ void	Server::runServer(int timeout) {
 					while (true)
 					{
 						ret = recv(_fds[i].fd, buffer, sizeof(buffer), 0);
+                        RequestParser parser = RequestParser(static_cast<std::string>(buffer));
 						if (ret < 0)
 							break;
 						if (ret == 0)
@@ -161,10 +163,10 @@ void	Server::runServer(int timeout) {
 						}
 						std::cout << ret << " bytes received from sd:\t" << _fds[i].fd <<  std::endl;
 
-						//std::string headers = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\n";
-						//std::string body = "SURPRISE MOTHERF@CKER!\n\nCyberpunk ain't dead!!!\n";
-						//std::string resp = headers + body;
-						//ret = send(_fds[i].fd, resp.c_str(), resp.length(), 0);
+//						std::string headers = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\n";
+//						std::string body = "SURPRISE MOTHERF@CKER!\n\nCyberpunk ain't dead!!!\n";
+//						std::string resp = headers + body;
+//						ret = send(_fds[i].fd, resp.c_str(), resp.length(), 0);
 						memset(buffer, 0, BUFFER_SIZE);
 						char *response = createResponse(buffer, "index.html");
 						ret = send(_fds[i].fd, response, ft_strlen(response), 0);
@@ -232,29 +234,30 @@ static void	fillLength(char *header, long size)
 	size_t lenSize = ft_strlen(len);
 	for (size_t j = 0; j <= lenSize; j++ )
 		header[i++] = len[j];
+	header[i + 1] = '\n';
 }
 
 char *createResponse(char *buffer, const char *file) {
 	struct stat	buf = {};
-	const char *str = "HTTP/1.1 200 OK\\nContent-Type: text/html; charset UTF-8\\nContent-Length: ";
+	const char *str = "HTTP/1.1 200 OK\nContent-Type: text/html; charset UTF-8\nContent-Length: ";
 	char tmp[BUFFER_SIZE];
 	for ( int i = 0 ; i < 75 ; i++)
 		buffer[i] = str[i];
 
-	std::cout << file << std::endl;
+//	std::cout << file << std::endl;
 	int fd = open(file, O_RDONLY);
 	fstat(fd, &buf);
 	long indexSize = buf.st_size;
 	fillLength(buffer, indexSize);
-	read(fd, tmp, BUFFER_SIZE);
-
-	close(fd);
 	int j = 0;
 	int i = 0;
 	while(buffer[i])
 		i++;
 	buffer[i++] = '\n';
-	buffer[i] = '\n';
+	buffer[i++] = '\n';
+
+	read(fd, tmp, BUFFER_SIZE);
+    close(fd);
 	while (tmp[j])
 		buffer[i++] = tmp[j++];
 	return buffer;
