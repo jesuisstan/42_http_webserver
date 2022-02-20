@@ -1,6 +1,14 @@
-//
-// Created by Yellowjacket Manfryd on 2/19/22.
-//
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   RequestParser.cpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ymanfryd <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/02/20 19:06:27 by ymanfryd          #+#    #+#             */
+/*   Updated: 2022/02/20 19:06:39 by ymanfryd         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "../inc/RequestParser.hpp"
 
@@ -37,10 +45,6 @@ RequestParser &RequestParser::operator=(const RequestParser &other) {
         body_           = other.body_;
     }
     return *this;
-}
-
-RequestParser::~RequestParser() {
-//    std::cout << "____PARSER DESTRUCTED____" << std::endl;
 }
 
 /**************************/
@@ -248,7 +252,6 @@ void RequestParser::setSupportedMethods() {
 
 
 void RequestParser::parse() {
-//    std::cout << request_ << std::endl;
     setSupportedMethods();
     setMethod();
     if (isSupportedMethod()) {

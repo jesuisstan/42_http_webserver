@@ -1,6 +1,14 @@
-//
-// Created by Yellowjacket Manfryd on 2/19/22.
-//
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   RequestParser.hpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ymanfryd <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/02/20 19:07:06 by ymanfryd          #+#    #+#             */
+/*   Updated: 2022/02/20 19:07:14 by ymanfryd         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef HTTP_WEBSERVER_REQUEST_PARSER_HPP
 #define HTTP_WEBSERVER_REQUEST_PARSER_HPP
@@ -55,15 +63,12 @@ class RequestParser {
             std::string                 parseByHeaderName(const std::string& name);
             static std::string          EraseSpaces(const std::string& string);
 
-
-
-            RequestParser();
-    public:
+public:
 
             RequestParser(std::string request, size_t requestLen);
             RequestParser(const RequestParser &other);
             RequestParser &operator=(const RequestParser &other);
-            ~RequestParser();
+            ~RequestParser() {}
 
             std::string getRequest()        const;
             std::string getMethod()         const;
@@ -95,6 +100,8 @@ class RequestParser {
                         const char* what() const throw();
                         virtual ~UnsupportedMethodException() throw() {}
             };
+
+    RequestParser();
 };
 
 #endif //HTTP_WEBSERVER_REQUEST_PARSER_HPP

@@ -18,10 +18,21 @@
 
 #include "utils.hpp"
 
-# define RESET "\033[0m" // sets color to default
-# define RED "\033[31m"
-# define GREEN "\033[32m"
-# define YELLOW "\033[33m"
+# define BLACK "\x1b[30m"
+# define RED "\x1b[31m"
+# define GREEN "\x1b[32m"
+# define YELLOW "\x1b[33m"
+# define BLUE "\x1b[34m"
+# define MAGENTA "\x1b[35m"
+# define CYAN "\x1b[36m"
+# define RESET "\x1b[0m"
+# define BgRED "\x1b[41m"
+# define BgGREEN "\x1b[42m"
+# define BgYELLOW "\x1b[43m"
+# define BgBLUE "\x1b[44m"
+# define BgMAGENTA "\x1b[45m"
+# define BgCYAN "\x1b[46m"
+# define BgWHITE "\x1b[47m"
 
 # define PORT 8888
 # define BACKLOG 100 // the maximum number of connections that will be queued

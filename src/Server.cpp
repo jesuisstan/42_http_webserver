@@ -1,5 +1,7 @@
+#include "webserv.hpp"
 #include "Server.hpp"
 #include "RequestParser.hpp"
+#include "Response.hpp"
 
 bool	g_serverOnAir;
 
@@ -100,6 +102,8 @@ void	Server::runServer(int timeout) {
 	this->setTimeout(timeout);
 
 	char buffer[BUFFER_SIZE];
+    size_t request_len = 0;
+    std::string request_buffer;
 	this->_numberFds = 1;
 	int currentSize = 0;
 	while (g_serverOnAir != false)
@@ -160,26 +164,39 @@ void	Server::runServer(int timeout) {
 							closeConnection = true;
 							break;
 						}
-                        try {
-                            RequestParser parser = RequestParser(static_cast<std::string>(buffer), ret);
-                        } catch (RequestParser::UnsupportedMethodException &e) {
-                            std::cout << e.what() << std::endl;
-                        }
-						std::cout << ret << " bytes received from sd:\t" << _fds[i].fd <<  std::endl;
+                        request_buffer += static_cast<std::string>(buffer).substr(0, ret);
+                        request_len += ret;
+                        memset(buffer, 0, BUFFER_SIZE);
+                        if (request_buffer[request_len - 1] == '\n' && request_buffer[request_len - 2] == '\r' && request_buffer[request_len - 3] == '\n' && request_buffer[request_len - 4] == '\r')
+                        {
+                                std::cout << YELLOW << request_buffer << RESET << std::endl;
+                                try {
+                                    RequestParser request = RequestParser(request_buffer, request_len);
+                                    memset(buffer, 0, BUFFER_SIZE);
+                                    request_buffer = "";
+                                    request_len = 0;
+                                    Response response = Response(request);
+                                    char *responseStr = createResponse(buffer, "index.html", request);
+                                    std::cout << responseStr << std::endl;
+                                    ret = send(_fds[i].fd, responseStr, ft_strlen(responseStr), 0);
+                                    if (ret < 0)
+                                    {
+                                        perror("send() failed");
+                                        closeConnection = true;
+                                        break;
+                                    }
+                                } catch (RequestParser::UnsupportedMethodException &e ) {
+                                    std::cout << e.what() << std::endl;
+                                }
 
-//						std::string headers = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\n";
-//						std::string body = "SURPRISE MOTHERF@CKER!\n\nCyberpunk ain't dead!!!\n";
-//						std::string resp = headers + body;
-//						ret = send(_fds[i].fd, resp.c_str(), resp.length(), 0);
-						memset(buffer, 0, BUFFER_SIZE);
-						char *response = createResponse(buffer, "index.html");
-						ret = send(_fds[i].fd, response, ft_strlen(response), 0);
-						if (ret < 0)
-						{
-							perror("send() failed");
-							closeConnection = true;
-							break;
-						}
+                            std::cout << request_len << " bytes received from sd:\t" << _fds[i].fd <<  std::endl;
+
+    //						std::string headers = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\n";
+    //						std::string body = "SURPRISE MOTHERF@CKER!\n\nCyberpunk ain't dead!!!\n";
+    //						std::string resp = headers + body;
+    //						ret = send(_fds[i].fd, resp.c_str(), resp.length(), 0);
+
+                        }
 					}
 					if (closeConnection)
 					{
@@ -241,11 +258,15 @@ static void	fillLength(char *header, long size)
 	header[i + 1] = '\n';
 }
 
-char *createResponse(char *buffer, const char *file) {
+char *createResponse(char *buffer, const char *file, RequestParser parser) {
 	struct stat	buf = {};
-	const char *str = "HTTP/1.1 200 OK\nContent-Type: text/html; charset UTF-8\nContent-Length: ";
+    const char *str;
+    if (parser.getMethod() == "GET")
+        str = "HTTP/1.1 200 OK\nContent-Type: text/html; charset UTF-8\nContent-Length: ";
+    else
+        str = "HTTP/1.1 405 Method Not Allowed \nContent-Type: text/html; charset UTF-8\nContent-Length: ";
 	char tmp[BUFFER_SIZE];
-	for ( int i = 0 ; i < 75 ; i++)
+	for ( size_t i = 0 ; i < ft_strlen(str) ; i++)
 		buffer[i] = str[i];
 
 //	std::cout << file << std::endl;
@@ -259,7 +280,7 @@ char *createResponse(char *buffer, const char *file) {
 		i++;
 	buffer[i++] = '\n';
 	buffer[i++] = '\r';
-
+    i++;
 	read(fd, tmp, BUFFER_SIZE);
     close(fd);
 	while (tmp[j])

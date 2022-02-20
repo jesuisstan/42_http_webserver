@@ -2,6 +2,8 @@
 
 # include "webserv.hpp"
 
+class RequestParser;
+
 class Server {
 private:
 	int 			_listenSocket;
@@ -25,4 +27,4 @@ public:
 };
 
 void	interruptHandler(int sig_int);
-char 	*createResponse(char *buffer, const char *file);
+char 	*createResponse(char *buffer, const char *file, RequestParser parser);
