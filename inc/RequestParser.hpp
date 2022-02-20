@@ -7,76 +7,94 @@
 #include "webserv.hpp"
 
 class RequestParser {
-private:
-    std::string request_;
-    std::string method_;
-    std::string route_;
-    std::string protocol_;
-    std::string host_;
-    std::string userAgent_;
-    std::string accept_;
-    std::string acceptLanguage_;
-    std::string acceptEncoding_;
-    std::string connection_;
-    std::string upgradeInsecureRequests_;
-    std::string secFetchDest_;
-    std::string secFetchMode_;
-    std::string secFetchSite_;
-    std::string secFetchUser_;
-    std::string cacheControl_;
-    std::string body_;
 
-    int iterator_;
-    std::vector<std::string> supportedMethods_;
+    private:
+            std::string                 request_;
+            std::string                 method_;
+            std::string                 route_;
+            std::string                 protocol_;
+            std::string                 host_;
+            std::string                 userAgent_;
+            std::string                 accept_;
+            std::string                 acceptLanguage_;
+            std::string                 acceptEncoding_;
+            std::string                 connection_;
+            std::string                 secFetchDest_;
+            std::string                 secFetchMode_;
+            std::string                 secFetchSite_;
+            std::string                 secFetchUser_;
+            std::string                 cacheControl_;
+            std::string                 headers_;
+            std::string                 body_;
+            size_t                      contentLength_;
 
-public:
-    RequestParser();
-    explicit RequestParser(std::string request);
-    RequestParser(const RequestParser &other);
-    RequestParser &operator=(const RequestParser &other);
+            size_t                      iterator_;
+            std::vector<std::string>    supportedMethods_;
 
-    std::string getRequest();
-    std::string getMethod();
-    std::string getRoute();
-    std::string getProtocol();
-    std::string getHost();
-    std::string getUserAgent();
-    std::string getAccept();
-    std::string getAcceptLanguage();
-    std::string getAcceptEncoding();
-    std::string getConnection();
-    std::string getUpgradeInsecureRequests();
-    std::string getSecFetchDest();
-    std::string getSecFetchMode();
-    std::string getSecFetchSite();
-    std::string getSecFetchUser();
-    std::string getCacheControl();
-    std::string getBody();
+            void                        setMethod();
+            void                        setRoute();
+            void                        setProtocol();
+            void                        setHost();
+            void                        setUserAgent();
+            void                        setAccept();
+            void                        setAcceptLanguage();
+            void                        setAcceptEncoding();
+            void                        setConnection();
+            void                        setSecFetchDest();
+            void                        setSecFetchMode();
+            void                        setSecFetchSite();
+            void                        setSecFetchUser();
+            void                        setCacheControl();
+            void                        setBody();
+            void                        setHeaders();
+            void                        setContentLength();
 
-    void        setMethod();
-    void        setRoute();
-    void        setProtocol();
-    void        setHost();
-    void        setUserAgent();
-    void        setAccept();
-    void        setAcceptLanguage();
-    void        setAcceptEncoding();
-    void        setConnection();
-    void        setUpgradeInsecureRequests();
-    void        setSecFetchDest();
-    void        setSecFetchMode();
-    void        setSecFetchSite();
-    void        setSecFetchUser();
-    void        setCacheControl();
-    void        setBody();
+            void                        parse();
+            void                        setSupportedMethods();
+            std::string                 parseByChar(const std::string& string, char symbol);
+            std::string                 parseByHeaderName(const std::string& name);
+            static std::string          EraseSpaces(const std::string& string);
 
-    void        setSupportedMethods();
-    bool        isSupportedMethod();
-    std::string parseByChar(std::string string, char symbol);
-    std::string parseByHeaderName(std::string name);
-    std::string eraseRequest();
 
-    ~RequestParser();
+
+            RequestParser();
+    public:
+
+            RequestParser(std::string request, size_t requestLen);
+            RequestParser(const RequestParser &other);
+            RequestParser &operator=(const RequestParser &other);
+            ~RequestParser();
+
+            std::string getRequest()        const;
+            std::string getMethod()         const;
+            std::string getRoute()          const;
+            std::string getProtocol()       const;
+            std::string getHost()           const;
+            std::string getUserAgent()      const;
+            std::string getAccept()         const;
+            std::string getAcceptLanguage() const;
+            std::string getAcceptEncoding() const;
+            std::string getConnection()     const;
+            std::string getSecFetchDest()   const;
+            std::string getSecFetchMode()   const;
+            std::string getSecFetchSite()   const;
+            std::string getSecFetchUser()   const;
+            std::string getCacheControl()   const;
+            std::string getBody()           const;
+            std::string getHeaders()        const;
+            size_t      getContentLength()  const;
+
+            bool        isSupportedMethod();
+
+            class UnsupportedMethodException: public std::exception
+            {
+                private:
+                        std::string         message_;
+                public:
+                        explicit UnsupportedMethodException(std::string const& method);
+                        const char* what() const throw();
+                        virtual ~UnsupportedMethodException() throw() {}
+            };
 };
 
 #endif //HTTP_WEBSERVER_REQUEST_PARSER_HPP

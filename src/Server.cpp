@@ -153,7 +153,6 @@ void	Server::runServer(int timeout) {
 					while (true)
 					{
 						ret = recv(_fds[i].fd, buffer, sizeof(buffer), 0);
-                        RequestParser parser = RequestParser(static_cast<std::string>(buffer));
 						if (ret < 0)
 							break;
 						if (ret == 0)
@@ -161,6 +160,11 @@ void	Server::runServer(int timeout) {
 							closeConnection = true;
 							break;
 						}
+                        try {
+                            RequestParser parser = RequestParser(static_cast<std::string>(buffer), ret);
+                        } catch (RequestParser::UnsupportedMethodException &e) {
+                            std::cout << e.what() << std::endl;
+                        }
 						std::cout << ret << " bytes received from sd:\t" << _fds[i].fd <<  std::endl;
 
 //						std::string headers = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\n";
@@ -254,7 +258,7 @@ char *createResponse(char *buffer, const char *file) {
 	while(buffer[i])
 		i++;
 	buffer[i++] = '\n';
-	buffer[i++] = '\n';
+	buffer[i++] = '\r';
 
 	read(fd, tmp, BUFFER_SIZE);
     close(fd);
