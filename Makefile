@@ -1,9 +1,9 @@
 NAME			= webserv
 
-SRCS			= main.cpp utils.cpp Server.cpp
+SRCS			= main.cpp utils.cpp Server.cpp RequestParser.cpp Response.cpp
 SRCS_DIR		= ./src/
 
-INC				= webserv.hpp utils.hpp Server.hpp
+INC				= webserv.hpp utils.hpp Server.hpp RequestParser.hpp Response.hpp
 INCS_DIR		= ./inc/
 INCS			= $(addprefix $(INCS_DIR), $(INC))
 

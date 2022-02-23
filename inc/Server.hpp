@@ -2,6 +2,8 @@
 
 # include "webserv.hpp"
 
+class RequestParser;
+
 class Server {
 private:
 	int 			_listenSocket;
@@ -22,7 +24,9 @@ public:
 	void	initiate(const char *ipAddr, int port);
 	void	runServer(int timeout);
 	void	closeConnections(void);
+
+    static bool findReqEnd(std::string request_buffer, size_t request_len);
 };
 
 void	interruptHandler(int sig_int);
-char 	*createResponse(char *buffer, const char *file);
+char 	*createResponse(char *buffer, const char *file, RequestParser parser);
