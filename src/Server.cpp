@@ -166,18 +166,20 @@ void	Server::runServer(int timeout) {
 						}
                         request_buffer += static_cast<std::string>(buffer).substr(0, ret);
                         request_len += ret;
+//                        std::cout << BLUE << request_buffer << RESET << std::endl;
                         memset(buffer, 0, BUFFER_SIZE);
-                        if (request_buffer[request_len - 1] == '\n' && request_buffer[request_len - 2] == '\r' && request_buffer[request_len - 3] == '\n' && request_buffer[request_len - 4] == '\r')
+                        if (findReqEnd(request_buffer, request_len))
                         {
-                                std::cout << YELLOW << request_buffer << RESET << std::endl;
+//                                std::cout << YELLOW << request_buffer << RESET << std::endl;
                                 try {
                                     RequestParser request = RequestParser(request_buffer, request_len);
+                                    std::cout << YELLOW << request.getMethod() << request.getRoute() << RESET << std::endl;
                                     memset(buffer, 0, BUFFER_SIZE);
                                     request_buffer = "";
                                     request_len = 0;
                                     Response response = Response(request);
-                                    char *responseStr = createResponse(buffer, "index.html", request);
-                                    std::cout << responseStr << std::endl;
+                                    char *responseStr = const_cast<char *>(response.getResponse().c_str());
+                                    std::cout << BgCYAN << response.getResponseCode() << RESET << std::endl;
                                     ret = send(_fds[i].fd, responseStr, ft_strlen(responseStr), 0);
                                     if (ret < 0)
                                     {
@@ -239,51 +241,22 @@ void	Server::closeConnections(void) {
 	}
 }
 
+bool Server::findReqEnd(std::string request_buffer, size_t request_len) {
+    std::string method = request_buffer;
+    method = method.substr(0, request_buffer.find_first_of(' '));
+//    std::cout << "|" << request_buffer[request_len - 5] << "|" << std::endl;
+    if (request_buffer[request_len - 1] == '\n' &&
+    request_buffer[request_len - 2] == '\r' &&
+    request_buffer[request_len - 3] == '\n' &&
+    request_buffer[request_len - 4] == '\r') {
+        if (method != "POST" || request_buffer[request_len - 5] == '0')
+            return true;
+    }
+    return false;
+}
+
 void	interruptHandler(int sig_int) {
 	(void)sig_int;
 	std::cout << "\nAttention! Interruption signal caught\n";
 	g_serverOnAir = false;
-}
-
-static void	fillLength(char *header, long size)
-{
-	int		i = 0;
-
-	while (header[i])
-		i++;
-	char *len = ft_itoa(size);
-	size_t lenSize = ft_strlen(len);
-	for (size_t j = 0; j <= lenSize; j++ )
-		header[i++] = len[j];
-	header[i + 1] = '\n';
-}
-
-char *createResponse(char *buffer, const char *file, RequestParser parser) {
-	struct stat	buf = {};
-    const char *str;
-    if (parser.getMethod() == "GET")
-        str = "HTTP/1.1 200 OK\nContent-Type: text/html; charset UTF-8\nContent-Length: ";
-    else
-        str = "HTTP/1.1 405 Method Not Allowed \nContent-Type: text/html; charset UTF-8\nContent-Length: ";
-	char tmp[BUFFER_SIZE];
-	for ( size_t i = 0 ; i < ft_strlen(str) ; i++)
-		buffer[i] = str[i];
-
-//	std::cout << file << std::endl;
-	int fd = open(file, O_RDONLY);
-	fstat(fd, &buf);
-	long indexSize = buf.st_size;
-	fillLength(buffer, indexSize);
-	int j = 0;
-	int i = 0;
-	while(buffer[i])
-		i++;
-	buffer[i++] = '\n';
-	buffer[i++] = '\r';
-    i++;
-	read(fd, tmp, BUFFER_SIZE);
-    close(fd);
-	while (tmp[j])
-		buffer[i++] = tmp[j++];
-	return buffer;
 }

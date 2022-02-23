@@ -143,7 +143,6 @@ void RequestParser::setRoute() {
         route_ = EraseSpaces(fistReqStr.substr(routeStart, routeEnd));
     else
         route_ = "/";
-//    std::cout << "__ROUTE______________|" <<  route_ << "|" << std::endl;
 }
 
 void RequestParser::setProtocol() {
@@ -243,6 +242,8 @@ void RequestParser::setSupportedMethods() {
     supportedMethods_.push_back("GET");
     supportedMethods_.push_back("POST");
     supportedMethods_.push_back("DELETE");
+    supportedMethods_.push_back("HEAD");
+    supportedMethods_.push_back("PUT");
 }
 
 

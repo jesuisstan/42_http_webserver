@@ -24,6 +24,8 @@ public:
 	void	initiate(const char *ipAddr, int port);
 	void	runServer(int timeout);
 	void	closeConnections(void);
+
+    static bool findReqEnd(std::string request_buffer, size_t request_len);
 };
 
 void	interruptHandler(int sig_int);

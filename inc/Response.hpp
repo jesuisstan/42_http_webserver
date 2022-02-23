@@ -23,23 +23,45 @@ class Response {
     private:
             RequestParser               request_;
             std::string                 response_;
+            std::string                 requestRoute_;
+            std::string                 requestMethod_;
+            std::string                 responseHeaders_;
+            std::string                 responseBody_;
+            int                         responseCode_;
+            size_t                      contentLength_;
             std::map<int, std::string>  responseCodes_;
 
+            void                        setResponse();
             void                        setResponseCodes();
-            void                        createResponse();
-            void                        setResponse(std::string response);
-            void                        homeRoot();
-            std::string                 countContentLength();
+            void                        setResponseHeaders();
+            void                        setResponseCode(int code);
+            void                        setContentLength(size_t len);
+            void                        setResponseBody(const std::string& body);
 
-            Response() {};
+            void                        homeRoot();
+            void                        DirectoryRoot();
+
+            void                        createResponse();
+            std::string                 getScreen() const;
+
+            Response(): responseCode_(0), contentLength_(0) {};
     public:
 
-            std::string getResponse();
+            std::string  getResponse()          const;
+            std::string  getResponseBody()      const;
+            std::string  getResponseHeaders()   const;
+            size_t       getContentLength()     const;
+            int          getResponseCode()      const;
 
-            explicit Response(RequestParser &request);
+            explicit    Response(RequestParser &request);
             Response(const Response &other);
             Response &operator=(const Response &other);
             ~Response() {}
+
+            static std::string readContent(const std::string &filename);
+
+
+
 };
 
 #endif //HTTP_WEBSERVER_RESPONSE_HPP
