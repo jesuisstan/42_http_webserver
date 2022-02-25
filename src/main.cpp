@@ -4,6 +4,7 @@
 int main(int argc, char *argv[]) {
 	(void)argc;//todo
 	(void)argv;//todo
+	std::cout << "C++ version is " << __cplusplus << std::endl << std::endl;
 	//if (argc != 2)
 	//{
 	//	std::cout << "Error: wrong amount of arguments!" << std::endl;
