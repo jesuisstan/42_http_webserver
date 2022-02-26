@@ -21,7 +21,7 @@ OBJS_CL 		= $(addprefix $(OBJS_DIR), $(OBJ_CL))
 
 CXX				= c++
 
-FLAGS			= -Wall -Wextra -Werror -std=c++98
+FLAGS			= -Wall -Wextra -Werror -std=c++98 -Wc++98-compat-pedantic
 
 RM				= rm -rf
 

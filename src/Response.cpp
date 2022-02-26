@@ -77,7 +77,8 @@ void Response::setResponseCode(int code) {
 void Response::setResponseHeaders() {
     responseHeaders_ = "HTTP/1.1 ";
     responseHeaders_ += responseCodes_.find(responseCode_)->second;
-    responseHeaders_ += "Content-Type: text/html; charset UTF-8\nContent-Length: ";
+    responseHeaders_ += requestRoute_ == "/style.css" ? "Content-Type: text/css " : "Content-Type: text/html ";
+    responseHeaders_ += "charset UTF-8\nContent-Length: ";
     responseHeaders_ += std::to_string(contentLength_);
 }
 
@@ -106,6 +107,8 @@ void Response::createResponse() {
 
     if (requestRoute_ == "/")
         homeRoot();
+    else if (requestRoute_ == "/style.css")
+        setResponseCode(200);
     else if (requestRoute_.find("/directory") == 0)
         DirectoryRoot();
     else
@@ -160,10 +163,11 @@ void Response::DirectoryRoot() {
 
 std::string Response::getScreen() const {
     std::string filename = "./src/screens/";
-    if (responseCode_ == 200)
-        filename += "index";
+    if (responseCode_ == 200 && requestRoute_ == "/")
+        filename += "HomePage/index.html";
+    else if (responseCode_ == 200 && requestRoute_ == "/style.css")
+        filename += "HomePage/style.css";
     else
-        filename += std::to_string(responseCode_);
-    filename += ".html";
+        filename += std::to_string(responseCode_) + ".html";
     return filename;
 }
