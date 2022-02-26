@@ -143,6 +143,19 @@ void RequestParser::setRoute() {
         route_ = EraseSpaces(fistReqStr.substr(routeStart, routeEnd));
     else
         route_ = "/";
+    setPath();
+}
+
+void RequestParser::setPath() {
+    std::string route = route_;
+    int slash1 = route.find('/');
+    int slash2 = route.find('/');
+    while (slash2 != std::string::npos) {
+        path_.push_back(route.substr(slash1, slash2));
+        slash1 = route.find('/');
+        slash2 = route.find('/');
+    }
+
 }
 
 void RequestParser::setProtocol() {

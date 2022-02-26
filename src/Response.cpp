@@ -32,6 +32,7 @@ Response &Response::operator=(const Response &other) {
         responseCode_ = other.responseCode_;
         responseBody_ = other.responseBody_;
         responseHeaders_ = other.responseHeaders_;
+        responseContentType_ = other.responseContentType_;
         responseCodes_ = other.responseCodes_;
         contentLength_ = other.contentLength_;
     }
@@ -72,6 +73,10 @@ void Response::setResponse() {
 
 void Response::setResponseCode(int code) {
     responseCode_ = code;
+}
+
+void Response::setContentType() {
+//    if (requestRoute_ == "/style.css")
 }
 
 void Response::setResponseHeaders() {

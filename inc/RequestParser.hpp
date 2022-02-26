@@ -37,10 +37,12 @@ class RequestParser {
             size_t                      contentLength_;
 
             size_t                      iterator_;
+            std::vector<std::string>    path_;
             std::vector<std::string>    supportedMethods_;
 
             void                        setMethod();
             void                        setRoute();
+            void                        setPath();
             void                        setProtocol();
             void                        setHost();
             void                        setUserAgent();

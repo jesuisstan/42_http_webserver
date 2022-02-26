@@ -26,6 +26,7 @@ class Response {
             std::string                 requestRoute_;
             std::string                 requestMethod_;
             std::string                 responseHeaders_;
+            std::string                 responseContentType_;
             std::string                 responseBody_;
             int                         responseCode_;
             size_t                      contentLength_;
@@ -34,6 +35,7 @@ class Response {
             void                        setResponse();
             void                        setResponseCodes();
             void                        setResponseHeaders();
+            void                        setContentType();
             void                        setResponseCode(int code);
             void                        setContentLength(size_t len);
             void                        setResponseBody(const std::string& body);
