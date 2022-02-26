@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ymanfryd <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: St.Krivtsov <1987stanislav@gmail.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/20 19:06:46 by ymanfryd          #+#    #+#             */
-/*   Updated: 2022/02/20 19:06:53 by ymanfryd         ###   ########.fr       */
+/*   Updated: 2022/02/26 17:23:54 by St.Krivtsov      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/Response.hpp"
+#include "Response.hpp"
 
 Response::Response(RequestParser &request): requestRoute_(request.getRoute()),
                                             requestMethod_(request.getMethod()),

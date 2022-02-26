@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   RequestParser.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ymanfryd <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: St.Krivtsov <1987stanislav@gmail.com>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/20 19:06:27 by ymanfryd          #+#    #+#             */
-/*   Updated: 2022/02/20 19:06:39 by ymanfryd         ###   ########.fr       */
+/*   Updated: 2022/02/26 17:23:49 by St.Krivtsov      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../inc/RequestParser.hpp"
+#include "RequestParser.hpp"
 
 RequestParser::RequestParser() {
 }
