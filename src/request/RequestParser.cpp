@@ -229,7 +229,7 @@ void        RequestParser::setContentLength() {
     std::string contentLengthStr = parseByHeaderName("Content-Length:");
     try {
         if (contentLengthStr.length())
-            contentLength_ = std::stol(contentLengthStr);
+            contentLength_ = std::stol(contentLengthStr); // это что-то из 11 стандарта, c флагами не скомпилится
         else
             contentLength_ = 0;
     } catch (std::exception &exception) {
@@ -320,7 +320,7 @@ std::string RequestParser::EraseSpaces(const std::string& string) {
 
 
 RequestParser::UnsupportedMethodException::UnsupportedMethodException(const std::string &method) {
-    message_ = RED"Method " + method + " is not supported"RESET;
+    message_ = RED"Method " + method + " is not supported" RESET;
 }
 
 const char* RequestParser::UnsupportedMethodException::what() const throw() {

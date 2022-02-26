@@ -4,25 +4,33 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <iostream>
+#include "Location.hpp"
 
 #define DEFAULT_ERROR_PAGE "error.html"
 #define DEFAULT_PORT 8080
 
-typedef struct s_location
-{
-	std::set<std::string> methods;
-	std::string root = NULL;
-	std::string icg = NULL;
-	bool autoindex = true;
-} t_locations;
+class ServerConfig {
+private:
+	std::string	host;
+	std::string	serverName;
+	int			port;
+	std::string	errorPage;
+	std::map<std::string, Location>	locations;
+public:
+	ServerConfig();
+
+	const std::string &getHost() const;
+	const std::string &getServerName() const;
+	const int &getPort() const;
+	const std::string &getErrorPage() const;
+	const std::map<std::string, Location> &getLocations() const;
+};
+
+std::ostream& operator<< (std::ostream &out, const ServerConfig &sc);
 
 
-typedef struct s_server_config
-{
-	std::string host;
-	int port = DEFAULT_PORT;
-	std::string error_page = DEFAULT_ERROR_PAGE;
-	std::map<std::string, std::vector<s_location> > locs;
-} t_server_config;
+
+
 
 #endif
