@@ -3,6 +3,7 @@ NAME			= webserv
 CXX				= g++
 
 FLAGS			= -Wall -Wextra -Werror -std=c++98
+FLAGS			= -Wall
 
 RM				= rm -rf
 
@@ -12,7 +13,7 @@ CLASS_HDRS		= -I src/server -I src/config -I src/request -I src/response
 
 HEADERS			= webserv.hpp
 
-CONFIG			= Config	ServerConfig
+CONFIG			= Config	ServerConfig	Location
 SERVER			= Server
 REQUEST			= RequestParser
 RESPONSE		= Response
