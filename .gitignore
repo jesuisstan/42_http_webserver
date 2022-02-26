@@ -1,12 +1,13 @@
 # Prerequisites
 *.d
 .DS_Store
-.vscode
+.editorconfig
+.vscode/
 .idea/
 src/client
 webserv
 client
-server
+
 
 # Compiled Object files
 *.slo
