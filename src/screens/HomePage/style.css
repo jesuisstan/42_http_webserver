@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap');
+
 body {
     margin: 0;
-    width: 100%;
+    width: 100vw;
 }
 
 h1 {
@@ -17,6 +18,7 @@ a {
     text-shadow: 1px 2px #000065;
     font-family: 'Open Sans', cursive;
 }
+
 a:hover {
     color: rgba(101, 8, 97, 0.91);
     text-shadow: 1px 1px rgba(110, 10, 105, 0.6);
@@ -26,10 +28,11 @@ a:hover {
 .header {
     width: 100vw;
     height: 80px;
-    background-color: rgba(118, 80, 245, 0.39);
+    background: linear-gradient(90deg, rgba(60, 145, 159, 0.56) 0%, rgb(2, 102, 151) 54%, rgb(0, 0, 60) 100%);
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    box-shadow: 15px 15px 50px 0 rgba(87, 144, 153, 0.8);
 }
 
 .title {
@@ -46,13 +49,20 @@ a:hover {
     margin: 10px;
     font-family: 'Open Sans', cursive;
     font-weight: 800;
+    background-color: rgba(255, 255, 255, 0);
+    border: none;
     border-radius: 22px;
-    border: 2px solid rgba(34, 0, 70, 0.8);
+    color: #fff;
+}
+
+.signBtn:hover {
+    cursor: pointer;
+    color: #00ffea;
+    text-shadow: 1px 1px rgba(0, 0, 0, 0.6);
 }
 
 .signUpBtn {
-    background-color: rgba(75, 75, 239, 0.24);
-    color: #fff;
+    background-color: rgba(149, 75, 239, 0.24);
 }
 
 .buttons {

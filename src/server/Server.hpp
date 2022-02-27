@@ -1,8 +1,10 @@
 #pragma once
 
+#include <Config.hpp>
 # include "webserv.hpp"
 
 class RequestParser;
+class ServerConfig;
 
 class Server {
 private:
@@ -22,7 +24,7 @@ public:
 	int		getTimeout(void) const;
 	int		getNumberFds(void) const;
 	void	initiate(const char *ipAddr, int port);
-	void	runServer(int timeout);
+	void	runServer(int timeout, ServerConfig config);
 	void	closeConnections(void);
 
     static bool findReqEnd(std::string request_buffer, size_t request_len);

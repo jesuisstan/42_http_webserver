@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 		for (size_t i = 0; i < it->second.size(); i++) // итерируется по серверам на этом порте
 		{
 			webserv.initiate(it->second[i].getHost().c_str(), it->first); // когда будет Config, метод сменится на .initiate(void)
-			webserv.runServer(-1);
+			webserv.runServer(-1, it->second[i]);
 		}
 
 

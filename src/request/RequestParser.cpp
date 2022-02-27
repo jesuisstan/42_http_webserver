@@ -139,23 +139,26 @@ void RequestParser::setRoute() {
     fistReqStr = fistReqStr.substr(0, request_.find_first_of('\n') - 1);
     size_t routeStart = fistReqStr.find_first_of(' ') + 1;
     size_t routeEnd = fistReqStr.find_last_of(' ') - 1;
-    if (routeStart != routeEnd)
+    if (routeStart != routeEnd) {
         route_ = EraseSpaces(fistReqStr.substr(routeStart, routeEnd));
-    else
+        setPath();
+    }
+    else {
         route_ = "/";
-    setPath();
+        path_.push_back("/");
+    }
+        for (size_t i = 0; i < path_.size(); i++)
+            std::cout << CYAN << "|" << path_[i] << "|" << RESET << std::endl;
 }
 
 void RequestParser::setPath() {
-    std::string route = route_;
-    int slash1 = route.find('/');
-    int slash2 = route.find('/');
-    while (slash2 != std::string::npos) {
-        path_.push_back(route.substr(slash1, slash2));
-        slash1 = route.find('/');
-        slash2 = route.find('/');
+    std::string route = route_.substr(1);
+    size_t slash = 0;
+    while (slash != std::string::npos) {
+        slash = route.find('/');
+        path_.push_back(route.substr(0, slash));
+        route = route.substr(slash + 1);
     }
-
 }
 
 void RequestParser::setProtocol() {

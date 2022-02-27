@@ -91,7 +91,7 @@ void	Server::initiate(const char *ipAddr, int port) {
 	}
 }
 
-void	Server::runServer(int timeout) {
+void	Server::runServer(int timeout,  ServerConfig config) {
 	_fds[0].fd = _listenSocket;
 	_fds[0].events = POLLIN;
 	this->setTimeout(timeout);
@@ -167,7 +167,7 @@ void	Server::runServer(int timeout) {
 								std::cout << YELLOW << request.getMethod() << request.getRoute() << RESET << std::endl;
 								request_buffer = "";
 								request_len = 0;
-								Response response = Response(request);
+								Response response = Response(request, config);
 								char *responseStr = const_cast<char *>(response.getResponse().c_str());
 								std::cout << BgCYAN << response.getResponseCode() << RESET << std::endl;
 								ret = send(_fds[i].fd, responseStr, strlen(responseStr), 0);

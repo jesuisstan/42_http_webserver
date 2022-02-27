@@ -12,9 +12,11 @@
 
 #include "Response.hpp"
 
-Response::Response(RequestParser &request): requestRoute_(request.getRoute()),
+Response::Response(RequestParser &request, ServerConfig config): requestRoute_(request.getRoute()),
                                             requestMethod_(request.getMethod()),
-                                            responseCode_(0), contentLength_(0) {
+                                            responseCode_(0), contentLength_(0),
+                                            locations_(config.getLocations()) {
+    std::map<std::string, Location>::iterator it;
     setResponseCodes();
     createResponse();
 }
