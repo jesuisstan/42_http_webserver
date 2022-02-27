@@ -15,15 +15,22 @@ private:
 	std::string	host;
 	std::string	serverName;
 	int			port;
-	std::string	errorPage;
+	std::map<int, std::string>	errorPages;
 	std::map<std::string, Location>	locations;
 public:
 	ServerConfig();
+	ServerConfig(
+		std::string &host,
+		std::string &serverName,
+		int			port,
+		std::map<int, std::string> &errorPages,
+		std::map<std::string, Location> &locations
+	);
 
 	const std::string &getHost() const;
 	const std::string &getServerName() const;
 	const int &getPort() const;
-	const std::string &getErrorPage() const;
+	const std::map<int, std::string> &getErrorPages() const;
 	const std::map<std::string, Location> &getLocations() const;
 };
 
