@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 	// Server webserv(Config);
 	Server webserv; //todo пока нет Config конструктор по-умолчанию
 	Config config;
-	config.set_simple_config(); // Тут сделаю замену на нормальное читание файла
+	config.set_config_with_3_servers(); // Тут сделаю замену на нормальное читание файла
 
 	// std::map<std::string, Location> locs = sc.getLocations();
 	// std::map<std::string, Location>::iterator it;

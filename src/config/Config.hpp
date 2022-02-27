@@ -20,7 +20,7 @@ public:
 	Config(/* args */);
 	~Config();
 	void set_config_from_file(int argc, char **argv);
-	void set_simple_config();
+	void set_config_with_3_servers();
 	const std::set<int> &getPorts() const;
 	const std::map<int, std::vector<ServerConfig> > &getServers() const;
 };

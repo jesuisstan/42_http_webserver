@@ -20,8 +20,8 @@ private:
 public:
 	ServerConfig();
 	ServerConfig(
-		std::string &host,
-		std::string &serverName,
+		const std::string &host,
+		const std::string &serverName,
 		int			port,
 		std::map<int, std::string> &errorPages,
 		std::map<std::string, Location> &locations

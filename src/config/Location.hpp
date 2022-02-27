@@ -11,19 +11,22 @@
 class Location
 {
 private:
-	std::set<std::string>	methods;
-	std::string				root;
-	std::string				cgi;
-	bool					autoindex;
+	std::set<std::string>		methods;
+	std::vector<std::string>	index;
+	std::string					root;
+	std::string					cgi;
+	bool						autoindex;
 public:
 	Location();
 	Location(	const std::set<std::string> &methods,
+				const std::vector<std::string> &index,
 				const std::string &root,
 				const std::string &cgi,
 				bool	autoindex
 				);
 
 	const std::set<std::string> &getMethods() const;
+	const std::vector<std::string> &getIndex() const;
 	const std::string &getRoot() const;
 	const std::string &getCgi() const;
 	bool getAutoindex() const;
