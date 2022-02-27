@@ -1,12 +1,15 @@
 # Prerequisites
 *.d
 .DS_Store
-.vscode
+.editorconfig
+.vscode/
 .idea/
+.editorconfig
 src/client
 webserv
 client
-server
+
+
 
 # Compiled Object files
 *.slo
@@ -38,4 +41,6 @@ obj
 *.exe
 *.out
 *.app
-© 2022 GitHub, Inc.
+
+
+

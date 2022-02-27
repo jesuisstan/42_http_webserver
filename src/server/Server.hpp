@@ -29,4 +29,3 @@ public:
 };
 
 void	interruptHandler(int sig_int);
-char 	*createResponse(char *buffer, const char *file, RequestParser parser);

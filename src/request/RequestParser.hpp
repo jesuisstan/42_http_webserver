@@ -13,6 +13,7 @@
 #ifndef HTTP_WEBSERVER_REQUEST_PARSER_HPP
 #define HTTP_WEBSERVER_REQUEST_PARSER_HPP
 #include "webserv.hpp"
+#include <string>
 
 class RequestParser {
 
