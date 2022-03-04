@@ -16,7 +16,7 @@ Config::Config(int argc, char **argv)
 	else
 		filename = argv[1];
 		
-	std::ifstream ifs(filename);
+	std::ifstream ifs(filename.c_str());
 	if (!ifs.is_open())
 		baseError("Cannot open config file: " + filename);
 

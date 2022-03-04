@@ -44,7 +44,9 @@
 # define BACKLOG 100 // the maximum number of connections that will be queued
 # define BUFFER_SIZE 10240
 
-# define DEFAULT_INDEX	"index.html"
+# define DEFAULT_PORT		8080
+# define DEFAULT_ERROR_PAGE	"errors/404.html"
+# define DEFAULT_INDEX		"index.html"
 
 
 template <typename T>
@@ -57,5 +59,6 @@ std::string numberToString ( T Number )
 
 void		baseError(std::string errorText);
 int			stringToNumber (std::string &text);
+bool		isPositiveDigit(std::string &s);
 void		readSemicolon(std::istream &ifs);
 std::string	&cutSemicolon(std::string &line);

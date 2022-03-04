@@ -29,9 +29,9 @@ Location::Location(std::istream &ifs): root(""), cgi(""), autoindex(false)
 			methods.insert("GET");
 		if (index.empty())
 			index.insert(DEFAULT_INDEX);
-		if (true)
+		if (true) // todo ?
 		{
-			std::cout << "got location\n" << this << std::endl;
+			// std::cout << "got location\n" << this << std::endl;
 			return;
 		}
 	}
@@ -52,71 +52,74 @@ void	Location::setMethods(std::istream &ifs) {
 		baseError("Error read methods");
 	line << _cmnd;
 	// std::cout << "methods line " << line.str() << std::endl;
-	while ((line >> _cmnd) and found_semicolon)
+	while ((line >> _cmnd) and not found_semicolon)
 	{
-		std::cout << _cmnd << std::endl;
+		// std::cout << _cmnd << std::endl;
 		if (_cmnd.size() and _cmnd[_cmnd.size() - 1] == ';')
 		{
 			_cmnd = cutSemicolon(_cmnd);
 			found_semicolon = true;
 		}
-		if (methods.find(_cmnd) == methods.end())
+		if (methods.find(_cmnd) != methods.end())
 			baseError("Dublicated methods in methods");
 		methods.insert(_cmnd);
 	}
-	if (found_semicolon and _cmnd != "")
-		baseError("Unprocessing parametrs after ';'");
+	if (found_semicolon and not line.eof())
+		baseError("Unprocessing parametrs after ';'"  + _cmnd);
 	if (!found_semicolon)
 		baseError("Failed parsing methods");
 }
 
 void	Location::setIndex(std::istream &ifs) {
-	std::istringstream	line;
+	std::stringstream	line;
 	bool	found_semicolon;
 
 	found_semicolon = false;
 
 	if (!index.empty())
-		baseError("Dublicated index string in location");
-	while ((line >> _cmnd))
+		baseError("Dublicated index string in index");
+	std::getline(ifs, _cmnd);
+	if (_cmnd == "")
+		baseError("Error read index");
+	line << _cmnd;
+	// std::cout << "index line " << line.str() << std::endl;
+	while ((line >> _cmnd) and not found_semicolon)
 	{
-		if (found_semicolon)
-		{
-			if (_cmnd != "")
-				baseError("unprocessing parametrs after ';'");
-			return ;
-		}
+		// std::cout << _cmnd << std::endl;
 		if (_cmnd.size() and _cmnd[_cmnd.size() - 1] == ';')
 		{
 			_cmnd = cutSemicolon(_cmnd);
 			found_semicolon = true;
 		}
-		if (index.find(_cmnd) == index.end())
-			baseError("Dublicated pages in index");
+		if (index.count(_cmnd))
+			baseError("Dublicated index page");
 		index.insert(_cmnd);
 	}
-	baseError("Failed parsing methods");
+	if (found_semicolon and not line.eof())
+		baseError("Unprocessing parametrs after ';'"  + _cmnd);
+	if (!found_semicolon)
+		baseError("Failed parsing index");
 }
 
 void	Location::setRedirection(std::istream &ifs) {
 	if (!(ifs >> redirection))
 		baseError("Failed parsing redirection");
 	redirection = cutSemicolon(redirection);
-	std::cout << "parced redirection " << redirection << std::endl;
+	// std::cout << "parced redirection " << redirection << std::endl;
 }
 
 void	Location::setRoot(std::istream &ifs) {
 	if (!(ifs >> root))
 		baseError("Failed parsing root");
 	root = cutSemicolon(root);
-	std::cout << "parced root " << root << std::endl;
+	// std::cout << "parced root " << root << std::endl;
 }
 
 void	Location::setCgi(std::istream &ifs) {
 	if (!(ifs >> cgi))
 		baseError("Failed parsing cgi");
 	cgi = cutSemicolon(cgi);
-	std::cout << "parced cgi " << cgi << std::endl;
+	// std::cout << "parced cgi " << cgi << std::endl;
 }
 
 

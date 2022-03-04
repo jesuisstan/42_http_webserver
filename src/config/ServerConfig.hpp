@@ -4,8 +4,7 @@
 #include "webserv.hpp"
 #include "Location.hpp"
 
-#define DEFAULT_ERROR_PAGE "error.html"
-#define DEFAULT_PORT 8080
+
 
 class ServerConfig {
 private:
@@ -13,6 +12,7 @@ private:
 	std::string						host;
 	std::string						serverName;
 	int								port;
+	size_t							clientMaxBodySize;
 	std::map<int, std::string>		errorPages;
 	std::map<std::string, Location>	locations;
 
@@ -31,12 +31,14 @@ public:
 	const std::string						&getServerName() const;
 	// const std::string &getPortHost() const;
 	const int								&getPort() const;
+	const size_t							&getClientMaxBodySize() const;
 	const std::map<int, std::string>		&getErrorPages() const;
 	const std::map<std::string, Location>	&getLocations() const;
 
 	void									setPort(std::istream &ifs);
 	void									setHost(std::istream &ifs);
 	void									setServerName(std::istream &ifs);
+	void									setClientMaxBodySize(std::istream &ifs);
 	void									setErrorPage(std::istream &ifs);
 	void									setLocation(std::istream &ifs);
 

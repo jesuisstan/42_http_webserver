@@ -7,7 +7,7 @@ void	baseError(std::string errorText)
 };
 
 // template <typename T>
-int stringToNumber (std::string &text)
+int		stringToNumber (std::string &text)
 {
 	int number;
 	if ( ! (std::istringstream(text) >> number) )
@@ -15,7 +15,15 @@ int stringToNumber (std::string &text)
 	return number;
 }
 
-void readSemicolon(std::istream &ifs)
+bool	isPositiveDigit(std::string &s)
+{
+	for (size_t i = 0; i < s.size(); i++)
+		if (!std::isdigit(s[i]))
+			return false;
+	return true;
+}
+
+void	readSemicolon(std::istream &ifs)
 {
 	std::string	cmnd;
 
@@ -28,6 +36,6 @@ std::string &cutSemicolon(std::string &line)
 	if (line.size() and line[line.size() - 1] == ';')
 		line.resize(line.size() - 1);
 	else
-		baseError("Not found semicololon in the end of the line: " + line);
+		baseError("Not found semicolon in the end of the line: " + line);
 	return line;
 }
