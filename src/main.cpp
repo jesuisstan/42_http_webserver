@@ -15,22 +15,28 @@ int main(int argc, char *argv[]) {
 	Config далее подаем аргументом в объект Server */
 	// Server webserv(Config);
 	Server webserv; //todo пока нет Config конструктор по-умолчанию
-	Config config;
-	config.set_simple_config(); // Тут сделаю замену на нормальное читание файла
+	Config config(argc, argv);
+	// config.set_config_with_3_servers(); // Тут сделаю замену на нормальное читание файла
 
 	// std::map<std::string, Location> locs = sc.getLocations();
 	// std::map<std::string, Location>::iterator it;
 	// for (it=locs.begin(); it!=locs.end(); it++)
 	// 	out << "\n\t" << it->first << '\n' << it->second;
+	// std::map<int, std::vector<ServerConfig> >::iterator it;
 
-	std::map<int, std::vector<ServerConfig> > servers = config.getServers();
-	std::map<int, std::vector<ServerConfig> >::iterator it;
-	for (it=servers.begin(); it!=servers.end(); it++) // итерируется по портам
-		for (size_t i = 0; i < it->second.size(); i++) // итерируется по серверам на этом порте
-		{
-			webserv.initiate(it->second[i].getHost().c_str(), it->first); // когда будет Config, метод сменится на .initiate(void)
-			webserv.runServer(-1, it->second[i]);
-		}
+	std::vector<ServerConfig> servers = config.getServers();
+	for (size_t i = 1; i < servers.size(); i++)
+	{
+		std::cout << "Run server[" << i << "]\n" << servers[i];
+		webserv.initiate(servers[i].getHost().c_str(), servers[i].getPort()); // когда будет Config, метод сменится на .initiate(void)
+		webserv.runServer(-1, servers[i]);
+	}
+	// for (it=servers.begin(); it!=servers.end(); it++) // итерируется по портам
+	// 	for (size_t i = 0; i < it->second.size(); i++) // итерируется по серверам на этом порте
+	// 	{
+	// 		webserv.initiate(it->second[i].getHost().c_str(), it->first); // когда будет Config, метод сменится на .initiate(void)
+	// 		webserv.runServer(-1);
+	// 	}
 
 
 
