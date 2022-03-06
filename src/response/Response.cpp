@@ -12,11 +12,12 @@
 
 #include "Response.hpp"
 
-Response::Response(RequestParser &request, ServerConfig config): requestRoute_(request.getRoute()),
+Response::Response(RequestParser &request, ServerConfig &config):
+                                            requestRoute_(request.getRoute()),
                                             requestMethod_(request.getMethod()),
                                             responseCode_(0), contentLength_(0),
-                                            locations_(config.getLocations()) {
-    std::map<std::string, Location>::iterator it;
+                                            requestPath_(request.getPath()),
+                                            locations_(config.getLocations()){
     setResponseCodes();
     createResponse();
 }
@@ -37,6 +38,8 @@ Response &Response::operator=(const Response &other) {
         responseContentType_ = other.responseContentType_;
         responseCodes_ = other.responseCodes_;
         contentLength_ = other.contentLength_;
+        locations_ = other.locations_;
+        requestPath_ = other.requestPath_;
     }
     return *this;
 }
@@ -45,23 +48,23 @@ Response &Response::operator=(const Response &other) {
 /******** GETTERS *********/
 /**************************/
 
-std::string Response::getResponse() const {
+const std::string &Response::getResponse() const {
     return this->response_;
 }
 
-int Response::getResponseCode() const {
+const int &Response::getResponseCode() const {
     return this->responseCode_;
 }
 
-size_t Response::getContentLength() const {
+const size_t &Response::getContentLength() const {
     return this->contentLength_;
 }
 
-std::string Response::getResponseBody() const {
+const std::string &Response::getResponseBody() const {
     return this->responseBody_;
 }
 
-std::string Response::getResponseHeaders() const {
+const std::string &Response::getResponseHeaders() const {
     return this->responseHeaders_;
 }
 
@@ -111,7 +114,13 @@ void Response::setResponseCodes() {
 
 void Response::createResponse() {
     std::string body;
+    std::map<std::string, Location>::iterator i;
 
+    for (i=locations_.begin(); i!=locations_.end(); i++) {
+//        std::cout << i->second << i->first << std::endl;
+        if (requestPath_[0] == i->first)
+            std::cout << BgMAGENTA << requestPath_[0] << RESET << std::endl;
+    }
     if (requestRoute_ == "/")
         homeRoot();
     else if (requestRoute_ == "/style.css")

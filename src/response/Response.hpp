@@ -14,10 +14,10 @@
 #define HTTP_WEBSERVER_RESPONSE_HPP
 
 #include <map>
-#include "ServerConfig.hpp"
-#include "webserv.hpp"
-#include "RequestParser.hpp"
-#include "Location.hpp"
+#include "../config/ServerConfig.hpp"
+#include "../../inc/webserv.hpp"
+#include "../request/RequestParser.hpp"
+#include "../config/Location.hpp"
 
 class RequestParser;
 class ServerConfig;
@@ -34,6 +34,7 @@ class Response {
             std::string                     responseBody_;
             int                             responseCode_;
             size_t                          contentLength_;
+            std::vector<std::string>        requestPath_;
             std::map<int, std::string>      responseCodes_;
             std::map<std::string, Location> locations_;
 
@@ -54,13 +55,13 @@ class Response {
             Response(): responseCode_(0), contentLength_(0) {};
     public:
 
-            std::string  getResponse()          const;
-            std::string  getResponseBody()      const;
-            std::string  getResponseHeaders()   const;
-            size_t       getContentLength()     const;
-            int          getResponseCode()      const;
+            const std::string  &getResponse()          const;
+            const std::string  &getResponseBody()      const;
+            const std::string  &getResponseHeaders()   const;
+            const size_t       &getContentLength()     const;
+            const int          &getResponseCode()      const;
 
-            explicit    Response(RequestParser &request, ServerConfig config);
+            Response(RequestParser &request, ServerConfig &config);
             Response(const Response &other);
             Response &operator=(const Response &other);
             ~Response() {}

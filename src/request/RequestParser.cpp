@@ -51,77 +51,81 @@ RequestParser &RequestParser::operator=(const RequestParser &other) {
 /******** GETTERS *********/
 /**************************/
 
-std::string RequestParser::getRequest() const {
+const std::string &RequestParser::getRequest() const {
     return this->request_;
 }
 
-std::string RequestParser::getMethod() const {
+const std::string &RequestParser::getMethod() const {
     return this->method_;
 }
 
-std::string RequestParser::getRoute() const {
+const std::string &RequestParser::getRoute() const {
     return this->route_;
 }
 
-std::string RequestParser::getProtocol() const {
+const std::string &RequestParser::getProtocol() const {
     return this->protocol_;
 }
 
 
-std::string RequestParser::getHost() const {
+const std::string &RequestParser::getHost() const {
     return this->host_;
 }
 
-std::string RequestParser::getUserAgent() const {
+const std::string &RequestParser::getUserAgent() const {
     return this->userAgent_;
 }
 
-std::string RequestParser::getAccept() const {
+const std::string &RequestParser::getAccept() const {
     return this->accept_;
 }
 
-std::string RequestParser::getAcceptLanguage() const {
+const std::string &RequestParser::getAcceptLanguage() const {
     return this->acceptLanguage_;
 }
 
-std::string RequestParser::getAcceptEncoding() const {
+const std::string &RequestParser::getAcceptEncoding() const {
     return this->acceptEncoding_;
 }
 
-std::string RequestParser::getConnection() const {
+const std::string &RequestParser::getConnection() const {
     return this->connection_;
 }
 
-std::string RequestParser::getSecFetchDest() const {
+const std::string &RequestParser::getSecFetchDest() const {
     return this->secFetchDest_;
 }
 
-std::string RequestParser::getSecFetchMode() const {
+const std::string &RequestParser::getSecFetchMode() const {
     return this->secFetchMode_;
 }
 
-std::string RequestParser::getSecFetchSite() const {
+const std::string &RequestParser::getSecFetchSite() const {
     return this->secFetchSite_;
 }
 
-std::string RequestParser::getSecFetchUser() const {
+const std::string &RequestParser::getSecFetchUser() const {
     return this->secFetchUser_;
 }
 
-std::string RequestParser::getCacheControl() const {
+const std::string &RequestParser::getCacheControl() const {
     return this->cacheControl_;
 }
 
-std::string RequestParser::getBody() const {
+const std::string &RequestParser::getBody() const {
     return this->body_;
 }
 
-std::string RequestParser::getHeaders() const {
+const std::string &RequestParser::getHeaders() const {
     return this->headers_;
 }
 
-size_t RequestParser::getContentLength() const {
+const size_t &RequestParser::getContentLength() const {
     return this->contentLength_;
+}
+
+const std::vector<std::string> &RequestParser::getPath()   const {
+    return this->path_;
 }
 
 /**************************/

@@ -91,7 +91,7 @@ void	Server::initiate(const char *ipAddr, int port) {
 	}
 }
 
-void	Server::runServer(int timeout,  ServerConfig config) {
+void	Server::runServer(int timeout,  ServerConfig &config) {
 	_fds[0].fd = _listenSocket;
 	_fds[0].events = POLLIN;
 	this->setTimeout(timeout);
