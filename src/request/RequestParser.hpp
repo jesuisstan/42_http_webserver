@@ -73,25 +73,26 @@ public:
             RequestParser &operator=(const RequestParser &other);
             ~RequestParser() {}
 
-            const std::string &getRequest()             const;
-            const std::string &getMethod()              const;
-            const std::string &getRoute()               const;
-            const std::string &getProtocol()            const;
-            const std::string &getHost()                const;
-            const std::string &getUserAgent()           const;
-            const std::string &getAccept()              const;
-            const std::string &getAcceptLanguage()      const;
-            const std::string &getAcceptEncoding()      const;
-            const std::string &getConnection()          const;
-            const std::string &getSecFetchDest()        const;
-            const std::string &getSecFetchMode()        const;
-            const std::string &getSecFetchSite()        const;
-            const std::string &getSecFetchUser()        const;
-            const std::string &getCacheControl()        const;
-            const std::string &getBody()                const;
-            const std::string &getHeaders()             const;
-            const size_t      &getContentLength()       const;
-            const std::vector<std::string> &getPath()   const;
+            const std::string &getRequest()                         const;
+            const std::string &getMethod()                          const;
+            const std::string &getRoute()                           const;
+            const std::string &getProtocol()                        const;
+            const std::string &getHost()                            const;
+            const std::string &getUserAgent()                       const;
+            const std::string &getAccept()                          const;
+            const std::string &getAcceptLanguage()                  const;
+            const std::string &getAcceptEncoding()                  const;
+            const std::string &getConnection()                      const;
+            const std::string &getSecFetchDest()                    const;
+            const std::string &getSecFetchMode()                    const;
+            const std::string &getSecFetchSite()                    const;
+            const std::string &getSecFetchUser()                    const;
+            const std::string &getCacheControl()                    const;
+            const std::string &getBody()                            const;
+            const std::string &getHeaders()                         const;
+            const size_t      &getContentLength()                   const;
+            const std::vector<std::string> &getPath()               const;
+            const std::vector<std::string> &getSupportedMethods()   const;
 
             bool        isSupportedMethod();
 

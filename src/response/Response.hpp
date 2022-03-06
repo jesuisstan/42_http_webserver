@@ -37,11 +37,18 @@ class Response {
             std::vector<std::string>        requestPath_;
             std::map<int, std::string>      responseCodes_;
             std::map<std::string, Location> locations_;
+            std::set<std::string>           locationMethods_;
+            std::vector<std::string>        supportedMethods_;
+            std::vector<std::string>        locationIndex_;
+            std::string                     locationRoot_;
 
             void                            setResponse();
             void                            setResponseCodes();
             void                            setResponseHeaders();
             void                            setContentType();
+            void                            setLocationMethods(const std::set<std::string>& locationMethods);
+            void                            setLocationIndex(const std::set<std::string>& locationIndex);
+            void                            setLocationRoot(const std::string& locationRoot);
             void                            setResponseCode(int code);
             void                            setContentLength(size_t len);
             void                            setResponseBody(const std::string& body);
@@ -50,6 +57,7 @@ class Response {
             void                            DirectoryRoot();
 
             void                            createResponse();
+            void                            readLocationData();
             std::string                     getScreen() const;
 
             Response(): responseCode_(0), contentLength_(0) {};

@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 	// std::map<int, std::vector<ServerConfig> >::iterator it;
 
 	std::vector<ServerConfig> servers = config.getServers();
-	for (size_t i = 1; i < servers.size(); i++)
+	for (size_t i = 0; i < servers.size(); i++)
 	{
 		std::cout << "Run server[" << i << "]\n" << servers[i];
 		webserv.initiate(servers[i].getHost().c_str(), servers[i].getPort()); // когда будет Config, метод сменится на .initiate(void)

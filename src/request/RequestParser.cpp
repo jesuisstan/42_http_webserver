@@ -128,6 +128,10 @@ const std::vector<std::string> &RequestParser::getPath()   const {
     return this->path_;
 }
 
+const std::vector<std::string> &RequestParser::getSupportedMethods()   const {
+    return this->supportedMethods_;
+}
+
 /**************************/
 /******** SETTERS *********/
 /**************************/
@@ -247,14 +251,7 @@ void        RequestParser::setHeaders() {
 
 void        RequestParser::setContentLength() {
     std::string contentLengthStr = parseByHeaderName("Content-Length:");
-    try {
-        if (contentLengthStr.length())
-            contentLength_ = std::stol(contentLengthStr); // это что-то из 11 стандарта, c флагами не скомпилится
-        else
-            contentLength_ = 0;
-    } catch (std::exception &exception) {
-        std::cout << exception.what() << std::endl;
-    }
+    contentLength_ = atoi(contentLengthStr.c_str()); // это что-то из 11 стандарта, c флагами не скомпилится
 //    std::cout << "__CONTENT_LENGTH_____|" << contentLength_ << "|" << std::endl;
 }
 

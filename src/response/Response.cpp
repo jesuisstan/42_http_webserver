@@ -15,9 +15,11 @@
 Response::Response(RequestParser &request, ServerConfig &config):
                                             requestRoute_(request.getRoute()),
                                             requestMethod_(request.getMethod()),
-                                            responseCode_(0), contentLength_(0),
+                                            responseCode_(0),
+                                            contentLength_(0),
                                             requestPath_(request.getPath()),
-                                            locations_(config.getLocations()){
+                                            locations_(config.getLocations()),
+                                            supportedMethods_(request.getSupportedMethods()) {
     setResponseCodes();
     createResponse();
 }
@@ -28,18 +30,22 @@ Response::Response(const Response &other) {
 
 Response &Response::operator=(const Response &other) {
     if (this != &other) {
-        request_ = other.request_;
-        requestRoute_ = other.requestRoute_;
-        requestMethod_ = other.requestMethod_;
-        response_ = other.response_;
-        responseCode_ = other.responseCode_;
-        responseBody_ = other.responseBody_;
-        responseHeaders_ = other.responseHeaders_;
-        responseContentType_ = other.responseContentType_;
-        responseCodes_ = other.responseCodes_;
-        contentLength_ = other.contentLength_;
-        locations_ = other.locations_;
-        requestPath_ = other.requestPath_;
+        request_                = other.request_;
+        requestRoute_           = other.requestRoute_;
+        requestMethod_          = other.requestMethod_;
+        response_               = other.response_;
+        responseCode_           = other.responseCode_;
+        responseBody_           = other.responseBody_;
+        responseHeaders_        = other.responseHeaders_;
+        responseContentType_    = other.responseContentType_;
+        responseCodes_          = other.responseCodes_;
+        contentLength_          = other.contentLength_;
+        locations_              = other.locations_;
+        requestPath_            = other.requestPath_;
+        supportedMethods_       = other.supportedMethods_;
+        locationMethods_        = other.locationMethods_;
+        locationIndex_          = other.locationIndex_;
+        locationRoot_           = other.locationRoot_;
     }
     return *this;
 }
@@ -81,13 +87,23 @@ void Response::setResponseCode(int code) {
 }
 
 void Response::setContentType() {
-//    if (requestRoute_ == "/style.css")
+    size_t routeCount = requestPath_.size() - 1;
+    size_t dotPos =  requestPath_[routeCount].find('.');
+    if (dotPos != std::string::npos) {
+        std::string extension = requestPath_[routeCount].substr(dotPos + 1);
+        if (extension == "css")
+            responseContentType_ = "text/css\n";
+        else if (extension == "js")
+            responseContentType_ = "application/javascript\n";
+        else
+            responseContentType_ = "text/html\n";
+    }
 }
 
 void Response::setResponseHeaders() {
     responseHeaders_ = "HTTP/1.1 ";
     responseHeaders_ += responseCodes_.find(responseCode_)->second;
-    responseHeaders_ += requestRoute_ == "/style.css" ? "Content-Type: text/css " : "Content-Type: text/html ";
+    responseHeaders_ += "Content-Type: " + responseContentType_;
     responseHeaders_ += "charset UTF-8\nContent-Length: ";
     responseHeaders_ += std::to_string(contentLength_);
 }
@@ -100,11 +116,32 @@ void Response::setContentLength(size_t len) {
     contentLength_ = len;
 }
 
+void Response::setLocationMethods(const std::set<std::string>& locationMethods) {
+    for(size_t j = 0; j < supportedMethods_.size(); j++) {
+        if (locationMethods.count(supportedMethods_[j]))
+            locationMethods_.insert(supportedMethods_[j]);
+    }
+}
+
+void Response::setLocationIndex(const std::set<std::string>& locationIndex) {
+    std::set<std::string>::iterator it;
+    for (it=locationIndex.begin(); it!=locationIndex.end(); it++) {
+        locationIndex_.push_back(it->data());
+    }
+}
+
+void Response::setLocationRoot(const std::string& locationRoot) {
+    locationRoot_ = locationRoot;
+}
+
 void Response::setResponseCodes() {
     responseCodes_.insert(std::pair<int, std::string>(200, "200 OK\n"));
     responseCodes_.insert(std::pair<int, std::string>(400, "400 Bad Request\n"));
     responseCodes_.insert(std::pair<int, std::string>(404, "404 Not Found\n"));
     responseCodes_.insert(std::pair<int, std::string>(405, "405 Method Not Allowed\n"));
+    responseCodes_.insert(std::pair<int, std::string>(500, "500 Internal Server Error\n"));
+    responseCodes_.insert(std::pair<int, std::string>(502, "502 Bad Gateway\n"));
+    responseCodes_.insert(std::pair<int, std::string>(503, "503 Service Unavailable\n"));
 }
 
 /**************************/
@@ -114,14 +151,12 @@ void Response::setResponseCodes() {
 
 void Response::createResponse() {
     std::string body;
-    std::map<std::string, Location>::iterator i;
 
-    for (i=locations_.begin(); i!=locations_.end(); i++) {
-//        std::cout << i->second << i->first << std::endl;
-        if (requestPath_[0] == i->first)
-            std::cout << BgMAGENTA << requestPath_[0] << RESET << std::endl;
-    }
-    if (requestRoute_ == "/")
+    setContentType();
+    readLocationData();
+    if (!locationMethods_.count(requestMethod_))
+        setResponseCode(405);
+    else if (requestRoute_ == "/")
         homeRoot();
     else if (requestRoute_ == "/style.css")
         setResponseCode(200);
@@ -134,6 +169,21 @@ void Response::createResponse() {
     setResponseHeaders();
     setResponseBody(body);
     setResponse();
+}
+
+void Response::readLocationData() {
+    std::map<std::string, Location>::iterator i;
+    for (i=locations_.begin(); i!=locations_.end(); i++) {
+        std::cout << i->second << i->first << std::endl;
+        if (requestPath_[0] == i->first.substr(1)) {
+            std::string locationRoot = i->second.getRoot();
+            std::set<std::string> locationMethods = i->second.getMethods();
+            std::set<std::string> locationIndex = i->second.getIndex();
+            setLocationRoot(i->second.getRoot());
+            setLocationMethods(i->second.getMethods());
+            setLocationIndex(i->second.getIndex());
+        }
+    }
 }
 
 std::string Response::readContent(const std::string&   filename) {
