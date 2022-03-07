@@ -31,14 +31,14 @@ a:hover {
     background: linear-gradient(90deg, rgba(60, 145, 159, 0.56) 0%, rgb(2, 102, 151) 54%, rgb(0, 0, 60) 100%);
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
     box-shadow: 15px 15px 50px 0 rgba(87, 144, 153, 0.8);
 }
 
 .title {
     font-family: 'Open Sans', cursive;
     font-size: 25px;
-    padding-right: 30vw;
+    padding-left: 20px;
     font-weight: bold;
     color: #FFF;
     text-shadow: 1px 1px rgba(110, 10, 105, 0.6);
@@ -57,7 +57,7 @@ a:hover {
 
 .signBtn:hover {
     cursor: pointer;
-    color: #00ffea;
+    color: #9ab2ff;
     text-shadow: 1px 1px rgba(0, 0, 0, 0.6);
 }
 
@@ -91,4 +91,14 @@ a:hover {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+}
+
+@media (max-width: 800px) {
+    .container {
+        width: 500px;
+    }
+
+    h1 {
+        font-size: 26px;
+    }
 }

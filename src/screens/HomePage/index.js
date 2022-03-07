@@ -1,5 +1,8 @@
-const signInBtn = document.document.getElementById("signInBtn")
+const signInBtn = document.getElementById("signInBtn")
+const signUpBtn = document.getElementById("signUpBtn")
 signInBtn.onclick = function() {
-    console.log("asd")
-    alert("qew")
+    alert("Sign In")
+}
+signUpBtn.onclick = function() {
+    alert("Sign Up")
 }

@@ -41,6 +41,8 @@ class Response {
             std::vector<std::string>        supportedMethods_;
             std::vector<std::string>        locationIndex_;
             std::string                     locationRoot_;
+            std::string                     requestedFile_;
+            std::map<int, std::string>		errorPages_;
 
             void                            setResponse();
             void                            setResponseCodes();
@@ -53,12 +55,11 @@ class Response {
             void                            setContentLength(size_t len);
             void                            setResponseBody(const std::string& body);
 
-            void                            homeRoot();
-            void                            DirectoryRoot();
-
             void                            createResponse();
             void                            readLocationData();
-            std::string                     getScreen() const;
+            void                            trimRequestPath();
+            std::string                     findMaxPossibleLocation(const std::string& location);
+            std::string                     getScreen();
 
             Response(): responseCode_(0), contentLength_(0) {};
     public:
@@ -75,9 +76,6 @@ class Response {
             ~Response() {}
 
             static std::string readContent(const std::string &filename);
-
-
-
 };
 
 #endif //HTTP_WEBSERVER_RESPONSE_HPP

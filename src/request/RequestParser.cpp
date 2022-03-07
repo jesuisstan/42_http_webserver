@@ -152,11 +152,11 @@ void RequestParser::setRoute() {
         setPath();
     }
     else {
-        route_ = "/";
-        path_.push_back("/");
+        route_ = "";
+        path_.push_back("");
     }
         for (size_t i = 0; i < path_.size(); i++)
-            std::cout << CYAN << "|" << path_[i] << "|" << RESET << std::endl;
+            std::cout << BgCYAN << "|" << path_[i] << "|" << RESET << std::endl;
 }
 
 void RequestParser::setPath() {
