@@ -47,6 +47,8 @@
 # define DEFAULT_PORT		8080
 # define DEFAULT_ERROR_PAGE	"errors/404.html"
 # define DEFAULT_INDEX		"index.html"
+# define DEFAULT_MAX_BODY	1024 * 1024
+
 
 
 template <typename T>
