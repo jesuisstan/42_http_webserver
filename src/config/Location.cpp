@@ -1,6 +1,10 @@
 #include "Location.hpp"
 
-Location::Location(std::istream &ifs): root(""), cgi(""), autoindex(false)
+Location::Location(std::istream &ifs):
+					alias(""),
+					cgi(""),
+					clientMaxBodySize(-1),
+					autoindex(false)
 {
 	std::string cmnd;
 
@@ -14,12 +18,14 @@ Location::Location(std::istream &ifs): root(""), cgi(""), autoindex(false)
 			setIndex(ifs);
 		else if (cmnd == "redirection")
 			setRedirection(ifs);
-		else if (cmnd == "root")
-			setRoot(ifs);
+		else if (cmnd == "alias")
+			setAlias(ifs);
 		else if (cmnd == "cgi")
 			setCgi(ifs);
 		else if (cmnd == "autoindex")
 			setAutoindex(ifs);
+		else if (cmnd == "client_max_body_size")
+			setClientMaxBodySize(ifs);
 		else
 			baseError("unrecognized keyWord in config: " + cmnd);
 	}
@@ -108,10 +114,10 @@ void	Location::setRedirection(std::istream &ifs) {
 	// std::cout << "parced redirection " << redirection << std::endl;
 }
 
-void	Location::setRoot(std::istream &ifs) {
-	if (!(ifs >> root))
-		baseError("Failed parsing root");
-	root = cutSemicolon(root);
+void	Location::setAlias(std::istream &ifs) {
+	if (!(ifs >> alias))
+		baseError("Failed parsing alias");
+	alias = cutSemicolon(alias);
 	// std::cout << "parced root " << root << std::endl;
 }
 
@@ -134,28 +140,31 @@ void	Location::setAutoindex(std::istream &ifs) {
 	autoindex = (line == "on");
 }
 
+void	Location::setClientMaxBodySize(std::istream &ifs)
+{
+	if (!(ifs >> _cmnd))
+		baseError("Failed parsing port");
+	_cmnd = cutSemicolon(_cmnd);
+	if (!isPositiveDigit(_cmnd))
+		baseError("Invalid bax body size: " + _cmnd);
+	clientMaxBodySize = stringToNumber(_cmnd);
+	// std::cout << "parced port " << port << std::endl;
+}
 
-// Location::Location(
-// 	const std::set<std::string> &methods,
-// 	const std::vector<std::string> &index,
-// 	const std::string &root,
-// 	const std::string &cgi,
-// 	bool	autoindex ): 
-// 		methods(methods), index(index), root(root), cgi(cgi), autoindex(autoindex)
-// {
-// }
 
 const std::set<std::string> &Location::getMethods() const { return methods; }
 
 const std::set<std::string> &Location::getIndex() const { return index; }
 
-const std::string &Location::getRoot() const { return root; }
+const std::string &Location::getAlias() const { return alias; }
 
 const std::string &Location::getRedirection() const { return redirection; }
 
 const std::string &Location::getCgi() const { return cgi; }
 
-bool Location::getAutoindex() const { return autoindex; }
+const int &Location::getClientMaxBodySize() const { return clientMaxBodySize; }
+
+const bool &Location::getAutoindex() const { return autoindex; }
 
 
 std::ostream& operator<< (std::ostream &out, const Location &loca)
@@ -166,8 +175,9 @@ std::ostream& operator<< (std::ostream &out, const Location &loca)
 	out << "\n\t\tindex: ";
 	std::set<std::string> index = loca.getIndex();
 	std::copy(index.begin(), index.end(), std::ostream_iterator<std::string>(out, ", "));
-	out	<< "\n\t\troot: " << loca.getRoot() 
+	out	<< "\n\t\talias: " << loca.getAlias() 
 		<< "\n\t\tcgi: " << loca.getCgi()
+		<< "\n\t\tmax_body: " << loca.getClientMaxBodySize()
 		<< "\n\t\tautoindex: " << loca.getAutoindex()
 		<< std::endl;
  

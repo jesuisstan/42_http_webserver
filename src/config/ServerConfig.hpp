@@ -12,7 +12,7 @@ private:
 	std::string						host;
 	std::string						serverName;
 	int								port;
-	size_t							clientMaxBodySize;
+	int								clientMaxBodySize;
 	std::map<int, std::string>		errorPages;
 	std::map<std::string, Location>	locations;
 
@@ -31,7 +31,7 @@ public:
 	const std::string						&getServerName() const;
 	// const std::string &getPortHost() const;
 	const int								&getPort() const;
-	const size_t							&getClientMaxBodySize() const;
+	const int								&getClientMaxBodySize() const;
 	const std::map<int, std::string>		&getErrorPages() const;
 	const std::map<std::string, Location>	&getLocations() const;
 
