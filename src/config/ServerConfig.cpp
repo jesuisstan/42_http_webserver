@@ -2,7 +2,7 @@
 
 ServerConfig::ServerConfig(std::ifstream &ifs):
 		port(DEFAULT_PORT),
-		clientMaxBodySize(1024*1024)
+		clientMaxBodySize(DEFAULT_MAX_BODY)
 {
 	std::string cmnd;
 
@@ -24,15 +24,11 @@ ServerConfig::ServerConfig(std::ifstream &ifs):
 			setClientMaxBodySize(ifs);
 		else if (cmnd == "}")
 		{
-			if (!host.empty() and locations.size() > 0)
-			{
-				// std::cout << "got server" << host << ":" << port << std::endl;
-				if (!errorPages.size())
-					errorPages[404] = DEFAULT_ERROR_PAGE;
-				return;
-			}
-			else
+			if (host.empty() or not locations.size())
 				baseError("Not configure hostName or location");
+			if (!errorPages.size())
+				errorPages[404] = DEFAULT_ERROR_PAGE;
+			return ;
 		}
 		else
 			baseError("unrecognized keyWord in config: " + cmnd);
@@ -153,7 +149,7 @@ const std::string &ServerConfig::getServerName() const { return serverName; }
 
 const int &ServerConfig::getPort() const { return port; }
 
-const size_t &ServerConfig::getClientMaxBodySize() const { return clientMaxBodySize; }
+const int &ServerConfig::getClientMaxBodySize() const { return clientMaxBodySize; }
 
 const std::map<int, std::string> &ServerConfig::getErrorPages() const { return errorPages; }
 

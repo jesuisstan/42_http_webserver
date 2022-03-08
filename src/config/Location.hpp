@@ -8,10 +8,11 @@ class Location
 private:
 	std::set<std::string>		methods;
 	std::set<std::string>		index;
-	std::string					root;
+	std::string					alias;
 	std::string					cgi;
 	std::string					redirection;
 	std::string					_cmnd;
+	int							clientMaxBodySize;
 	bool						autoindex;
 public:
 
@@ -27,15 +28,17 @@ public:
 	const std::set<std::string>		&getMethods() const;
 	const std::set<std::string>		&getIndex() const;
 	const std::string				&getRedirection() const;
-	const std::string				&getRoot() const;
+	const std::string				&getAlias() const;
 	const std::string				&getCgi() const;
-	bool							getAutoindex() const;
+	const int						&getClientMaxBodySize() const;
+	const bool						&getAutoindex() const;
 
 	void							setMethods(std::istream &ifs);
 	void							setIndex(std::istream &ifs);
 	void							setRedirection(std::istream &ifs);
-	void							setRoot(std::istream &ifs);
+	void							setAlias(std::istream &ifs);
 	void							setCgi(std::istream &ifs);
+	void							setClientMaxBodySize(std::istream &ifs);
 	void							setAutoindex(std::istream &ifs);
 };
 
