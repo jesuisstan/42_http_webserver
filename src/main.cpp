@@ -25,11 +25,11 @@ int main(int argc, char *argv[]) {
 	// std::map<int, std::vector<ServerConfig> >::iterator it;
 
 	std::vector<ServerConfig> servers = config.getServers();
-	for (size_t i = 1; i < servers.size(); i++)
+	for (size_t i = 0; i < servers.size(); i++)
 	{
 		std::cout << "Run server[" << i << "]\n" << servers[i];
 		webserv.initiate(servers[i].getHost().c_str(), servers[i].getPort()); // когда будет Config, метод сменится на .initiate(void)
-		webserv.runServer(-1);
+		webserv.runServer(-1, servers[i]);
 	}
 	// for (it=servers.begin(); it!=servers.end(); it++) // итерируется по портам
 	// 	for (size_t i = 0; i < it->second.size(); i++) // итерируется по серверам на этом порте

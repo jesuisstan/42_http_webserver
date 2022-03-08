@@ -51,77 +51,85 @@ RequestParser &RequestParser::operator=(const RequestParser &other) {
 /******** GETTERS *********/
 /**************************/
 
-std::string RequestParser::getRequest() const {
+const std::string &RequestParser::getRequest() const {
     return this->request_;
 }
 
-std::string RequestParser::getMethod() const {
+const std::string &RequestParser::getMethod() const {
     return this->method_;
 }
 
-std::string RequestParser::getRoute() const {
+const std::string &RequestParser::getRoute() const {
     return this->route_;
 }
 
-std::string RequestParser::getProtocol() const {
+const std::string &RequestParser::getProtocol() const {
     return this->protocol_;
 }
 
 
-std::string RequestParser::getHost() const {
+const std::string &RequestParser::getHost() const {
     return this->host_;
 }
 
-std::string RequestParser::getUserAgent() const {
+const std::string &RequestParser::getUserAgent() const {
     return this->userAgent_;
 }
 
-std::string RequestParser::getAccept() const {
+const std::string &RequestParser::getAccept() const {
     return this->accept_;
 }
 
-std::string RequestParser::getAcceptLanguage() const {
+const std::string &RequestParser::getAcceptLanguage() const {
     return this->acceptLanguage_;
 }
 
-std::string RequestParser::getAcceptEncoding() const {
+const std::string &RequestParser::getAcceptEncoding() const {
     return this->acceptEncoding_;
 }
 
-std::string RequestParser::getConnection() const {
+const std::string &RequestParser::getConnection() const {
     return this->connection_;
 }
 
-std::string RequestParser::getSecFetchDest() const {
+const std::string &RequestParser::getSecFetchDest() const {
     return this->secFetchDest_;
 }
 
-std::string RequestParser::getSecFetchMode() const {
+const std::string &RequestParser::getSecFetchMode() const {
     return this->secFetchMode_;
 }
 
-std::string RequestParser::getSecFetchSite() const {
+const std::string &RequestParser::getSecFetchSite() const {
     return this->secFetchSite_;
 }
 
-std::string RequestParser::getSecFetchUser() const {
+const std::string &RequestParser::getSecFetchUser() const {
     return this->secFetchUser_;
 }
 
-std::string RequestParser::getCacheControl() const {
+const std::string &RequestParser::getCacheControl() const {
     return this->cacheControl_;
 }
 
-std::string RequestParser::getBody() const {
+const std::string &RequestParser::getBody() const {
     return this->body_;
 }
 
-std::string RequestParser::getHeaders() const {
+const std::string &RequestParser::getHeaders() const {
     return this->headers_;
 }
 
-size_t RequestParser::getContentLength() const {
+const size_t &RequestParser::getContentLength() const {
     return this->contentLength_;
+}
+
+const std::vector<std::string> &RequestParser::getPath()   const {
+    return this->path_;
+}
+
+const std::vector<std::string> &RequestParser::getSupportedMethods()   const {
+    return this->supportedMethods_;
 }
 
 /**************************/
@@ -139,10 +147,26 @@ void RequestParser::setRoute() {
     fistReqStr = fistReqStr.substr(0, request_.find_first_of('\n') - 1);
     size_t routeStart = fistReqStr.find_first_of(' ') + 1;
     size_t routeEnd = fistReqStr.find_last_of(' ') - 1;
-    if (routeStart != routeEnd)
+    if (routeStart != routeEnd) {
         route_ = EraseSpaces(fistReqStr.substr(routeStart, routeEnd));
-    else
-        route_ = "/";
+        setPath();
+    }
+    else {
+        route_ = "";
+        path_.push_back("");
+    }
+        for (size_t i = 0; i < path_.size(); i++)
+            std::cout << BgCYAN << "|" << path_[i] << "|" << RESET << std::endl;
+}
+
+void RequestParser::setPath() {
+    std::string route = route_.substr(1);
+    size_t slash = 0;
+    while (slash != std::string::npos) {
+        slash = route.find('/');
+        path_.push_back(route.substr(0, slash));
+        route = route.substr(slash + 1);
+    }
 }
 
 void RequestParser::setProtocol() {
@@ -227,14 +251,7 @@ void        RequestParser::setHeaders() {
 
 void        RequestParser::setContentLength() {
     std::string contentLengthStr = parseByHeaderName("Content-Length:");
-    try {
-        if (contentLengthStr.length())
-            contentLength_ = std::stol(contentLengthStr); // это что-то из 11 стандарта, c флагами не скомпилится
-        else
-            contentLength_ = 0;
-    } catch (std::exception &exception) {
-        std::cout << exception.what() << std::endl;
-    }
+    contentLength_ = atoi(contentLengthStr.c_str()); // это что-то из 11 стандарта, c флагами не скомпилится
 //    std::cout << "__CONTENT_LENGTH_____|" << contentLength_ << "|" << std::endl;
 }
 

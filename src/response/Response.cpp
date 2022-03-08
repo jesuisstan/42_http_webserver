@@ -12,9 +12,15 @@
 
 #include "Response.hpp"
 
-Response::Response(RequestParser &request): requestRoute_(request.getRoute()),
-                                            requestMethod_(request.getMethod()),
-                                            responseCode_(0), contentLength_(0) {
+Response::Response(RequestParser &request, ServerConfig &config) :
+        requestRoute_(request.getRoute()),
+        requestMethod_(request.getMethod()),
+        responseCode_(0),
+        contentLength_(0),
+        requestPath_(request.getPath()),
+        locations_(config.getLocations()),
+        supportedMethods_(request.getSupportedMethods()),
+        errorPages_(config.getErrorPages()) {
     setResponseCodes();
     createResponse();
 }
@@ -32,8 +38,17 @@ Response &Response::operator=(const Response &other) {
         responseCode_ = other.responseCode_;
         responseBody_ = other.responseBody_;
         responseHeaders_ = other.responseHeaders_;
+        responseContentType_ = other.responseContentType_;
         responseCodes_ = other.responseCodes_;
         contentLength_ = other.contentLength_;
+        locations_ = other.locations_;
+        requestPath_ = other.requestPath_;
+        supportedMethods_ = other.supportedMethods_;
+        locationMethods_ = other.locationMethods_;
+        locationIndex_ = other.locationIndex_;
+        locationRoot_ = other.locationRoot_;
+        requestedFile_ = other.requestedFile_;
+        errorPages_ = other.errorPages_;
     }
     return *this;
 }
@@ -42,23 +57,23 @@ Response &Response::operator=(const Response &other) {
 /******** GETTERS *********/
 /**************************/
 
-std::string Response::getResponse() const {
+const std::string &Response::getResponse() const {
     return this->response_;
 }
 
-int Response::getResponseCode() const {
+const int &Response::getResponseCode() const {
     return this->responseCode_;
 }
 
-size_t Response::getContentLength() const {
+const size_t &Response::getContentLength() const {
     return this->contentLength_;
 }
 
-std::string Response::getResponseBody() const {
+const std::string &Response::getResponseBody() const {
     return this->responseBody_;
 }
 
-std::string Response::getResponseHeaders() const {
+const std::string &Response::getResponseHeaders() const {
     return this->responseHeaders_;
 }
 
@@ -74,14 +89,33 @@ void Response::setResponseCode(int code) {
     responseCode_ = code;
 }
 
+void Response::setContentType() {
+    size_t routeEnd = requestPath_.size() - 1;
+    size_t dotPos = requestPath_[routeEnd].find('.');
+    if (dotPos != std::string::npos) {
+        std::string extension = requestPath_[routeEnd].substr(dotPos + 1);
+        if (extension == "css") {
+            requestedFile_ = requestPath_[routeEnd];
+            responseContentType_ = "text/css\n";
+            trimRequestPath();
+        } else if (extension == "js") {
+            requestedFile_ = requestPath_[routeEnd];
+            responseContentType_ = "application/javascript\n";
+            trimRequestPath();
+        }
+    } else
+        responseContentType_ = "text/html\n";
+}
+
 void Response::setResponseHeaders() {
     responseHeaders_ = "HTTP/1.1 ";
     responseHeaders_ += responseCodes_.find(responseCode_)->second;
-    responseHeaders_ += "Content-Type: text/html; charset UTF-8\nContent-Length: ";
+    responseHeaders_ += "Content-Type: " + responseContentType_;
+    responseHeaders_ += "charset UTF-8\nContent-Length: ";
     responseHeaders_ += std::to_string(contentLength_);
 }
 
-void Response::setResponseBody(const std::string& body) {
+void Response::setResponseBody(const std::string &body) {
     responseBody_ = body;
 }
 
@@ -89,11 +123,33 @@ void Response::setContentLength(size_t len) {
     contentLength_ = len;
 }
 
+void Response::setLocationMethods(const std::set<std::string> &locationMethods) {
+    for (size_t j = 0; j < supportedMethods_.size(); j++) {
+        if (locationMethods.count(supportedMethods_[j])) {
+            locationMethods_.insert(supportedMethods_[j]);
+        }
+    }
+}
+
+void Response::setLocationIndex(const std::set<std::string> &locationIndex) {
+    std::set<std::string>::iterator it;
+    for (it = locationIndex.begin(); it != locationIndex.end(); it++) {
+        locationIndex_.push_back(it->data());
+    }
+}
+
+void Response::setLocationRoot(const std::string &locationRoot) {
+    locationRoot_ = locationRoot;
+}
+
 void Response::setResponseCodes() {
     responseCodes_.insert(std::pair<int, std::string>(200, "200 OK\n"));
     responseCodes_.insert(std::pair<int, std::string>(400, "400 Bad Request\n"));
     responseCodes_.insert(std::pair<int, std::string>(404, "404 Not Found\n"));
     responseCodes_.insert(std::pair<int, std::string>(405, "405 Method Not Allowed\n"));
+    responseCodes_.insert(std::pair<int, std::string>(500, "500 Internal Server Error\n"));
+    responseCodes_.insert(std::pair<int, std::string>(502, "502 Bad Gateway\n"));
+    responseCodes_.insert(std::pair<int, std::string>(503, "503 Service Unavailable\n"));
 }
 
 /**************************/
@@ -104,66 +160,127 @@ void Response::setResponseCodes() {
 void Response::createResponse() {
     std::string body;
 
-    if (requestRoute_ == "/")
-        homeRoot();
-    else if (requestRoute_.find("/directory") == 0)
-        DirectoryRoot();
-    else
-        setResponseCode(404);
-    body = readContent(getScreen());
-    setContentLength(body.size());
-    setResponseHeaders();
-    setResponseBody(body);
+    setContentType();
+    readLocationData();
+    if (!locationMethods_.count(requestMethod_) && !requestedFile_.length()) {
+        setResponseCode(405);
+    } else {
+        if (checkPathForLocation() == -1)
+            setResponseCode(404);
+        else
+            setResponseCode(200);
+    }
+
+    if (responseBody_.empty()) {
+        body = readContent(getScreen());
+        if (responseBody_.empty()) {
+            setContentLength(body.size());
+            setResponseHeaders();
+            setResponseBody(body);
+        } else {
+            setContentLength(responseBody_.size());
+            setResponseHeaders();
+        }
+    } else {
+        setContentLength(responseBody_.size());
+        setResponseHeaders();
+    }
+
     setResponse();
 }
 
-std::string Response::readContent(const std::string&   filename) {
-    std::string     buf;
-    std::string     content;
-    std::ifstream   inFile(filename);
+std::string Response::findMaxPossibleLocation(const std::string &location) {
+    std::string route = requestRoute_;
 
-    while(getline(inFile, buf))
+    for (size_t i = route.size(); i > 0; i--) {
+        if (route == location)
+            return route;
+        route = route.substr(0, i);
+    }
+    return "";
+}
+
+void Response::readLocationData() {
+    std::map<std::string, Location>::iterator iterator;
+    std::string maxPossibleLocation;
+
+    for (iterator = locations_.begin(); iterator != locations_.end(); iterator++) {
+        if (!findMaxPossibleLocation(iterator->first).empty())
+            maxPossibleLocation = findMaxPossibleLocation(iterator->first);
+    }
+    if (maxPossibleLocation.empty())
+        maxPossibleLocation = "/";
+    for (iterator = locations_.begin(); iterator != locations_.end(); iterator++) {
+        if (iterator->first == maxPossibleLocation) {
+            setLocationRoot(iterator->second.getAlias());
+            setLocationMethods(iterator->second.getMethods());
+            setLocationIndex(iterator->second.getIndex());
+        }
+    }
+    if (maxPossibleLocation != "/")
+        requestRoute_ = requestRoute_.substr(maxPossibleLocation.length());
+}
+
+
+int Response::checkPathForLocation() {
+    std::string stringFilename = locationRoot_ + requestRoute_;
+    char *filename = const_cast<char *>(stringFilename.c_str());
+    int openRes = open(filename, O_RDONLY);
+    if (openRes == -1)
+        return -1;
+    close(openRes);
+    std::string content = readContent(filename);
+    if (!content.empty()) {
+        setResponseBody(content);
+        return 1;
+    } else {
+        std::string index = readContent(stringFilename + "/" + locationIndex_[0]);
+        if (!index.empty()) {
+            setResponseBody(index);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+std::string Response::readContent(const std::string &filename) {
+    std::string buf;
+    std::string content;
+    std::ifstream inFile(filename);
+
+    while (getline(inFile, buf))
         content += buf + "\n";
     inFile.close();
     return content;
 }
 
-void Response::homeRoot() {
-    if (requestMethod_ == "GET")
-        setResponseCode(200);
-    else
-        setResponseCode(405);
-}
+std::string Response::getScreen() {
+    std::string filename = locationRoot_;
 
-void Response::DirectoryRoot() {
-    if (requestMethod_ == "GET") {
-        if (requestRoute_ == "/directory") {
-            setResponseCode(200);
-        } else if (requestRoute_.find("/directory/youpi.bad_extension") == 0) {
-            setResponseCode(200);
-        } else if (requestRoute_.find("/directory/youpi.bla") == 0) {
-            setResponseCode(200);
-        } else if (requestRoute_.find("/directory/nop") == 0) {
-            if (requestRoute_ == "/directory/nop/" || requestRoute_ == "/directory/nop" || requestRoute_ == "/directory/nop/other.pouic" || requestRoute_ == "/directory/nop/youpi.bad_extension")
-                setResponseCode(200);
-            else
-                setResponseCode(404);
-        } else if (requestRoute_.find("/directory/Yeah") == 0) {
-            setResponseCode(200);
-        } else {
-            setResponseCode(404);
-        }
+    if (responseCode_ == 200 && !requestedFile_.length())
+        filename += "/index.html";
+    else if (responseCode_ == 200 && requestedFile_ == "style.css")
+        filename += "/style.css";
+    else if (responseCode_ == 200 && requestedFile_ == "index.js")
+        filename += "/index.js";
+    else if (errorPages_.find(responseCode_) != errorPages_.end())
+        filename = "./errors/" + errorPages_[responseCode_];
+    else if (responseCode_ != 200) {
+        std::string errorDescription = responseCodes_.find(responseCode_)->second;
+        setResponseBody(errorDescription);
+        return errorDescription;
     }
-    else
-        setResponseCode(405);
+    return filename;
 }
 
-std::string Response::getScreen() const {
-    std::string filename = "./src/screens/";
-    if (responseCode_ == 200)
-        filename += "index";
-    else
-        filename += std::to_string(responseCode_);
-    filename += ".html";
-    return filename;
+void Response::trimRequestPath() {
+    std::vector<std::string> newRequestPath;
+    size_t routeEnd = requestPath_.size() - 1;
+    if (routeEnd == 0) {
+        newRequestPath.push_back("");
+    }
+    for (size_t i = 0; i < routeEnd; i++) {
+        newRequestPath.push_back(requestPath_[i]);
+    }
+    requestPath_ = newRequestPath;
 }
