@@ -58,6 +58,7 @@ class Response {
             void                            createResponse();
             void                            readLocationData();
             void                            trimRequestPath();
+            int                             checkPathForLocation();
             std::string                     findMaxPossibleLocation(const std::string& location);
             std::string                     getScreen();
 
@@ -76,6 +77,7 @@ class Response {
             ~Response() {}
 
             static std::string readContent(const std::string &filename);
+
 };
 
 #endif //HTTP_WEBSERVER_RESPONSE_HPP

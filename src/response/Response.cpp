@@ -108,7 +108,6 @@ void Response::setContentType() {
 }
 
 void Response::setResponseHeaders() {
-//    std::cout << BgYELLOW << responseCode_ << RESET << std::endl;
     responseHeaders_ = "HTTP/1.1 ";
     responseHeaders_ += responseCodes_.find(responseCode_)->second;
     responseHeaders_ += "Content-Type: " + responseContentType_;
@@ -163,22 +162,34 @@ void Response::createResponse() {
 
     setContentType();
     readLocationData();
-//    std::cout << BgBLUE << errorPages_[404] << RESET << std::endl;
-    bool locationSupportedMethod = locationMethods_.count(requestMethod_);
-    if (locationMethods_.empty() && !requestedFile_.length())
-        setResponseCode(404);
-    else if (!locationSupportedMethod && !requestedFile_.length())
+    if (!locationMethods_.count(requestMethod_) && !requestedFile_.length()) {
         setResponseCode(405);
-    else
-        setResponseCode(200);
-    body = readContent(getScreen());
-    setContentLength(body.size());
-    setResponseHeaders();
-    setResponseBody(body);
+    } else {
+        if (checkPathForLocation() == -1)
+            setResponseCode(404);
+        else
+            setResponseCode(200);
+    }
+
+    if (responseBody_.empty()) {
+        body = readContent(getScreen());
+        if (responseBody_.empty()) {
+            setContentLength(body.size());
+            setResponseHeaders();
+            setResponseBody(body);
+        } else {
+            setContentLength(responseBody_.size());
+            setResponseHeaders();
+        }
+    } else {
+        setContentLength(responseBody_.size());
+        setResponseHeaders();
+    }
+
     setResponse();
 }
 
-std::string Response::findMaxPossibleLocation(const std::string& location) {
+std::string Response::findMaxPossibleLocation(const std::string &location) {
     std::string route = requestRoute_;
 
     for (size_t i = route.size(); i > 0; i--) {
@@ -195,20 +206,41 @@ void Response::readLocationData() {
 
     for (iterator = locations_.begin(); iterator != locations_.end(); iterator++) {
         if (!findMaxPossibleLocation(iterator->first).empty())
-        maxPossibleLocation = findMaxPossibleLocation(iterator->first);
+            maxPossibleLocation = findMaxPossibleLocation(iterator->first);
     }
     if (maxPossibleLocation.empty())
         maxPossibleLocation = "/";
-    std::cout << BgRED << maxPossibleLocation << RESET << std::endl;
     for (iterator = locations_.begin(); iterator != locations_.end(); iterator++) {
         if (iterator->first == maxPossibleLocation) {
-            setLocationRoot(iterator->second.getRoot());
+            setLocationRoot(iterator->second.getAlias());
             setLocationMethods(iterator->second.getMethods());
             setLocationIndex(iterator->second.getIndex());
         }
-
     }
+    if (maxPossibleLocation != "/")
+        requestRoute_ = requestRoute_.substr(maxPossibleLocation.length());
+}
 
+
+int Response::checkPathForLocation() {
+    std::string stringFilename = locationRoot_ + requestRoute_;
+    char *filename = const_cast<char *>(stringFilename.c_str());
+    int openRes = open(filename, O_RDONLY);
+    if (openRes == -1)
+        return -1;
+    close(openRes);
+    std::string content = readContent(filename);
+    if (!content.empty()) {
+        setResponseBody(content);
+        return 1;
+    } else {
+        std::string index = readContent(stringFilename + "/" + locationIndex_[0]);
+        if (!index.empty()) {
+            setResponseBody(index);
+            return 1;
+        }
+    }
+    return 0;
 }
 
 std::string Response::readContent(const std::string &filename) {
@@ -233,7 +265,11 @@ std::string Response::getScreen() {
         filename += "/index.js";
     else if (errorPages_.find(responseCode_) != errorPages_.end())
         filename = "./errors/" + errorPages_[responseCode_];
-
+    else if (responseCode_ != 200) {
+        std::string errorDescription = responseCodes_.find(responseCode_)->second;
+        setResponseBody(errorDescription);
+        return errorDescription;
+    }
     return filename;
 }
 
@@ -244,7 +280,7 @@ void Response::trimRequestPath() {
         newRequestPath.push_back("");
     }
     for (size_t i = 0; i < routeEnd; i++) {
-        newRequestPath[i] = requestPath_[i];
+        newRequestPath.push_back(requestPath_[i]);
     }
     requestPath_ = newRequestPath;
 }
