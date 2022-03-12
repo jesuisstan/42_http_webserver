@@ -29,10 +29,12 @@ class Response {
             std::string                     response_;
             std::string                     requestRoute_;
             std::string                     requestMethod_;
+            std::string                     requestBody_;
             std::string                     responseHeaders_;
             std::string                     responseContentType_;
             std::string                     responseBody_;
             int                             responseCode_;
+            int						        ClientMaxBodySize_;
             size_t                          contentLength_;
             std::vector<std::string>        requestPath_;
             std::map<int, std::string>      responseCodes_;
@@ -41,6 +43,7 @@ class Response {
             std::vector<std::string>        supportedMethods_;
             std::vector<std::string>        locationIndex_;
             std::string                     locationRoot_;
+            std::string                     locationRedirection_;
             std::string                     requestedFile_;
             std::map<int, std::string>		errorPages_;
 
@@ -51,16 +54,19 @@ class Response {
             void                            setLocationMethods(const std::set<std::string>& locationMethods);
             void                            setLocationIndex(const std::set<std::string>& locationIndex);
             void                            setLocationRoot(const std::string& locationRoot);
+            void                            setLocationRedirection(const std::string& locationRedirection);
             void                            setResponseCode(int code);
             void                            setContentLength(size_t len);
             void                            setResponseBody(const std::string& body);
 
             void                            createResponse();
+            void                            redirectUser();
             void                            readLocationData();
             void                            trimRequestPath();
             int                             checkPathForLocation();
             std::string                     findMaxPossibleLocation(const std::string& location);
             std::string                     getScreen();
+            void                            savePostBody();
 
             Response(): responseCode_(0), contentLength_(0) {};
     public:

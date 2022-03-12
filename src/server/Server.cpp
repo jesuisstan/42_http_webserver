@@ -157,7 +157,7 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 						}
                         request_buffer += static_cast<std::string>(buffer).substr(0, ret);
                         request_len += ret;
-						//std::cout << BLUE << request_buffer << RESET << std::endl;
+//						std::cout << BLUE << request_buffer << RESET << std::endl;
                         memset(buffer, 0, BUFFER_SIZE);
                         if (findReqEnd(request_buffer, request_len))
                         {
@@ -230,7 +230,7 @@ void	Server::closeConnections(void) {
 bool Server::findReqEnd(std::string request_buffer, size_t request_len) {
     std::string method = request_buffer;
     method = method.substr(0, request_buffer.find_first_of(' '));
-	//std::cout << "|" << request_buffer[request_len - 5] << "|" << std::endl;
+//	std::cout << "|" << request_buffer[request_len - 5] << "|" << std::endl;
     if (request_buffer[request_len - 1] == '\n' &&
     request_buffer[request_len - 2] == '\r' &&
     request_buffer[request_len - 3] == '\n' &&

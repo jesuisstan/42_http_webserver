@@ -44,6 +44,7 @@ a:hover {
 }
 
 .title {
+    cursor: pointer;
     font-family: 'Open Sans', cursive;
     font-size: 25px;
     padding-left: 20px;
@@ -81,8 +82,9 @@ a:hover {
 }
 
 .signUpConfirm:hover {
-    border: 1px solid rgb(255, 0, 0);
-    color: rgb(255, 0, 0);
+    border: 1px solid rgba(101, 8, 97, 0.91);
+    color: rgba(255, 255, 255, 0.91);
+    text-shadow: 2px 2px rgba(101, 8, 97, 0.91);
     font-size: 15px;
 }
 

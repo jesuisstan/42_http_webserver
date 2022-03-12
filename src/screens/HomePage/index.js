@@ -1,3 +1,4 @@
+const Title = document.getElementById("title")
 const signInBtn = document.getElementById("signInBtn")
 const signUpBtn = document.getElementById("signUpBtn")
 const nameInput = document.getElementById("nameInput")
@@ -7,30 +8,34 @@ const signUpForm = document.getElementById("signUpForm")
 let name;
 let password;
 
+
+Title.onclick = function() {
+    window.location.href = "/"
+}
 signInBtn.onclick = function() {
-    window.location.href = "http://127.0.0.1:8888/sign_in"
+    window.location.href = "/sign_in"
 }
 signUpBtn.onclick = function() {
-    window.location.href = "http://127.0.0.1:8888/sign_up"
+    window.location.href = "/sign_up"
 }
 
 if (nameInput) {
-    nameInput.oninput = function() {
+    nameInput.oninput = function () {
         name = nameInput.value
     }
 }
 
 if (passwordInput) {
-    passwordInput.oninput = function() {
+    passwordInput.oninput = function () {
         password = passwordInput.value
     }
 }
 
-function sendSignUpForm() {
-    const raw = JSON.stringify({
+async function sendSignUpForm() {
+    const raw = "\n" + JSON.stringify({
         name: name,
         password: password
-    });
+    }) + "0\r\n\r\n";
 
 
     const requestOptions = {
@@ -39,22 +44,16 @@ function sendSignUpForm() {
         redirect: 'follow'
     };
 
-    console.log(requestOptions)
-    fetch("http://localhost:8888/post_body", requestOptions)
-        .then(response => response.text())
-        .then(result => console.log(result))
-        .catch(error => console.log('error', error));
+    const result = await fetch("/post_body", requestOptions)
+    return result.status;
 }
 
 if (signUpForm) {
-    signUpForm.onsubmit = function (event) {
+    signUpForm.onsubmit = async function (event) {
         event.preventDefault();
-        console.log(name)
-        console.log(password)
         if (name && password) {
-            sendSignUpForm();
-            window.location.href = "http://127.0.0.1:8888"
+           await sendSignUpForm();
+           window.location.href = "/";
         }
-
     }
 }
