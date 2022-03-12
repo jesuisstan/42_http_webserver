@@ -23,6 +23,7 @@
 #include <stdio.h> // for perror
 #include <signal.h>
 #include <fstream> // for getline
+#include <dirent.h> //to get directory content
 
 # define BLACK "\x1b[30m"
 # define RED "\x1b[31m"

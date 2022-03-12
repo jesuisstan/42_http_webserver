@@ -124,11 +124,11 @@ const size_t &RequestParser::getContentLength() const {
     return this->contentLength_;
 }
 
-const std::vector<std::string> &RequestParser::getPath()   const {
+const std::vector <std::string> &RequestParser::getPath() const {
     return this->path_;
 }
 
-const std::vector<std::string> &RequestParser::getSupportedMethods()   const {
+const std::vector <std::string> &RequestParser::getSupportedMethods() const {
     return this->supportedMethods_;
 }
 
@@ -150,13 +150,12 @@ void RequestParser::setRoute() {
     if (routeStart != routeEnd) {
         route_ = EraseSpaces(fistReqStr.substr(routeStart, routeEnd));
         setPath();
-    }
-    else {
+    } else {
         route_ = "";
         path_.push_back("");
     }
-        for (size_t i = 0; i < path_.size(); i++)
-            std::cout << BgCYAN << "|" << path_[i] << "|" << RESET << std::endl;
+    for (size_t i = 0; i < path_.size(); i++)
+        std::cout << BgCYAN << "|" << path_[i] << "|" << RESET << std::endl;
 }
 
 void RequestParser::setPath() {
@@ -235,21 +234,24 @@ void RequestParser::setCacheControl() {
 
 void RequestParser::setBody() {
     std::string erasedRequest = request_;
-    size_t bodyStart = request_.find("\n\r");
-    if (bodyStart != std::string::npos)
-        body_ = erasedRequest.substr(bodyStart + 3);
-//    std::cout << "__BODY_______________|" << body_ << "|" << std::endl;
-}
+    size_t bodyStart = request_.find("\r\n\r\n");
+    if (bodyStart != std::string::npos) {
+        erasedRequest = erasedRequest.substr(bodyStart + 5);
+        size_t bodyEnd = erasedRequest.find("0\r\n\r\n");
+        if (bodyEnd != std::string::npos)
+            body_ = erasedRequest.substr(0, bodyEnd);
+//std::cout << "__BODY_______________|"<< erasedRequest << body_ << "|" << std::endl;
+}}
 
-void        RequestParser::setHeaders() {
+void RequestParser::setHeaders() {
     std::string erasedRequest = request_;
-    size_t headersEnd = request_.find("\n\r");
+    size_t headersEnd = request_.find("\r\n\r\n");
     if (headersEnd != std::string::npos)
-        headers_ = erasedRequest.substr( 0,headersEnd);
+        headers_ = erasedRequest.substr(0, headersEnd);
 //    std::cout << "__HEADERS____________|" << GREEN << headers_  << RESET << std::endl;
 }
 
-void        RequestParser::setContentLength() {
+void RequestParser::setContentLength() {
     std::string contentLengthStr = parseByHeaderName("Content-Length:");
     contentLength_ = atoi(contentLengthStr.c_str()); // это что-то из 11 стандарта, c флагами не скомпилится
 //    std::cout << "__CONTENT_LENGTH_____|" << contentLength_ << "|" << std::endl;
@@ -286,7 +288,8 @@ void RequestParser::parse() {
         setSecFetchSite();
         setSecFetchUser();
         setCacheControl();
-        setBody();
+        if (method_ == "POST" || method_ == "PUT")
+            setBody();
         setHeaders();
         setContentLength();
     } else {
@@ -303,16 +306,17 @@ bool RequestParser::isSupportedMethod() {
     return false;
 }
 
-std::string RequestParser::parseByChar(const std::string& string, char symbol) {
+std::string RequestParser::parseByChar(const std::string &string, char symbol) {
     std::string erasedRequest = request_;
     iterator_ = string.find_first_of(symbol);
     if (iterator_ == std::string::npos)
         return "";
     if (request_[iterator_ - 1] == ' ')
         return erasedRequest.substr(0, iterator_ - 1);
-    return erasedRequest.substr(0, iterator_ );
+    return erasedRequest.substr(0, iterator_);
 }
-std::string RequestParser::parseByHeaderName(const std::string& name) {
+
+std::string RequestParser::parseByHeaderName(const std::string &name) {
     std::string erasedRequest = request_;
     iterator_ = request_.find(name);
     if (iterator_ == std::string::npos)
@@ -322,14 +326,14 @@ std::string RequestParser::parseByHeaderName(const std::string& name) {
         erasedRequest = erasedRequest.erase(0, iterator_);
     else
         erasedRequest = erasedRequest.erase(0, iterator_ + 1);
-    return erasedRequest.substr(0, erasedRequest.find_first_of('\n') - 1) ;
+    return erasedRequest.substr(0, erasedRequest.find_first_of('\n') - 1);
 }
 
-std::string RequestParser::EraseSpaces(const std::string& string) {
+std::string RequestParser::EraseSpaces(const std::string &string) {
     size_t spacePos = string.find(' ');
     std::string result = string;
     while (spacePos != std::string::npos) {
-        result = result.replace(spacePos,spacePos, "");
+        result = result.replace(spacePos, spacePos, "");
         spacePos = result.find(' ');
     }
     return result;
@@ -340,6 +344,6 @@ RequestParser::UnsupportedMethodException::UnsupportedMethodException(const std:
     message_ = RED"Method " + method + " is not supported" RESET;
 }
 
-const char* RequestParser::UnsupportedMethodException::what() const throw() {
+const char *RequestParser::UnsupportedMethodException::what() const throw() {
     return (message_.c_str());
 }
