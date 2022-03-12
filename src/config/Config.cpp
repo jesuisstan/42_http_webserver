@@ -24,7 +24,8 @@ Config::Config(int argc, char **argv)
 		if (keyWord != "server")
 			baseError("Corrupted data in config file near " + keyWord);
 		ServerConfig serverConfig(ifs);
-		portHost = numberToString(serverConfig.getPort()) + serverConfig.getHost();
+		portHost = numberToString(serverConfig.getPort()) + ":" + serverConfig.getHost();
+		// std::cout << portHosts;
 		if (!this->portHosts.count(portHost))
 		{
 			this->portHosts.insert(portHost);

@@ -36,17 +36,6 @@ ServerConfig::ServerConfig(std::ifstream &ifs):
 	baseError("Error while parcing server config");
 }
 
-// ServerConfig::ServerConfig(
-// 		const std::string &host,
-// 		const std::string &serverName,
-// 		int			port,
-// 		std::map<int, std::string> &errorPages,
-// 		std::map<std::string, Location> &locations) :
-// 	host(host), serverName(serverName), port(port),
-// 	errorPages(errorPages), locations(locations) {}
-
-
-
 void ServerConfig::setPort(std::istream &ifs)
 {
 	if (!(ifs >> port))
@@ -110,7 +99,7 @@ void ServerConfig::setErrorPage(std::istream &ifs)
 		if (!isPositiveDigit(_cmnd))
 			baseError("not only digit characters in errorCode: " + _cmnd);
 		code = stringToNumber(_cmnd);
-		if (code < 100 or code >= 600)
+		if (code < 400 or code >= 600)
 			baseError("Incorrect errorCode in " + line.str());
 		if (codes.count(code))
 			baseError("Dublicated code in errorPages");
