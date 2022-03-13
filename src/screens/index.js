@@ -7,29 +7,35 @@ const signUpForm = document.getElementById("signUpForm")
 
 let name;
 let password;
+let status;
 
-
-Title.onclick = function() {
-    window.location.href = "/"
-}
-signInBtn.onclick = function() {
-    window.location.href = "/sign_in"
-}
-signUpBtn.onclick = function() {
-    window.location.href = "/sign_up"
+if (status === 200) {
+    signInBtn.hidden = true;
+    signUpBtn.hidden = true;
 }
 
-if (nameInput) {
+if (Title)
+    Title.onclick = function() {
+        window.location.href = "/"
+    }
+if (signInBtn)
+    signInBtn.onclick = function() {
+        window.location.href = "/sign_in"
+    }
+if (signUpBtn)
+    signUpBtn.onclick = function() {
+        window.location.href = "/sign_up"
+    }
+
+if (nameInput)
     nameInput.oninput = function () {
         name = nameInput.value
     }
-}
 
-if (passwordInput) {
+if (passwordInput)
     passwordInput.oninput = function () {
         password = passwordInput.value
     }
-}
 
 async function sendSignUpForm() {
     const raw = "\n" + JSON.stringify({
@@ -48,12 +54,13 @@ async function sendSignUpForm() {
     return result.status;
 }
 
-if (signUpForm) {
+if (signUpForm)
     signUpForm.onsubmit = async function (event) {
         event.preventDefault();
         if (name && password) {
-           await sendSignUpForm();
+           status = await sendSignUpForm();
            window.location.href = "/";
+            console.log(status)
+
         }
     }
-}

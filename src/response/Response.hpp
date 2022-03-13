@@ -18,14 +18,18 @@
 #include "../../inc/webserv.hpp"
 #include "../request/RequestParser.hpp"
 #include "../config/Location.hpp"
+#include "../cgi/Cgi.hpp"
 
 class RequestParser;
 class ServerConfig;
 class Location;
+class Cgi;
 
 class Response {
     private:
-            RequestParser                   request_;
+            RequestParser                   RequestParser_;
+            ServerConfig                    ServerConfig_;
+            Location                        Location_;
             std::string                     response_;
             std::string                     requestRoute_;
             std::string                     requestMethod_;
@@ -46,6 +50,7 @@ class Response {
             std::string                     locationRedirection_;
             std::string                     requestedFile_;
             std::map<int, std::string>		errorPages_;
+            bool                            cgiRequested_;
 
             void                            setResponse();
             void                            setResponseCodes();
@@ -60,7 +65,8 @@ class Response {
             void                            setResponseBody(const std::string& body);
 
             void                            createResponse();
-            void                            redirectUser();
+            void                            checkFileRequested();
+            void                            createAutoIndexPage(const char *dir);
             void                            readLocationData();
             void                            trimRequestPath();
             int                             checkPathForLocation();

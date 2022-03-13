@@ -9,6 +9,7 @@
 class Cgi
 {
 private:
+    RequestParser request_;
 	std::map<std::string, std::string>	env_;
 	char *script_argv_[4];
 
@@ -17,7 +18,7 @@ private:
 	
 
 public:
-	Cgi(ServerConfig &serv, Location &loca);
+	Cgi(ServerConfig &serv, Location &loca, RequestParser &req);
 	std::pair<int, std::string>	execute();
 
 

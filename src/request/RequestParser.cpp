@@ -26,23 +26,31 @@ RequestParser::RequestParser(const RequestParser &other) {
 
 RequestParser &RequestParser::operator=(const RequestParser &other) {
     if (this != &other) {
-        request_        = other.request_;
-        method_         = other.method_;
-        protocol_       = other.protocol_;
-        host_           = other.host_;
-        userAgent_      = other.userAgent_;
-        accept_         = other.accept_;
-        acceptLanguage_ = other.acceptLanguage_;
-        acceptEncoding_ = other.acceptEncoding_;
-        connection_     = other.connection_;
-        secFetchDest_   = other.secFetchDest_;
-        secFetchMode_   = other.secFetchMode_;
-        secFetchSite_   = other.secFetchSite_;
-        secFetchUser_   = other.secFetchUser_;
-        cacheControl_   = other.cacheControl_;
-        headers_        = other.headers_;
-        contentLength_  = other.contentLength_;
-        body_           = other.body_;
+        host_             = other.host_;
+        body_             = other.body_;
+        route_            = other.route_;
+        query_            = other.query_;
+        accept_           = other.accept_;
+        method_           = other.method_;
+        headers_          = other.headers_;
+        request_          = other.request_;
+        pathInfo_         = other.pathInfo_;
+        protocol_         = other.protocol_;
+        userAgent_        = other.userAgent_;
+        connection_       = other.connection_;
+        contentType_      = other.contentType_;
+        secFetchDest_     = other.secFetchDest_;
+        secFetchMode_     = other.secFetchMode_;
+        secFetchSite_     = other.secFetchSite_;
+        secFetchUser_     = other.secFetchUser_;
+        cacheControl_     = other.cacheControl_;
+        acceptLanguage_   = other.acceptLanguage_;
+        acceptEncoding_   = other.acceptEncoding_;
+
+        path_             = other.path_;
+        iterator_         = other.iterator_;
+        contentLength_    = other.contentLength_;
+        supportedMethods_ = other.supportedMethods_;
     }
     return *this;
 }
@@ -61,6 +69,10 @@ const std::string &RequestParser::getMethod() const {
 
 const std::string &RequestParser::getRoute() const {
     return this->route_;
+}
+
+const std::string &RequestParser::getQuery() const {
+    return this->query_;
 }
 
 const std::string &RequestParser::getProtocol() const {
@@ -124,6 +136,14 @@ const size_t &RequestParser::getContentLength() const {
     return this->contentLength_;
 }
 
+const std::string &RequestParser::getContentType() const {
+    return this->contentType_;
+}
+
+const std::string &RequestParser::getPathInfo() const {
+    return this->pathInfo_;
+}
+
 const std::vector <std::string> &RequestParser::getPath() const {
     return this->path_;
 }
@@ -149,6 +169,11 @@ void RequestParser::setRoute() {
     size_t routeEnd = fistReqStr.find_last_of(' ') - 1;
     if (routeStart != routeEnd) {
         route_ = EraseSpaces(fistReqStr.substr(routeStart, routeEnd));
+        size_t queryStart = route_.find('?');
+        if (queryStart != std::string::npos) {
+            query_ = route_.substr(queryStart);
+            route_ = route_.substr(0, queryStart);
+        }
         setPath();
     } else {
         route_ = "";
@@ -253,8 +278,17 @@ void RequestParser::setHeaders() {
 
 void RequestParser::setContentLength() {
     std::string contentLengthStr = parseByHeaderName("Content-Length:");
-    contentLength_ = atoi(contentLengthStr.c_str()); // это что-то из 11 стандарта, c флагами не скомпилится
+    contentLength_ = stringToNumber(contentLengthStr);
 //    std::cout << "__CONTENT_LENGTH_____|" << contentLength_ << "|" << std::endl;
+}
+
+void RequestParser::setContentType() {
+    contentType_ = parseByHeaderName("Content-Type:");
+//    std::cout << "__CONTENT_TYPE_______|" << contentType_ << "|" << std::endl;
+}
+
+void RequestParser::setPathInfo(std::string pathInfo) {
+    pathInfo_ = pathInfo;
 }
 
 void RequestParser::setSupportedMethods() {

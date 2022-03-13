@@ -144,6 +144,22 @@ const std::map<int, std::string> &ServerConfig::getErrorPages() const { return e
 
 const std::map<std::string, Location> &ServerConfig::getLocations() const { return locations; }
 
+ServerConfig::ServerConfig(const ServerConfig &other) {
+    *this = other;
+}
+
+ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
+    if (this != &other) {
+        _cmnd = other._cmnd;
+        host = other.host;
+        serverName = other.serverName;
+        port = other.port;
+        clientMaxBodySize = other.clientMaxBodySize;
+        errorPages = other.errorPages;
+        locations = other.locations;
+    }
+    return *this;
+}
 
 std::ostream &operator<<(std::ostream &out, const ServerConfig &sc)
 {

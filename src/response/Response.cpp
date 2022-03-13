@@ -13,6 +13,8 @@
 #include "Response.hpp"
 
 Response::Response(RequestParser &request, ServerConfig &config) :
+        RequestParser_(request),
+        ServerConfig_(config),
         requestRoute_(request.getRoute()),
         requestMethod_(request.getMethod()),
         requestBody_(request.getBody()),
@@ -22,7 +24,8 @@ Response::Response(RequestParser &request, ServerConfig &config) :
         requestPath_(request.getPath()),
         locations_(config.getLocations()),
         supportedMethods_(request.getSupportedMethods()),
-        errorPages_(config.getErrorPages()) {
+        errorPages_(config.getErrorPages()),
+        cgiRequested_(false) {
     setResponseCodes();
     createResponse();
 }
@@ -33,7 +36,9 @@ Response::Response(const Response &other) {
 
 Response &Response::operator=(const Response &other) {
     if (this != &other) {
-        request_                = other.request_;
+        RequestParser_          = other.RequestParser_;
+        ServerConfig_           = other.ServerConfig_;
+        Location_               = other.Location_;
         requestRoute_           = other.requestRoute_;
         requestPath_            = other.requestPath_;
         requestMethod_          = other.requestMethod_;
@@ -54,6 +59,7 @@ Response &Response::operator=(const Response &other) {
         errorPages_             = other.errorPages_;
         ClientMaxBodySize_      = other.ClientMaxBodySize_;
         requestBody_            = other.requestBody_;
+        cgiRequested_           = other.cgiRequested_;
     }
     return *this;
 }
@@ -98,16 +104,19 @@ void Response::setContentType() {
     size_t routeEnd = requestPath_.size() - 1;
     size_t dotPos = requestPath_[routeEnd].find('.');
     if (dotPos != std::string::npos) {
-        std::string extension = requestPath_[routeEnd].substr(dotPos + 1);
-        if (extension == "css") {
+        std::string extension = requestPath_[routeEnd].substr(dotPos);
+        if (extension == ".css") {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "text/css\n";
             trimRequestPath();
-        } else if (extension == "js") {
+        } else if (extension == ".js") {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "application/javascript\n";
             trimRequestPath();
-        }
+        } else if (extension == Location_.getCgiExt())
+            requestedFile_ = requestPath_[routeEnd];
+         else
+            responseContentType_ = "text/html\n";
     } else
         responseContentType_ = "text/html\n";
 }
@@ -120,7 +129,6 @@ void Response::setResponseHeaders() {
     responseHeaders_ += "Content-Type: " + responseContentType_;
     responseHeaders_ += "Content-Length: ";
     responseHeaders_ += std::to_string(contentLength_);
-//    std::cout << BgBLUE << responseHeaders_ << RESET << std::endl;
 }
 
 void Response::setResponseBody(const std::string &body) {
@@ -151,7 +159,6 @@ void Response::setLocationRoot(const std::string &locationRoot) {
 }
 
 void Response::setLocationRedirection(const std::string& locationRedirection) {
-//    std::cout << RED << locationRedirection  << " redirect"<< RESET << std::endl;
     locationRedirection_ = locationRedirection;
 }
 
@@ -175,37 +182,52 @@ void Response::setResponseCodes() {
 void Response::createResponse() {
     std::string body;
 
-    setContentType();
     readLocationData();
+    setContentType();
     if (!locationRedirection_.empty())
         setResponseCode(301);
     else if (!locationMethods_.count(requestMethod_) && !requestedFile_.length())
         setResponseCode(405);
     else if (checkPathForLocation() == -1)
         setResponseCode(404);
-    else if (requestBody_.length() > ClientMaxBodySize_)
+    else if (requestBody_.length() > ClientMaxBodySize_ && !cgiRequested_)
         setResponseCode(413);
-    else
+    else if (!cgiRequested_)
         setResponseCode(200);
-
-    if ((requestMethod_ == "PUT" || requestMethod_ == "POST") && responseCode_ == 200)
-        savePostBody();
-    if (responseBody_.empty()) {
-        body = readContent(getScreen());
+    if (!cgiRequested_) {
+        if ((requestMethod_ == "PUT" || requestMethod_ == "POST") && responseCode_ == 200)
+            savePostBody();
         if (responseBody_.empty()) {
-            setContentLength(body.size());
-            setResponseHeaders();
-            setResponseBody(body);
+            body = readContent(getScreen());
+            if (responseBody_.empty()) {
+                setContentLength(body.size());
+                setResponseHeaders();
+                setResponseBody(body);
+            } else {
+                setContentLength(responseBody_.size());
+                setResponseHeaders();
+            }
         } else {
             setContentLength(responseBody_.size());
             setResponseHeaders();
         }
-    } else {
-        setContentLength(responseBody_.size());
-        setResponseHeaders();
+        setResponse();
     }
+}
 
-    setResponse();
+void Response::checkFileRequested() {
+    size_t routeEnd = requestPath_.size() - 1;
+    size_t dotPos = requestPath_[routeEnd].find('.');
+    if (dotPos != std::string::npos) {
+        std::string extension = requestPath_[routeEnd].substr(dotPos);
+        if (extension == ".css") {
+            requestedFile_ = requestPath_[routeEnd];
+            responseContentType_ = "text/css\n";
+        } else if (extension == ".js") {
+            requestedFile_ = requestPath_[routeEnd];
+            responseContentType_ = "application/javascript\n";
+        }
+    }
 }
 
 void Response::savePostBody() {
@@ -243,6 +265,7 @@ void Response::readLocationData() {
         maxPossibleLocation = "/";
     for (iterator = locations_.begin(); iterator != locations_.end(); iterator++) {
         if (iterator->first == maxPossibleLocation) {
+            Location_ = iterator->second;
             setLocationRedirection(iterator->second.getRedirection());
             setLocationRoot(iterator->second.getAlias());
             setLocationMethods(iterator->second.getMethods());
@@ -260,17 +283,35 @@ void Response::readLocationData() {
 int Response::checkPathForLocation() {
     std::string stringFilename = locationRoot_ + requestRoute_;
     char *filename = const_cast<char *>(stringFilename.c_str());
+    if (requestedFile_ == "style.css" || requestedFile_ == "index.js")
+        return 1;
     int openRes = open(filename, O_RDONLY);
-
+    std::cout << openRes << " | " << filename << std::endl;
     if (openRes == -1)
         return -1;
     close(openRes);
-
+    if (requestedFile_.find('.') != std::string::npos) {
+        std::string extension = requestedFile_.substr(requestedFile_.find('.'));
+        if (extension == Location_.getCgiExt()) {
+            cgiRequested_ = true;
+            RequestParser_.setPathInfo(stringFilename);
+            std::cout << BgRED << "CGI START" << RESET << std::endl;
+            Cgi* cgi = new Cgi(ServerConfig_, Location_, RequestParser_);
+            std::pair<int, std::string> cgiResult = cgi->execute();
+            setResponseCode(cgiResult.first);
+            response_ = cgiResult.second;
+            std::cout << BLUE << cgiResult.first << " | " << cgiResult.second << RESET << std::endl;
+        }
+    }
     std::string content = readContent(filename);
     if (!content.empty()) {
         setResponseBody(content);
         return 1;
     } else {
+        if (Location_.getAutoindex()) {
+            createAutoIndexPage(stringFilename.c_str());
+            return 1;
+        }
         std::string index = readContent(stringFilename + "/" + locationIndex_[0]);
         if (!index.empty()) {
             setResponseBody(index);
@@ -278,6 +319,26 @@ int Response::checkPathForLocation() {
         }
     }
     return 0;
+}
+
+void    Response::createAutoIndexPage(const char *dir) {
+    struct dirent *d;
+    DIR *dh = opendir(dir);
+    std::string autoIndexPage = readContent("./src/screens/sample.html");
+    autoIndexPage += "<body>\n <h1 class=\"autoIndexHeader\">";
+    autoIndexPage += dir;
+    autoIndexPage += "</h1>\n<div class=\"simpleContainer\">";
+
+    while ((d = readdir(dh)) != NULL)
+    {
+        autoIndexPage += "<a class=\"autoIndexLink\"href=" + locationRoot_ + (std::string) "/" + d->d_name + ">";
+        autoIndexPage +=  (std::string)d->d_name + "</a>\n";
+        std::cout << BgGREEN << d->d_name << RESET << std::endl;
+    }
+    autoIndexPage += "<div>\n</body>\n</html>\n";
+//    std::cout << BgGREEN << autoIndexPage << RESET << std::endl;
+
+    setResponseBody(autoIndexPage);
 }
 
 std::string Response::readContent(const std::string &filename) {
@@ -297,9 +358,9 @@ std::string Response::getScreen() {
     if (responseCode_ == 200 && !requestedFile_.length())
         filename += "/index.html";
     else if (responseCode_ == 200 && requestedFile_ == "style.css")
-        filename += "/style.css";
+        filename = "./src/screens/style.css";
     else if (responseCode_ == 200 && requestedFile_ == "index.js")
-        filename += "/index.js";
+        filename = "./src/screens/index.js";
     else if (errorPages_.find(responseCode_) != errorPages_.end())
         filename = "./errors/" + errorPages_[responseCode_];
     else if (responseCode_ != 200) {
