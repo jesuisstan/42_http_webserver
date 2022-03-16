@@ -89,7 +89,7 @@ class Response {
             ~Response() {}
 
             static std::string readContent(const std::string &filename);
-
+            std::string  findFileWithExtension(std::string extension, std::string dir);
 };
 
 #endif //HTTP_WEBSERVER_RESPONSE_HPP
