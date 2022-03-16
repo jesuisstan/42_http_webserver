@@ -11,7 +11,7 @@ class Cgi
 private:
     RequestParser request_;
 	std::map<std::string, std::string>	env_;
-	char *script_argv_[4];
+	// char *script_argv_[4];
 
 	char **getNewEnviroment() const;
 

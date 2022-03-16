@@ -56,19 +56,24 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 //    ... ... ... ...\ : : : : : : : : : \: : : : : : : : : _=" : : : : : ',_.: : : : : : : :,-“
 //    ... ... ... ... \,: : : : : : : : : \: :"”'~---~”" : : : : : : : : : : : : = :"”~~
 
+	
 
+	// std::vector<string> vector;
+	// const char *programname = "abc";
 
-    if (loca.getCgi() == "python") { // ебанный стыд. напомните сжечь этот код
-		script_argv_[0] = (char *)"python3";
-		script_argv_[1] = (char *)"-m";
-		script_argv_[2] = (char *)"./testers/alch.sgi"; // todo replace to get_path_info
-		script_argv_[3] = 0;
-	}
+	// const char **argv = new const char* [vector.size()+2];   // extra room for program name and sentinel
+	// argv [0] = programname;         // by convention, argv[0] is program name
+	// for (int j = 0;  j < vector.size()+1;  ++j)     // copy args
+	// 		argv [j+1] = vector[j] .c_str();
+
+	// argv [vector.size()+1] = NULL;  // end of arguments sentinel is NULL
+
+	// execv (programname, (char **)argv);
 }
 
 
-char **Cgi::getNewEnviroment() const {
-	char			**env;
+char ** Cgi::getNewEnviroment() const {
+	char		**env;
 	std::string		line;
 
 	env = new char*[env_.size() + 1];
@@ -95,12 +100,43 @@ std::pair<int, std::string> Cgi::execute() {
     std::cout << BgBLUE << "getContentType |" << request_.getContentType()<< RESET << std::endl;
     std::cout << BgBLUE << "getContentLength |" << request_.getContentLength()<< RESET << std::endl;
     std::cout << BgBLUE << "getPathInfo |" << request_.getPathInfo()<< RESET << std::endl;
+	
+	
+	
+	
+	char **envs = getNewEnviroment();
+	int res, pid;
+
+	pid = fork();
+
+
+
+	if (!pid){
+		if (env_["SCRIPT_NAME"] == "python") {
+			char *args[] = {
+				"python3",
+				"-m",
+				(char *)env_["PATH_INFO"].c_str(),
+				0};
+			execve(args[0], args, envs);
+		}
+
+		else {
+			char * args[] = {
+				"php?",
+				(char *)env_["PATH_INFO"].c_str(),
+				0};
+			execve(args[0], args, envs);
+		}
+		perror("not running");
+	}
+		
+
+
 
 	std::pair <int, std::string> best_sgi;
-
 	best_sgi.first = 200;
 	best_sgi.second = "Our sgi is working";
-
 	return best_sgi;
 
 }
