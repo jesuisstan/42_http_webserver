@@ -43,7 +43,7 @@
 
 # define PORT 8888
 # define BACKLOG 100 // the maximum number of connections that will be queued
-# define BUFFER_SIZE 10240
+# define BUFFER_SIZE 102400
 
 # define DEFAULT_PORT		8080
 # define DEFAULT_ERROR_PAGE	"errors/404.html"
