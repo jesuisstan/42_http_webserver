@@ -1,9 +1,9 @@
 NAME			= webserv
- 
+
 CXX				= g++
 
-FLAGS			= -Wall -Wextra -Werror -std=c++98
-FLAGS			= -Wall -g
+FLAGS			= -MMD -Wall -Wextra -Werror -std=c++98 
+FLAGS			= -MMD -Wall -g
 
 RM				= rm -rf
 
@@ -37,7 +37,8 @@ OBJ				= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, main)) \
 
 OBJ_SUBDIR		= $(addprefix $(OBJ_DIR)/, config server request response cgi)
 
-OBJ_BUILD		= $(addprefix $(OBJ_DIR)/, $(SRC:cpp=o))
+OBJ_BUILD		= $(addprefix $(OBJ_DIR)/, $(SRC:.cpp=.o))
+MMD_FILES		= $(OBJ_BUILD:.o=.d)
 
 .PHONY:			all clean fclean re
 
@@ -67,3 +68,5 @@ re:				fclean $(NAME)
 
 client:			
 				$(CXX) $(INCLUDES) src/client.cpp -o client
+
+-include $(MMD_FILES)
