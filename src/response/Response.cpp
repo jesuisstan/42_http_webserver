@@ -281,12 +281,9 @@ void Response::readLocationData() {
 
 
 int Response::checkPathForLocation() {
-    std::string stringFilename = locationRoot_ + requestRoute_;
+    std::string stringFilename = locationRoot_+ requestRoute_ ;
     char *filename = const_cast<char *>(stringFilename.c_str());
-    if (requestedFile_ == "style.css" || requestedFile_ == "index.js")
-        return 1;
     int openRes = open(filename, O_RDONLY);
-    std::cout << openRes << " | " << filename << std::endl;
     if (openRes == -1)
         return -1;
     close(openRes);
@@ -300,7 +297,6 @@ int Response::checkPathForLocation() {
             std::pair<int, std::string> cgiResult = cgi->execute();
             setResponseCode(cgiResult.first);
             response_ = cgiResult.second;
-            std::cout << BLUE << cgiResult.first << " | " << cgiResult.second << RESET << std::endl;
         }
     }
     std::string content = readContent(filename);
@@ -312,13 +308,33 @@ int Response::checkPathForLocation() {
             createAutoIndexPage(stringFilename.c_str());
             return 1;
         }
-        std::string index = readContent(stringFilename + "/" + locationIndex_[0]);
+        std::string index;
+        if (locationIndex_[0][0] != '.')
+            index = readContent(stringFilename + "/" + locationIndex_[0]);
+        else
+            index = findFileWithExtension(locationIndex_[0], stringFilename);
         if (!index.empty()) {
             setResponseBody(index);
             return 1;
         }
     }
     return 0;
+}
+
+std::string Response::findFileWithExtension(std::string extension, std::string dir) {
+    struct dirent *d;
+    DIR *dh = opendir(dir.c_str());
+    while ((d = readdir(dh)) != NULL)
+    {
+        std::string file = (std::string) d->d_name;
+        size_t dotPos = file.find('.');
+        if (dotPos != std::string::npos) {
+            std::string fileExtension = file.substr(dotPos);
+            if (fileExtension == extension)
+                return readContent(dir + "/" + file);
+        }
+    }
+    return "";
 }
 
 void    Response::createAutoIndexPage(const char *dir) {
@@ -331,9 +347,8 @@ void    Response::createAutoIndexPage(const char *dir) {
 
     while ((d = readdir(dh)) != NULL)
     {
-        autoIndexPage += "<a class=\"autoIndexLink\"href=" + locationRoot_ + (std::string) "/" + d->d_name + ">";
+        autoIndexPage += "<a class=\"autoIndexLink\"href=" + (std::string)dir +  "/" + d->d_name + ">";
         autoIndexPage +=  (std::string)d->d_name + "</a>\n";
-        std::cout << BgGREEN << d->d_name << RESET << std::endl;
     }
     autoIndexPage += "<div>\n</body>\n</html>\n";
 //    std::cout << BgGREEN << autoIndexPage << RESET << std::endl;
