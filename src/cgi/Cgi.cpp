@@ -106,27 +106,28 @@ std::pair<int, std::string> Cgi::execute() {
 	
 	char **envs = getNewEnviroment();
 	int res, pid;
+	FILE	*in = tmpfile();
+	FILE	*out = tmpfile();
+	char	**envs = getNewEnviroment();
+	int		res, pid;
 
 	pid = fork();
-
-
-
 	if (!pid){
 		if (env_["SCRIPT_NAME"] == "python") {
-			char *args[] = {
+			const char *args[] = {
 				"python3",
 				"-m",
-				(char *)env_["PATH_INFO"].c_str(),
+				env_["PATH_INFO"].c_str(),
 				0};
-			execve(args[0], args, envs);
+			execve(args[0], (char **)args, envs);
 		}
 
 		else {
-			char * args[] = {
+			const char *args[] = {
 				"php?",
-				(char *)env_["PATH_INFO"].c_str(),
+				env_["PATH_INFO"].c_str(),
 				0};
-			execve(args[0], args, envs);
+			execve(args[0], (char **)args, envs);
 		}
 		perror("not running");
 	}
