@@ -15,6 +15,9 @@ private:
 	int								clientMaxBodySize;
 	std::map<int, std::string>		errorPages;
 	std::map<std::string, Location>	locations;
+	std::string						cgi;
+	std::string						cgiExt;
+
 
 public:
 	ServerConfig() {};
@@ -36,6 +39,8 @@ public:
 	const int								&getClientMaxBodySize() const;
 	const std::map<int, std::string>		&getErrorPages() const;
 	const std::map<std::string, Location>	&getLocations() const;
+	const std::string						&getCgi() const;
+	const std::string						&getCgiExt() const;
 
 	void									setPort(std::istream &ifs);
 	void									setHost(std::istream &ifs);
@@ -43,6 +48,8 @@ public:
 	void									setClientMaxBodySize(std::istream &ifs);
 	void									setErrorPage(std::istream &ifs);
 	void									setLocation(std::istream &ifs);
+	void									setCgi(std::istream &ifs);
+	void									setCgiExt(std::istream &ifs);
 
 	// void									readSemicolon(std::istream &ifs);
 	// std::string								&cutSemicolon(std::string &line);

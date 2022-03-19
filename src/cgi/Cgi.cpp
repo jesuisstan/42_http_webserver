@@ -104,10 +104,9 @@ std::pair<int, std::string> Cgi::execute() {
 	
 	
 	
-	char **envs = getNewEnviroment();
-	int res, pid;
-	FILE	*in = tmpfile();
-	FILE	*out = tmpfile();
+
+	// FILE	*in = tmpfile();
+	// FILE	*out = tmpfile();
 	char	**envs = getNewEnviroment();
 	int		res, pid;
 
