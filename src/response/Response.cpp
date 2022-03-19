@@ -184,6 +184,7 @@ void Response::createResponse() {
 
     readLocationData();
     setContentType();
+    std::cout << GREEN << checkPathForLocation() << RESET << std::endl;
     if (!locationRedirection_.empty())
         setResponseCode(301);
     else if (!locationMethods_.count(requestMethod_) && !requestedFile_.length())
@@ -237,9 +238,11 @@ void Response::savePostBody() {
     while ((d = readdir(dh)) != NULL)
     { filesCount++; }
     std::string filesCountStr = numberToString(filesCount - 1);
-    std::ofstream	postBodyFile(locationRoot_ + "/" + filesCountStr);
+    std::string filename = requestedFile_.empty() ? filesCountStr : requestedFile_;
+    std::ofstream	postBodyFile(locationRoot_ + "/" + filename);
     postBodyFile << requestBody_;
     postBodyFile.close();
+    std::cout << filename << std::endl;
 }
 
 std::string Response::findMaxPossibleLocation(const std::string &location) {
@@ -284,9 +287,13 @@ int Response::checkPathForLocation() {
     std::string stringFilename = locationRoot_+ requestRoute_ ;
     char *filename = const_cast<char *>(stringFilename.c_str());
     int openRes = open(filename, O_RDONLY);
-    if (openRes == -1)
+    if (openRes == -1 && requestMethod_ != "PUT")
         return -1;
     close(openRes);
+    if (requestMethod_ == "PUT") {
+        requestedFile_ = requestRoute_.substr(1);
+        return 1;
+    }
     if (requestedFile_.find('.') != std::string::npos) {
         std::string extension = requestedFile_.substr(requestedFile_.find('.'));
         if (extension == Location_.getCgiExt()) {
@@ -309,16 +316,19 @@ int Response::checkPathForLocation() {
             return 1;
         }
         std::string index;
-        if (locationIndex_[0][0] != '.')
+        if (locationIndex_[0][0] != '.') {
+            std::string file = stringFilename + "/" + locationIndex_[0];
+            int fd = open(file.c_str(), O_RDONLY);
+            if (fd == -1 && requestMethod_ != "PUT")
+                return -1;
             index = readContent(stringFilename + "/" + locationIndex_[0]);
+        }
         else
             index = findFileWithExtension(locationIndex_[0], stringFilename);
-        if (!index.empty()) {
-            setResponseBody(index);
-            return 1;
-        }
+        std::cout << RED << locationRoot_ << " | " << requestRoute_  <<RESET << std::endl;
+        setResponseBody(index);
+        return 1;
     }
-    return 0;
 }
 
 std::string Response::findFileWithExtension(std::string extension, std::string dir) {
@@ -340,14 +350,15 @@ std::string Response::findFileWithExtension(std::string extension, std::string d
 void    Response::createAutoIndexPage(const char *dir) {
     struct dirent *d;
     DIR *dh = opendir(dir);
+    std::string strDir = (std::string)dir;
     std::string autoIndexPage = readContent("./src/screens/sample.html");
     autoIndexPage += "<body>\n <h1 class=\"autoIndexHeader\">";
     autoIndexPage += dir;
     autoIndexPage += "</h1>\n<div class=\"simpleContainer\">";
-
+    strDir = strDir[strDir.size() - 1] == '/' ? strDir.substr(0, strDir.size() - 1) : strDir;
     while ((d = readdir(dh)) != NULL)
     {
-        autoIndexPage += "<a class=\"autoIndexLink\"href=" + (std::string)dir +  "/" + d->d_name + ">";
+        autoIndexPage += "<a class=\"autoIndexLink\"href=" + strDir + "/" + (std::string)d->d_name + ">";
         autoIndexPage +=  (std::string)d->d_name + "</a>\n";
     }
     autoIndexPage += "<div>\n</body>\n</html>\n";

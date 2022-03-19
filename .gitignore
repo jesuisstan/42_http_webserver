@@ -9,6 +9,7 @@ src/client
 webserv
 client
 post_body/*
+put_test/*
 
 
 

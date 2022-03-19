@@ -235,7 +235,7 @@ bool Server::findReqEnd(std::string request_buffer, size_t request_len) {
     request_buffer[request_len - 2] == '\r' &&
     request_buffer[request_len - 3] == '\n' &&
     request_buffer[request_len - 4] == '\r') {
-        if (method != "POST" || request_buffer[request_len - 5] == '0')
+        if ((method != "POST" && method != "PUT")|| request_buffer[request_len - 5] == '0')
             return true;
     }
     return false;
