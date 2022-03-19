@@ -20,7 +20,7 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 	env_["REQUEST_URI"] = "/YoupiBananae/alch.sgi?a=1&b=2"; // req.getRoute() + req.getQuery()
 	env_["PATH_INFO"] = "./testers/alch.sgi"; // req.getPathInfo()
 	env_["REDIRECT_STATUS"] = ""; // ??? opyat kakayato hueta
-	env_["SCRIPT_NAME"] = loca.getCgi();
+	env_["SCRIPT_NAME"] = serv.getCgi();
 	env_["QUERY_STRING"] = "a=1&b=2    request.getQuery()"; // req.getQuery();
 
 	env_["AUTH_TYPE"] = ""; //bonus or hz
