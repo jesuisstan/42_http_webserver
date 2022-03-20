@@ -19,7 +19,7 @@ private:
 public:
 	ServerConfig() {};
 	ServerConfig(const ServerConfig &other);
-    ServerConfig &operator=(const ServerConfig &other);
+	ServerConfig &operator=(const ServerConfig &other);
 	ServerConfig(std::ifstream &ifs);
 	// ServerConfig(
 	// 	const std::string				&host,

@@ -180,7 +180,7 @@ const bool &Location::getAutoindex() const { return autoindex; }
 
 std::ostream& operator<< (std::ostream &out, const Location &loca)
 {
-    out << "\t\tmethods: ";
+	out << "\t\tmethods: ";
 	std::set<std::string> methods = loca.getMethods();
 	std::copy(methods.begin(), methods.end(), std::ostream_iterator<std::string>(out, ", "));
 	out << "\n\t\tindex: ";
@@ -193,5 +193,5 @@ std::ostream& operator<< (std::ostream &out, const Location &loca)
 		<< "\n\t\tautoindex: " << loca.getAutoindex()
 		<< std::endl;
  
-    return out;
+	return out;
 }

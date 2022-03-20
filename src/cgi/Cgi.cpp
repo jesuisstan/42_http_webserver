@@ -21,7 +21,7 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 	env_["PATH_INFO"] = "./testers/alch.sgi"; // req.getPathInfo()
 	env_["REDIRECT_STATUS"] = ""; // ??? opyat kakayato hueta
 	env_["SCRIPT_NAME"] = loca.getCgi();
-	env_["QUERY_STRING"] = "a=1&b=2    request.getQuery()"; // req.getQuery();
+	env_["QUERY_STRING"] = "a=1&b=2	request.getQuery()"; // req.getQuery();
 
 	env_["AUTH_TYPE"] = ""; //bonus or hz
 	env_["REMOTE_IDENT"] = ""; //bonus
@@ -34,31 +34,31 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 	// пример чужого кода 
 	/*
 	for (std::map<std::string, std::string, ft::comp>::iterator it = req_headers_.begin(); it != req_headers_.end(); it++) {
-    if (!it->second.empty()) {
-      std::string header = "HTTP_" + ft::to_upper(it->first);
-      std::replace(header.begin(), header.end(), '-', '_');
-      cgi_env_[header] = it->second;
-    }
+	if (!it->second.empty()) {
+	  std::string header = "HTTP_" + ft::to_upper(it->first);
+	  std::replace(header.begin(), header.end(), '-', '_');
+	  cgi_env_[header] = it->second;
+	}
 	*/
 	// ну или можно забить хуй)
 
-    // не хочу ничего решать
-    // и хуй тоже не хочу
-    // вот сиськи
-//    .| : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : :”-'\,,
-//    ..\: : : : : : : : : : :'\: : : : : : : : : : : : : :~,,: : : : : : : : : “~-.,_
-//    ...\ : : : : : : : : : : :\: /: : : : : : : : : : : : : : : “,: : : : : : : : : : :"~,_
-//    ... .\: : : : : : : : : : :\|: : : : : : : : :_._ : : : : : : \: : : : : : : : : : : : :”- .
-//    ... ...\: : : : : : : : : : \: : : : : : : : ( O ) : : : : : : \: : : : : : : : : : : : : : '\._
-//    ... ... .\ : : : : : : : : : '\': : : : : : : :"*": : : : : : : :|: : : : : : : : : : : : : : : |0)
-//    ... ... ...\ : : : : : : : : : '\: : : : : : : : : : : : : : : :/: : : : : : : : : : : : : : : /""
-//    ... ... .....\ : : : : : : : : : \: : : : : : : : : : : : : ,-“: : : : : : : : : : : : : : : :/
-//    ... ... ... ...\ : : : : : : : : : \: : : : : : : : : _=" : : : : : ',_.: : : : : : : :,-“
-//    ... ... ... ... \,: : : : : : : : : \: :"”'~---~”" : : : : : : : : : : : : = :"”~~
+	// не хочу ничего решать
+	// и хуй тоже не хочу
+	// вот сиськи
+//	.| : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : :”-'\,,
+//	..\: : : : : : : : : : :'\: : : : : : : : : : : : : :~,,: : : : : : : : : “~-.,_
+//	...\ : : : : : : : : : : :\: /: : : : : : : : : : : : : : : “,: : : : : : : : : : :"~,_
+//	... .\: : : : : : : : : : :\|: : : : : : : : :_._ : : : : : : \: : : : : : : : : : : : :”- .
+//	... ...\: : : : : : : : : : \: : : : : : : : ( O ) : : : : : : \: : : : : : : : : : : : : : '\._
+//	... ... .\ : : : : : : : : : '\': : : : : : : :"*": : : : : : : :|: : : : : : : : : : : : : : : |0)
+//	... ... ...\ : : : : : : : : : '\: : : : : : : : : : : : : : : :/: : : : : : : : : : : : : : : /""
+//	... ... .....\ : : : : : : : : : \: : : : : : : : : : : : : ,-“: : : : : : : : : : : : : : : :/
+//	... ... ... ...\ : : : : : : : : : \: : : : : : : : : _=" : : : : : ',_.: : : : : : : :,-“
+//	... ... ... ... \,: : : : : : : : : \: :"”'~---~”" : : : : : : : : : : : : = :"”~~
 
 
 
-    if (loca.getCgi() == "python") { // ебанный стыд. напомните сжечь этот код
+	if (loca.getCgi() == "python") { // ебанный стыд. напомните сжечь этот код
 		script_argv_[0] = (char *)"python3";
 		script_argv_[1] = (char *)"-m";
 		script_argv_[2] = (char *)"./testers/alch.sgi"; // todo replace to get_path_info
@@ -89,12 +89,12 @@ std::pair<int, std::string> Cgi::execute() {
 //	FILE *out = tmpfile();
 
 	// тут будет execve
-    std::cout << BgBLUE << "getMethod |" << request_.getMethod()<< RESET << std::endl;
-    std::cout << BgBLUE << "getRoute |" << request_.getRoute() + request_.getQuery()<< RESET << std::endl;
-    std::cout << BgBLUE << "getQuery |" << request_.getQuery()<< RESET << std::endl;
-    std::cout << BgBLUE << "getContentType |" << request_.getContentType()<< RESET << std::endl;
-    std::cout << BgBLUE << "getContentLength |" << request_.getContentLength()<< RESET << std::endl;
-    std::cout << BgBLUE << "getPathInfo |" << request_.getPathInfo()<< RESET << std::endl;
+	std::cout << BgBLUE << "getMethod |" << request_.getMethod()<< RESET << std::endl;
+	std::cout << BgBLUE << "getRoute |" << request_.getRoute() + request_.getQuery()<< RESET << std::endl;
+	std::cout << BgBLUE << "getQuery |" << request_.getQuery()<< RESET << std::endl;
+	std::cout << BgBLUE << "getContentType |" << request_.getContentType()<< RESET << std::endl;
+	std::cout << BgBLUE << "getContentLength |" << request_.getContentLength()<< RESET << std::endl;
+	std::cout << BgBLUE << "getPathInfo |" << request_.getPathInfo()<< RESET << std::endl;
 
 	std::pair <int, std::string> best_sgi;
 
