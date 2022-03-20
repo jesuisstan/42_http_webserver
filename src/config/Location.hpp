@@ -9,8 +9,6 @@ private:
 	std::set<std::string>		methods;
 	std::set<std::string>		index;
 	std::string					alias;
-	std::string					cgi;
-	std::string					cgiExt;
 	std::string					redirection;
 	std::string					_cmnd;
 	int							clientMaxBodySize;
@@ -30,8 +28,6 @@ public:
 	const std::set<std::string>		&getIndex() const;
 	const std::string				&getRedirection() const;
 	const std::string				&getAlias() const;
-	const std::string				&getCgi() const;
-	const std::string				&getCgiExt() const;
 	const int						&getClientMaxBodySize() const;
 	const bool						&getAutoindex() const;
 
@@ -39,8 +35,6 @@ public:
 	void							setIndex(std::istream &ifs);
 	void							setRedirection(std::istream &ifs);
 	void							setAlias(std::istream &ifs);
-	void							setCgi(std::istream &ifs);
-	void							setCgiExt(std::istream &ifs);
 	void							setClientMaxBodySize(std::istream &ifs);
 	void							setAutoindex(std::istream &ifs);
 };
