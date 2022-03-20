@@ -128,7 +128,7 @@ const std::string &RequestParser::getBody() const {
     return this->body_;
 }
 
-const std::string &RequestParser::getHeaders() const {
+const std::map<std::string, std::string> &RequestParser::getHeaders() const {
     return this->headers_;
 }
 
@@ -271,9 +271,26 @@ void RequestParser::setBody() {
 void RequestParser::setHeaders() {
     std::string erasedRequest = request_;
     size_t headersEnd = request_.find("\r\n\r\n");
-    if (headersEnd != std::string::npos)
-        headers_ = erasedRequest.substr(0, headersEnd);
-//    std::cout << "__HEADERS____________|" << GREEN << headers_  << RESET << std::endl;
+    std::string headers = erasedRequest.substr(0, headersEnd + 4);
+    if (headersEnd != std::string::npos)  {
+        size_t  lineEnd = headers.find("\n");
+        while (lineEnd != std::string::npos) {
+            std::string line = headers.substr(0,lineEnd);
+            size_t colonPos = line.find(":");
+            if (colonPos != std::string::npos) {
+                std::string headerName = line.substr(0, colonPos);
+                std::string headerContent = line.substr(colonPos + 2);
+                headers_.insert(std::pair<std::string, std::string> (headerName, headerContent));
+            }
+            headers = headers.substr(lineEnd + 1);
+            lineEnd = headers.find("\n");
+        }
+    }
+//    std::map<std::string, std::string>::iterator it;
+//    for (it=headers_.begin(); it!=headers_.end(); it++) {
+//        std::cout << "__HEADERS____________|" << GREEN << it->first << RESET <<": " << BLUE << it->second << RESET <<"|"<< std::endl;
+//
+//    }
 }
 
 void RequestParser::setContentLength() {

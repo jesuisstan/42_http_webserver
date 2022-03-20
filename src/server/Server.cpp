@@ -161,7 +161,10 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
                         memset(buffer, 0, BUFFER_SIZE);
                         if (findReqEnd(request_buffer, request_len))
                         {
-							std::cout << YELLOW << request_buffer << RESET << std::endl;
+                            if (request_buffer.length() > 10000)
+                                std::cout << YELLOW << "Request length: " <<  request_buffer.length() << RESET << std::endl;
+                            else
+                                std::cout << YELLOW << request_buffer << RESET << std::endl;
 							try {
 								RequestParser request = RequestParser(request_buffer, request_len);
 								request_buffer = "";

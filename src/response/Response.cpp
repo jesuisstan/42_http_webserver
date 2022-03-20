@@ -193,8 +193,10 @@ void Response::createResponse() {
         setResponseCode(404);
     else if (requestBody_.length() > ClientMaxBodySize_ && !cgiRequested_)
         setResponseCode(413);
-    else if (!cgiRequested_)
+    else if (!cgiRequested_ && requestMethod_ != "PUT" && requestMethod_ != "POST")
         setResponseCode(200);
+    else if (!cgiRequested_)
+        setResponseCode(201);
     if (!cgiRequested_) {
         if ((requestMethod_ == "PUT" || requestMethod_ == "POST") && responseCode_ == 200)
             savePostBody();
@@ -325,7 +327,7 @@ int Response::checkPathForLocation() {
         }
         else
             index = findFileWithExtension(locationIndex_[0], stringFilename);
-        std::cout << RED << locationRoot_ << " | " << requestRoute_  <<RESET << std::endl;
+//        std::cout << RED << locationRoot_ << " | " << requestRoute_  <<RESET << std::endl;
         setResponseBody(index);
         return 1;
     }
