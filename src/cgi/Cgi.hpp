@@ -9,7 +9,7 @@
 class Cgi
 {
 private:
-    RequestParser request_;
+	RequestParser request_;
 	std::map<std::string, std::string>	env_;
 	char *script_argv_[4];
 

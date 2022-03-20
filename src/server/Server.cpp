@@ -91,19 +91,96 @@ void	Server::initiate(const char *ipAddr, int port) {
 	}
 }
 
+void	Server::acceptConnection(void) {
+	int newSD = -1;
+	do {
+		newSD = accept(_listenSocket, NULL, NULL);
+		if (newSD < 0)
+			break;
+		int ret = fcntl(newSD, F_SETFL, fcntl(newSD, F_GETFL, 0) | O_NONBLOCK);
+		if (ret < 0) {
+			std::cout << "fcntl() failed" << std::endl;
+			close(_listenSocket);
+			exit(-1);
+		}
+		std::cout << "New incoming connection:\t" << newSD << std::endl;
+		_fds[_numberFds].fd = newSD;
+		_fds[_numberFds].events = POLLIN;
+		_numberFds++;
+	} while (newSD != -1);
+}
+
+void	Server::handleConnection(int i, ServerConfig &config) {
+	std::cout << "Event detected on descriptor:\t" << _fds[i].fd << std::endl;
+	bool closeConnection = false;
+	bool compressArray = false;
+	std::string requestBuffer = "";
+	size_t requestLength = 0;
+	while (!closeConnection) {
+		char buffer[BUFFER_SIZE] = {0};
+		int ret = recv(_fds[i].fd, buffer, sizeof(buffer), 0);
+		if (ret <= 0) {
+			if (ret == 0)
+				closeConnection = true;
+			break;
+		}
+		requestBuffer += static_cast<std::string>(buffer).substr(0, ret);
+		requestLength += ret;
+		std::cout << requestLength << " bytes received from sd:\t" << _fds[i].fd <<  std::endl;
+		memset(buffer, 0, BUFFER_SIZE);
+		if (findReqEnd(requestBuffer, requestLength))
+		{
+			std::cout << YELLOW << requestBuffer << RESET << std::endl;
+			try {
+				RequestParser request = RequestParser(requestBuffer, requestLength);
+				requestBuffer = "";
+				requestLength = 0;
+				Response response = Response(request, config);
+				char *responseStr = const_cast<char *>(response.getResponse().c_str());
+				std::cout << CYAN << response.getResponseCode() << RESET << std::endl;
+				ret = send(_fds[i].fd, responseStr, strlen(responseStr), 0);
+				if (ret < 0) {
+					std::cout << "send() failed" << std::endl;
+					closeConnection = true;
+					break;
+				}
+			}
+			catch (RequestParser::UnsupportedMethodException &e ) {
+				std::cout << e.what() << std::endl;
+			}
+		}
+	}
+	if (closeConnection) {
+		close(_fds[i].fd);
+		std::cout << "Connection has been closed:\t" << _fds[i].fd << std::endl;
+		_fds[i].fd = -1;
+		compressArray = true;
+	}
+	if (compressArray) {
+		compressArray = false;
+		for (int i = 0; i < _numberFds; i++) {
+			if (_fds[i].fd == -1)
+			{
+				for (int j = i; j < _numberFds; j++)
+				{
+					_fds[j].fd = _fds[j + 1].fd;
+				}
+				i--;
+				_numberFds--;
+				std::cout << "Array of client's descriptors compressed" << std::endl;
+			}
+		}
+	}
+}
+
 void	Server::runServer(int timeout,  ServerConfig &config) {
+	signal(SIGINT, interruptHandler);
 	_fds[0].fd = _listenSocket;
 	_fds[0].events = POLLIN;
 	this->setTimeout(timeout);
-
-	char buffer[BUFFER_SIZE];
-    size_t request_len = 0;
-    std::string request_buffer;
 	this->_numberFds = 1;
 	int currentSize = 0;
-	while (g_serverOnAir != false)
-	{
-		signal(SIGINT, interruptHandler);
+	while (g_serverOnAir != false) {
 		std::cout << "Waiting on poll()...\n";
 		int ret = poll(_fds, _numberFds, _timeout);
 		if (ret < 0) {
@@ -115,101 +192,14 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 			break;
 		}
 		currentSize = _numberFds;
-		bool compressArray = false;
-		for (int i = 0; i < currentSize; i++)
-		{
+		for (int i = 0; i < currentSize; i++) {
 			if (_fds[i].revents == 0)
 				continue;
-			if (_fds[i].revents && POLLIN)
-			{
+			if (_fds[i].revents && POLLIN) {
 				if( _fds[i].fd == _listenSocket)
-				{
-					int new_sd = -1;
-					do
-					{
-						new_sd = accept(_listenSocket, NULL, NULL);
-						if (new_sd < 0)
-							break;
-						ret = fcntl(new_sd, F_SETFL, fcntl(new_sd, F_GETFL, 0) | O_NONBLOCK);
-						if (ret < 0) {
-							std::cout << "fcntl() failed" << std::endl;
-							close(_listenSocket);
-							exit(-1);
-						}
-						std::cout << "New incoming connection:\t" << new_sd << std::endl;
-						_fds[_numberFds].fd = new_sd;
-						_fds[_numberFds].events = POLLIN;
-						_numberFds++;
-					} while (new_sd != -1);
-				}
-				else
-				{
-					std::cout << "Event detected on descriptor:\t" << _fds[i].fd << std::endl;
-					int closeConnection = false;
-					while (true)
-					{
-						ret = recv(_fds[i].fd, buffer, sizeof(buffer), 0);
-						if (ret < 0)
-							break;
-						if (ret == 0) {
-							closeConnection = true;
-							break;
-						}
-                        request_buffer += static_cast<std::string>(buffer).substr(0, ret);
-                        request_len += ret;
-//						std::cout << BLUE << request_buffer << RESET << std::endl;
-                        memset(buffer, 0, BUFFER_SIZE);
-                        if (findReqEnd(request_buffer, request_len))
-                        {
-							std::cout << YELLOW << request_buffer << RESET << std::endl;
-							try {
-								RequestParser request = RequestParser(request_buffer, request_len);
-								request_buffer = "";
-								request_len = 0;
-								Response response = Response(request, config);
-								char *responseStr = const_cast<char *>(response.getResponse().c_str());
-								std::cout << CYAN << response.getResponseCode() << RESET << std::endl;
-								ret = send(_fds[i].fd, responseStr, strlen(responseStr), 0);
-								if (ret < 0) {
-									std::cout << "send() failed" << std::endl;
-									closeConnection = true;
-									break;
-								}
-							}
-							catch (RequestParser::UnsupportedMethodException &e ) {
-								std::cout << e.what() << std::endl;
-							}
-							std::cout << request_len << " bytes received from sd:\t" << _fds[i].fd <<  std::endl;
-							//std::string headers = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 47\n\n";
-							//std::string body = "SURPRISE MOTHERF@CKER!\n\nCyberpunk ain't dead!!!\n";
-							//std::string resp = headers + body;
-							//ret = send(_fds[i].fd, resp.c_str(), resp.length(), 0);
-						}
-					}
-					if (closeConnection)
-					{
-						close(_fds[i].fd);
-						std::cout << "Connection has been closed:\t" << _fds[i].fd << std::endl;
-						_fds[i].fd = -1;
-						compressArray = true;
-					}
-				}
-			}
-		}
-		if (compressArray)
-		{
-			compressArray = false;
-			for (int i = 0; i < _numberFds; i++)
-			{
-				if (_fds[i].fd == -1)
-				{
-					for (int j = i; j < _numberFds; j++)
-					{
-						_fds[j].fd = _fds[j + 1].fd;
-					}
-					i--;
-					_numberFds--;
-					std::cout << "Array of client's descriptors compressed" << std::endl;
+					acceptConnection();
+				else {
+					handleConnection(i, config);
 				}
 			}
 		}
@@ -217,28 +207,25 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 }
 
 void	Server::closeConnections(void) {
-	for (int i = 0; i < _numberFds; i++)
-	{
-		if (_fds[i].fd >= 0)
-		{
+	for (int i = 0; i < _numberFds; i++) {
+		if (_fds[i].fd >= 0) {
 			close(_fds[i].fd);
 			std::cout << "Connection successfully closed:\t" << _fds[i].fd << std::endl;
 		}
 	}
 }
 
-bool Server::findReqEnd(std::string request_buffer, size_t request_len) {
-    std::string method = request_buffer;
-    method = method.substr(0, request_buffer.find_first_of(' '));
-//	std::cout << "|" << request_buffer[request_len - 5] << "|" << std::endl;
-    if (request_buffer[request_len - 1] == '\n' &&
-    request_buffer[request_len - 2] == '\r' &&
-    request_buffer[request_len - 3] == '\n' &&
-    request_buffer[request_len - 4] == '\r') {
-        if (method != "POST" || request_buffer[request_len - 5] == '0')
-            return true;
-    }
-    return false;
+bool Server::findReqEnd(std::string requestBuffer, size_t requestLength) {
+	std::string method = requestBuffer;
+	method = method.substr(0, requestBuffer.find_first_of(' '));
+	if (requestBuffer[requestLength - 1] == '\n' &&
+	requestBuffer[requestLength - 2] == '\r' &&
+	requestBuffer[requestLength - 3] == '\n' &&
+	requestBuffer[requestLength - 4] == '\r') {
+		if (method != "POST" || requestBuffer[requestLength - 5] == '0')
+			return true;
+	}
+	return false;
 }
 
 void	interruptHandler(int sig_int) {
