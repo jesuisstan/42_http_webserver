@@ -23,6 +23,29 @@ bool	isPositiveDigit(std::string &s)
 	return true;
 }
 
+int hexToDec(std::string hex)
+{
+    int len = hex.size();
+    int base = 1;
+    int dec = 0;
+    for (int i = len - 1; i >= 0; i--) {
+        if (hex[i] >= '0' && hex[i] <= '9') {
+            dec += (int(hex[i]) - 48) * base;
+            base = base * 16;
+        }
+        else if (hex[i] >= 'A' && hex[i] <= 'F') {
+            dec += (int(hex[i]) - 55) * base;
+            base = base * 16;
+        }
+        else if (hex[i] >= 'a' && hex[i] <= 'f') {
+            dec += (int(hex[i]) - 87) * base;
+            base = base * 16;
+        }
+    }
+    return dec;
+}
+
+
 void	readSemicolon(std::istream &ifs)
 {
 	std::string	cmnd;

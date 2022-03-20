@@ -151,7 +151,7 @@ void	ServerConfig::setCgiExt(std::istream &ifs) {
 	if (!(ifs >> cgiExt))
 		baseError("Failed parsing cgiExt");
 	cgiExt = cutSemicolon(cgiExt);
-	// std::cout << "parced cgiExt " << cgiExt << std::endl;
+//	 std::cout  << GREEN << "parsed cgiExt "<< cgiExt << RESET << std::endl;
 }
 
 
@@ -185,6 +185,8 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
         clientMaxBodySize = other.clientMaxBodySize;
         errorPages = other.errorPages;
         locations = other.locations;
+        cgi = other.cgi;
+        cgiExt = other.cgiExt;
     }
     return *this;
 }

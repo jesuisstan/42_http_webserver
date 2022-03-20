@@ -1,10 +1,9 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 
-#include "webserv.hpp"
-#include "ServerConfig.hpp"
-#include "RequestParser.hpp"
-#include "Response.hpp" // ?
+#include "../../inc/webserv.hpp"
+#include "../config/ServerConfig.hpp"
+#include "../request/RequestParser.hpp"
 
 class Cgi
 {

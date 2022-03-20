@@ -169,18 +169,20 @@ void RequestParser::setRoute() {
     size_t routeEnd = fistReqStr.find_last_of(' ') - 1;
     if (routeStart != routeEnd) {
         route_ = EraseSpaces(fistReqStr.substr(routeStart, routeEnd));
+
         size_t queryStart = route_.find('?');
         if (queryStart != std::string::npos) {
             query_ = route_.substr(queryStart);
             route_ = route_.substr(0, queryStart);
         }
+        if (route_[route_.length() - 1] != '/')
+            route_ = route_ + "/";
         setPath();
     } else {
-        route_ = "";
+        route_ = "./";
         path_.push_back("");
     }
-    for (size_t i = 0; i < path_.size(); i++)
-        std::cout << BgCYAN << "|" << path_[i] << "|" << RESET << std::endl;
+    std::cout << BgCYAN << "|" << route_ << "|" << RESET << std::endl;
 }
 
 void RequestParser::setPath() {
@@ -188,7 +190,8 @@ void RequestParser::setPath() {
     size_t slash = 0;
     while (slash != std::string::npos) {
         slash = route.find('/');
-        path_.push_back(route.substr(0, slash));
+        if (route.substr(0, slash).length())
+            path_.push_back(route.substr(0, slash));
         route = route.substr(slash + 1);
     }
 }
@@ -264,7 +267,7 @@ void RequestParser::setBody() {
         erasedRequest = erasedRequest.substr(bodyStart + 4);
         size_t bodyEnd = erasedRequest.find("0\r\n\r\n");
         if (bodyEnd != std::string::npos)
-            body_ = erasedRequest.substr(0, bodyEnd);
+            body_ = erasedRequest.substr(0, bodyEnd - 2);
 //std::cout << "__BODY_______________|"<< erasedRequest << body_ << "|" << std::endl;
 }}
 
@@ -275,7 +278,7 @@ void RequestParser::setHeaders() {
     if (headersEnd != std::string::npos)  {
         size_t  lineEnd = headers.find("\n");
         while (lineEnd != std::string::npos) {
-            std::string line = headers.substr(0,lineEnd);
+            std::string line = headers.substr(0,lineEnd - 1);
             size_t colonPos = line.find(":");
             if (colonPos != std::string::npos) {
                 std::string headerName = line.substr(0, colonPos);
@@ -355,6 +358,13 @@ bool RequestParser::isSupportedMethod() {
             return true;
     }
     return false;
+}
+
+void RequestParser::showHeaders() {
+    std::map<std::string, std::string>::iterator it;
+    for (it=headers_.begin(); it!=headers_.end(); it++) {
+        std::cout << GREEN << it->first << RESET <<": " << BLUE << it->second << RESET << std::endl;
+    }
 }
 
 std::string RequestParser::parseByChar(const std::string &string, char symbol) {

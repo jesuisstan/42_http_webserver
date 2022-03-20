@@ -18,57 +18,57 @@
 class RequestParser {
 
     private:
-            std::string                         host_;
-            std::string                         body_;
-            std::string                         route_;
-            std::string                         query_;
-            std::string                         accept_;
-            std::string                         method_;
-            std::string                         request_;
-            std::string                         pathInfo_;
-            std::string                         protocol_;
-            std::string                         userAgent_;
-            std::string                         connection_;
-            std::string                         contentType_;
-            std::string                         secFetchDest_;
-            std::string                         secFetchMode_;
-            std::string                         secFetchSite_;
-            std::string                         secFetchUser_;
-            std::string                         cacheControl_;
-            std::string                         acceptLanguage_;
-            std::string                         acceptEncoding_;
+            std::string                                 host_;
+            std::string                                 body_;
+            std::string                                 route_;
+            std::string                                 query_;
+            std::string                                 accept_;
+            std::string                                 method_;
+            std::string                                 request_;
+            std::string                                 pathInfo_;
+            std::string                                 protocol_;
+            std::string                                 userAgent_;
+            std::string                                 connection_;
+            std::string                                 contentType_;
+            std::string                                 secFetchDest_;
+            std::string                                 secFetchMode_;
+            std::string                                 secFetchSite_;
+            std::string                                 secFetchUser_;
+            std::string                                 cacheControl_;
+            std::string                                 acceptLanguage_;
+            std::string                                 acceptEncoding_;
 
-            std::vector<std::string>            path_;
-            size_t                              iterator_;
-            size_t                              contentLength_;
-            std::map<std::string, std::string>  headers_;
-            std::vector<std::string>            supportedMethods_;
+            std::vector<std::string>                    path_;
+            size_t                                      iterator_;
+            size_t                                      contentLength_;
+            std::map<std::string, std::string>          headers_;
+            std::vector<std::string>                    supportedMethods_;
 
-            void                                setMethod();
-            void                                setRoute();
-            void                                setPath();
-            void                                setProtocol();
-            void                                setHost();
-            void                                setUserAgent();
-            void                                setAccept();
-            void                                setAcceptLanguage();
-            void                                setAcceptEncoding();
-            void                                setConnection();
-            void                                setSecFetchDest();
-            void                                setSecFetchMode();
-            void                                setSecFetchSite();
-            void                                setSecFetchUser();
-            void                                setCacheControl();
-            void                                setBody();
-            void                                setHeaders();
-            void                                setContentLength();
-            void                                setContentType();
+            void                                        setMethod();
+            void                                        setRoute();
+            void                                        setPath();
+            void                                        setProtocol();
+            void                                        setHost();
+            void                                        setUserAgent();
+            void                                        setAccept();
+            void                                        setAcceptLanguage();
+            void                                        setAcceptEncoding();
+            void                                        setConnection();
+            void                                        setSecFetchDest();
+            void                                        setSecFetchMode();
+            void                                        setSecFetchSite();
+            void                                        setSecFetchUser();
+            void                                        setCacheControl();
+            void                                        setBody();
+            void                                        setHeaders();
+            void                                        setContentLength();
+            void                                        setContentType();
 
-            void                                parse();
-            void                                setSupportedMethods();
-            std::string                         parseByChar(const std::string& string, char symbol);
-            std::string                         parseByHeaderName(const std::string& name);
-            static std::string                  EraseSpaces(const std::string& string);
+            void                                        parse();
+            void                                        setSupportedMethods();
+            std::string                                 parseByChar(const std::string& string, char symbol);
+            std::string                                 parseByHeaderName(const std::string& name);
+            static std::string                          EraseSpaces(const std::string& string);
 
 public:
             RequestParser();
@@ -77,7 +77,7 @@ public:
             RequestParser &operator=(const RequestParser &other);
             ~RequestParser() {}
 
-            void                        setPathInfo(std::string pathInfo);
+            void                                        setPathInfo(std::string pathInfo);
 
             const   std::string                         &getRequest()            const;
             const   std::string                         &getMethod()             const;
@@ -103,6 +103,7 @@ public:
             const   std::vector<std::string>            &getPath()               const;
             const   std::vector<std::string>            &getSupportedMethods()   const;
 
+            void                                        showHeaders();
             bool                                        isSupportedMethod();
 
             class UnsupportedMethodException: public std::exception

@@ -16,18 +16,18 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 
 	env_["SERVER_PROTOCOL"] = "HTTP/1.1";
 	env_["SERVER_PORT"] = numberToString(serv.getPort());
-	env_["REQUEST_METHOD"] = "GET"; // req.getMethod()
-	env_["REQUEST_URI"] = "/YoupiBananae/alch.sgi?a=1&b=2"; // req.getRoute() + req.getQuery()
-	env_["PATH_INFO"] = "./testers/alch.sgi"; // req.getPathInfo()
+	env_["REQUEST_METHOD"] = req.getMethod(); // req.getMethod()
+	env_["REQUEST_URI"] = req.getRoute() + req.getQuery(); // req.getRoute() + req.getQuery()
+	env_["PATH_INFO"] = req.getPathInfo(); // req.getPathInfo()
 	env_["REDIRECT_STATUS"] = ""; // ??? opyat kakayato hueta
 	env_["SCRIPT_NAME"] = serv.getCgi();
-	env_["QUERY_STRING"] = "a=1&b=2    request.getQuery()"; // req.getQuery();
+	env_["QUERY_STRING"] =  req.getQuery(); // req.getQuery();
 
 	env_["AUTH_TYPE"] = ""; //bonus or hz
 	env_["REMOTE_IDENT"] = ""; //bonus
 	env_["REMOTE_USER"] = ""; //bonus
-	env_["CONTENT_TYPE"] = "request.getContentType()"; //req.getContentType()
-	env_["CONTENT_LENGTH"] =  "request.getContentLenght()"; //req.getContentLength()
+	env_["CONTENT_TYPE"] = req.getContentType(); //req.getContentType()
+	env_["CONTENT_LENGTH"] =  req.getContentLength(); //req.getContentLength()
 	
 	// Еще сюда нужно добавить все поля с запроса, которые начинаются на http
 	// идеально, если ты их в мапу считала

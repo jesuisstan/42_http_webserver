@@ -113,7 +113,7 @@ void Response::setContentType() {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "application/javascript\n";
             trimRequestPath();
-        } else if (extension == Location_.getCgiExt())
+        } else if (extension == ServerConfig_.getCgiExt())
             requestedFile_ = requestPath_[routeEnd];
          else
             responseContentType_ = "text/html\n";
@@ -164,6 +164,7 @@ void Response::setLocationRedirection(const std::string& locationRedirection) {
 
 void Response::setResponseCodes() {
     responseCodes_.insert(std::pair<int, std::string>(200, "200 OK\n"));
+    responseCodes_.insert(std::pair<int, std::string>(201, "201 Created\n"));
     responseCodes_.insert(std::pair<int, std::string>(301, "301 Moved Permanently\n"));
     responseCodes_.insert(std::pair<int, std::string>(400, "400 Bad Request\n"));
     responseCodes_.insert(std::pair<int, std::string>(404, "404 Not Found\n"));
@@ -184,7 +185,6 @@ void Response::createResponse() {
 
     readLocationData();
     setContentType();
-    std::cout << GREEN << checkPathForLocation() << RESET << std::endl;
     if (!locationRedirection_.empty())
         setResponseCode(301);
     else if (!locationMethods_.count(requestMethod_) && !requestedFile_.length())
@@ -198,7 +198,7 @@ void Response::createResponse() {
     else if (!cgiRequested_)
         setResponseCode(201);
     if (!cgiRequested_) {
-        if ((requestMethod_ == "PUT" || requestMethod_ == "POST") && responseCode_ == 200)
+        if (responseCode_ == 201)
             savePostBody();
         if (responseBody_.empty()) {
             body = readContent(getScreen());
@@ -216,6 +216,7 @@ void Response::createResponse() {
         }
         setResponse();
     }
+
 }
 
 void Response::checkFileRequested() {
@@ -233,6 +234,31 @@ void Response::checkFileRequested() {
     }
 }
 
+std::string Response::handleChunkedBody() {
+    std::string newBody;
+    std::string restBody = requestBody_;
+    size_t lineEnd;
+    while (restBody.length()) {
+        lineEnd = restBody.find("\n");
+        if (lineEnd != std::string::npos) {
+            std::string chunkSize = restBody.substr(0, lineEnd - 1);
+            int decChunkSize;
+            if (!isPositiveDigit(chunkSize)) {
+                decChunkSize = hexToDec(chunkSize);
+            } else {
+                decChunkSize = stringToNumber(chunkSize);
+            }
+            newBody += restBody.substr(lineEnd + 1, decChunkSize);
+//            std::cout << BgCYAN "|" << decChunkSize << "|"RESET << std::endl;
+            restBody = restBody.substr(decChunkSize + lineEnd + 1);
+//            std::cout << RED "|" << restBody.substr(0, 50) << "|"RESET << std::endl;
+        } else
+            break;
+    }
+
+    return newBody;
+}
+
 void Response::savePostBody() {
     int filesCount = 0;
     struct dirent *d;
@@ -240,11 +266,14 @@ void Response::savePostBody() {
     while ((d = readdir(dh)) != NULL)
     { filesCount++; }
     std::string filesCountStr = numberToString(filesCount - 1);
-    std::string filename = requestedFile_.empty() ? filesCountStr : requestedFile_;
+    std::string filename = requestedFile_.empty() ? filesCountStr : requestedFile_.substr(0, requestedFile_.length() - 1);
     std::ofstream	postBodyFile(locationRoot_ + "/" + filename);
-    postBodyFile << requestBody_;
+    std::string encoding = RequestParser_.getHeaders().find("Transfer-Encoding")->second;
+    if (encoding == "chunked" && requestBody_.length())
+        postBodyFile << handleChunkedBody();
+    else
+        postBodyFile << requestBody_;
     postBodyFile.close();
-    std::cout << filename << std::endl;
 }
 
 std::string Response::findMaxPossibleLocation(const std::string &location) {
@@ -281,12 +310,16 @@ void Response::readLocationData() {
         }
     }
     if (maxPossibleLocation != "/")
-        requestRoute_ = requestRoute_.substr(maxPossibleLocation.length());
+        requestRoute_ = requestRoute_.substr(maxPossibleLocation.length() - 1);
 }
 
 
 int Response::checkPathForLocation() {
-    std::string stringFilename = locationRoot_+ requestRoute_ ;
+    std::string stringFilename;
+    if (locationRoot_[locationRoot_.size() - 1] == '/')
+        stringFilename = locationRoot_ + requestRoute_.substr(1, requestRoute_.length() - 2);
+    else
+        stringFilename = locationRoot_ + "/" + requestRoute_.substr(1, requestRoute_.length() - 2);
     char *filename = const_cast<char *>(stringFilename.c_str());
     int openRes = open(filename, O_RDONLY);
     if (openRes == -1 && requestMethod_ != "PUT")
@@ -298,7 +331,7 @@ int Response::checkPathForLocation() {
     }
     if (requestedFile_.find('.') != std::string::npos) {
         std::string extension = requestedFile_.substr(requestedFile_.find('.'));
-        if (extension == Location_.getCgiExt()) {
+        if (extension == ServerConfig_.getCgiExt()) {
             cgiRequested_ = true;
             RequestParser_.setPathInfo(stringFilename);
             std::cout << BgRED << "CGI START" << RESET << std::endl;
@@ -319,7 +352,7 @@ int Response::checkPathForLocation() {
         }
         std::string index;
         if (locationIndex_[0][0] != '.') {
-            std::string file = stringFilename + "/" + locationIndex_[0];
+            std::string file = stringFilename + locationIndex_[0];
             int fd = open(file.c_str(), O_RDONLY);
             if (fd == -1 && requestMethod_ != "PUT")
                 return -1;
@@ -327,7 +360,6 @@ int Response::checkPathForLocation() {
         }
         else
             index = findFileWithExtension(locationIndex_[0], stringFilename);
-//        std::cout << RED << locationRoot_ << " | " << requestRoute_  <<RESET << std::endl;
         setResponseBody(index);
         return 1;
     }
@@ -364,7 +396,6 @@ void    Response::createAutoIndexPage(const char *dir) {
         autoIndexPage +=  (std::string)d->d_name + "</a>\n";
     }
     autoIndexPage += "<div>\n</body>\n</html>\n";
-//    std::cout << BgGREEN << autoIndexPage << RESET << std::endl;
 
     setResponseBody(autoIndexPage);
 }
