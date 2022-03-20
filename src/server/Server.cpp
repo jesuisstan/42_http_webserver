@@ -110,12 +110,11 @@ void	Server::acceptConnection(void) {
 	} while (newSD != -1);
 }
 
-void	Server::handleConnection(int i, ServerConfig &config) {
+void	Server::handleConnection(int i, ServerConfig &config, std::string *requestBuffer, size_t  *requestLength) {
 	std::cout << "Event detected on descriptor:\t" << _fds[i].fd << std::endl;
 	bool closeConnection = false;
 	bool compressArray = false;
-	std::string requestBuffer = "";
-	size_t requestLength = 0;
+
 	while (!closeConnection) {
 		char buffer[BUFFER_SIZE] = {0};
 		int ret = recv(_fds[i].fd, buffer, sizeof(buffer), 0);
@@ -124,17 +123,17 @@ void	Server::handleConnection(int i, ServerConfig &config) {
 				closeConnection = true;
 			break;
 		}
-		requestBuffer += static_cast<std::string>(buffer).substr(0, ret);
-		requestLength += ret;
+		*requestBuffer += static_cast<std::string>(buffer).substr(0, ret);
+		*requestLength += ret;
 		std::cout << requestLength << " bytes received from sd:\t" << _fds[i].fd <<  std::endl;
 		memset(buffer, 0, BUFFER_SIZE);
-		if (findReqEnd(requestBuffer, requestLength))
+		if (findReqEnd(*requestBuffer, *requestLength))
 		{
-			std::cout << YELLOW << requestBuffer << RESET << std::endl;
+			std::cout << YELLOW << *requestBuffer << RESET << std::endl;
 			try {
-				RequestParser request = RequestParser(requestBuffer, requestLength);
-				requestBuffer = "";
-				requestLength = 0;
+				RequestParser request = RequestParser(*requestBuffer, *requestLength);
+				*requestBuffer = "";
+				*requestLength = 0;
 				Response response = Response(request, config);
 				char *responseStr = const_cast<char *>(response.getResponse().c_str());
 				std::cout << CYAN << response.getResponseCode() << RESET << std::endl;
@@ -180,6 +179,8 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 	this->setTimeout(timeout);
 	this->_numberFds = 1;
 	int currentSize = 0;
+		std::string requestBuffer = "";
+	size_t requestLength = 0;
 	while (g_serverOnAir != false) {
 		std::cout << "Waiting on poll()...\n";
 		int ret = poll(_fds, _numberFds, _timeout);
@@ -199,7 +200,7 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 				if( _fds[i].fd == _listenSocket)
 					acceptConnection();
 				else {
-					handleConnection(i, config);
+					handleConnection(i, config, &requestBuffer, &requestLength);
 				}
 			}
 		}

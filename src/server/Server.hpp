@@ -25,7 +25,7 @@ public:
 	int		getNumberFds(void) const;
 	void	initiate(const char *ipAddr, int port);
 	void	acceptConnection(void);
-	void	handleConnection(int i, ServerConfig &config);
+	void	handleConnection(int i, ServerConfig &config, std::string *rB, size_t *rLen);
 	void	runServer(int timeout, ServerConfig &config);
 	void	closeConnections(void);
 
