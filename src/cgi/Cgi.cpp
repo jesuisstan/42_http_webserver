@@ -21,7 +21,7 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 	env_["PATH_INFO"] = req.getPathInfo(); // req.getPathInfo()
 	env_["REDIRECT_STATUS"] = ""; // ??? opyat kakayato hueta
 	env_["SCRIPT_NAME"] = serv.getCgi();
-	env_["QUERY_STRING"] =  req.getQuery(); // req.getQuery();
+	env_["QUERY_STRING"] =  req.getQuery();// req.getQuery();
 
 	env_["AUTH_TYPE"] = ""; //bonus or hz
 	env_["REMOTE_IDENT"] = ""; //bonus
@@ -34,32 +34,33 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 	// пример чужого кода 
 	/*
 	for (std::map<std::string, std::string, ft::comp>::iterator it = req_headers_.begin(); it != req_headers_.end(); it++) {
-    if (!it->second.empty()) {
-      std::string header = "HTTP_" + ft::to_upper(it->first);
-      std::replace(header.begin(), header.end(), '-', '_');
-      cgi_env_[header] = it->second;
-    }
+	if (!it->second.empty()) {
+	  std::string header = "HTTP_" + ft::to_upper(it->first);
+	  std::replace(header.begin(), header.end(), '-', '_');
+	  cgi_env_[header] = it->second;
+	}
 	*/
 	// ну или можно забить хуй)
 
-    // не хочу ничего решать
-    // и хуй тоже не хочу
-    // вот сиськи
-//    .| : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : :”-'\,,
-//    ..\: : : : : : : : : : :'\: : : : : : : : : : : : : :~,,: : : : : : : : : “~-.,_
-//    ...\ : : : : : : : : : : :\: /: : : : : : : : : : : : : : : “,: : : : : : : : : : :"~,_
-//    ... .\: : : : : : : : : : :\|: : : : : : : : :_._ : : : : : : \: : : : : : : : : : : : :”- .
-//    ... ...\: : : : : : : : : : \: : : : : : : : ( O ) : : : : : : \: : : : : : : : : : : : : : '\._
-//    ... ... .\ : : : : : : : : : '\': : : : : : : :"*": : : : : : : :|: : : : : : : : : : : : : : : |0)
-//    ... ... ...\ : : : : : : : : : '\: : : : : : : : : : : : : : : :/: : : : : : : : : : : : : : : /""
-//    ... ... .....\ : : : : : : : : : \: : : : : : : : : : : : : ,-“: : : : : : : : : : : : : : : :/
-//    ... ... ... ...\ : : : : : : : : : \: : : : : : : : : _=" : : : : : ',_.: : : : : : : :,-“
-//    ... ... ... ... \,: : : : : : : : : \: :"”'~---~”" : : : : : : : : : : : : = :"”~~
+	// не хочу ничего решать
+	// и хуй тоже не хочу
+	// вот сиськи
+//	.| : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : :”-'\,,
+//	..\: : : : : : : : : : :'\: : : : : : : : : : : : : :~,,: : : : : : : : : “~-.,_
+//	...\ : : : : : : : : : : :\: /: : : : : : : : : : : : : : : “,: : : : : : : : : : :"~,_
+//	... .\: : : : : : : : : : :\|: : : : : : : : :_._ : : : : : : \: : : : : : : : : : : : :”- .
+//	... ...\: : : : : : : : : : \: : : : : : : : ( O ) : : : : : : \: : : : : : : : : : : : : : '\._
+//	... ... .\ : : : : : : : : : '\': : : : : : : :"*": : : : : : : :|: : : : : : : : : : : : : : : |0)
+//	... ... ...\ : : : : : : : : : '\: : : : : : : : : : : : : : : :/: : : : : : : : : : : : : : : /""
+//	... ... .....\ : : : : : : : : : \: : : : : : : : : : : : : ,-“: : : : : : : : : : : : : : : :/
+//	... ... ... ...\ : : : : : : : : : \: : : : : : : : : _=" : : : : : ',_.: : : : : : : :,-“
+//	... ... ... ... \,: : : : : : : : : \: :"”'~---~”" : : : : : : : : : : : : = :"”~~
 
-	
+
 
 	// std::vector<string> vector;
 	// const char *programname = "abc";
+
 
 	// const char **argv = new const char* [vector.size()+2];   // extra room for program name and sentinel
 	// argv [0] = programname;         // by convention, argv[0] is program name
@@ -100,10 +101,10 @@ std::pair<int, std::string> Cgi::execute() {
     std::cout << BgBLUE << "getContentType |" << request_.getContentType()<< RESET << std::endl;
     std::cout << BgBLUE << "getContentLength |" << request_.getContentLength()<< RESET << std::endl;
     std::cout << BgBLUE << "getPathInfo |" << request_.getPathInfo()<< RESET << std::endl;
-	
-	
-	
-	
+
+
+
+
 
 	// FILE	*in = tmpfile();
 	// FILE	*out = tmpfile();
@@ -130,7 +131,7 @@ std::pair<int, std::string> Cgi::execute() {
 		}
 		perror("not running");
 	}
-		
+
 
 
 

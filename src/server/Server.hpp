@@ -24,10 +24,12 @@ public:
 	int		getTimeout(void) const;
 	int		getNumberFds(void) const;
 	void	initiate(const char *ipAddr, int port);
+	void	acceptConnection(void);
+	void	handleConnection(int i, ServerConfig &config, std::string *rB, size_t *rLen);
 	void	runServer(int timeout, ServerConfig &config);
 	void	closeConnections(void);
 
-    static bool findReqEnd(std::string request_buffer, size_t request_len);
+	static bool findReqEnd(std::string request_buffer, size_t request_len);
 };
 
 void	interruptHandler(int sig_int);
