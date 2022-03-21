@@ -16,18 +16,18 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 
 	env_["SERVER_PROTOCOL"] = "HTTP/1.1";
 	env_["SERVER_PORT"] = numberToString(serv.getPort());
-	env_["REQUEST_METHOD"] = "GET"; // req.getMethod()
-	env_["REQUEST_URI"] = "/YoupiBananae/alch.sgi?a=1&b=2"; // req.getRoute() + req.getQuery()
-	env_["PATH_INFO"] = "./testers/alch.sgi"; // req.getPathInfo()
+	env_["REQUEST_METHOD"] = req.getMethod(); // req.getMethod()
+	env_["REQUEST_URI"] = req.getRoute() + req.getQuery(); // req.getRoute() + req.getQuery()
+	env_["PATH_INFO"] = req.getPathInfo(); // req.getPathInfo()
 	env_["REDIRECT_STATUS"] = ""; // ??? opyat kakayato hueta
-	env_["SCRIPT_NAME"] = loca.getCgi();
-	env_["QUERY_STRING"] = "a=1&b=2	request.getQuery()"; // req.getQuery();
+	env_["SCRIPT_NAME"] = serv.getCgi();
+	env_["QUERY_STRING"] =  req.getQuery();// req.getQuery();
 
 	env_["AUTH_TYPE"] = ""; //bonus or hz
 	env_["REMOTE_IDENT"] = ""; //bonus
 	env_["REMOTE_USER"] = ""; //bonus
-	env_["CONTENT_TYPE"] = "request.getContentType()"; //req.getContentType()
-	env_["CONTENT_LENGTH"] =  "request.getContentLenght()"; //req.getContentLength()
+	env_["CONTENT_TYPE"] = req.getContentType(); //req.getContentType()
+	env_["CONTENT_LENGTH"] =  req.getContentLength(); //req.getContentLength()
 	
 	// Еще сюда нужно добавить все поля с запроса, которые начинаются на http
 	// идеально, если ты их в мапу считала
@@ -58,17 +58,23 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 
 
 
-	if (loca.getCgi() == "python") { // ебанный стыд. напомните сжечь этот код
-		script_argv_[0] = (char *)"python3";
-		script_argv_[1] = (char *)"-m";
-		script_argv_[2] = (char *)"./testers/alch.sgi"; // todo replace to get_path_info
-		script_argv_[3] = 0;
-	}
+	// std::vector<string> vector;
+	// const char *programname = "abc";
+
+
+	// const char **argv = new const char* [vector.size()+2];   // extra room for program name and sentinel
+	// argv [0] = programname;         // by convention, argv[0] is program name
+	// for (int j = 0;  j < vector.size()+1;  ++j)     // copy args
+	// 		argv [j+1] = vector[j] .c_str();
+
+	// argv [vector.size()+1] = NULL;  // end of arguments sentinel is NULL
+
+	// execv (programname, (char **)argv);
 }
 
 
-char **Cgi::getNewEnviroment() const {
-	char			**env;
+char ** Cgi::getNewEnviroment() const {
+	char		**env;
 	std::string		line;
 
 	env = new char*[env_.size() + 1];
@@ -89,18 +95,49 @@ std::pair<int, std::string> Cgi::execute() {
 //	FILE *out = tmpfile();
 
 	// тут будет execve
-	std::cout << BgBLUE << "getMethod |" << request_.getMethod()<< RESET << std::endl;
-	std::cout << BgBLUE << "getRoute |" << request_.getRoute() + request_.getQuery()<< RESET << std::endl;
-	std::cout << BgBLUE << "getQuery |" << request_.getQuery()<< RESET << std::endl;
-	std::cout << BgBLUE << "getContentType |" << request_.getContentType()<< RESET << std::endl;
-	std::cout << BgBLUE << "getContentLength |" << request_.getContentLength()<< RESET << std::endl;
-	std::cout << BgBLUE << "getPathInfo |" << request_.getPathInfo()<< RESET << std::endl;
+    std::cout << BgBLUE << "getMethod |" << request_.getMethod()<< RESET << std::endl;
+    std::cout << BgBLUE << "getRoute |" << request_.getRoute() + request_.getQuery()<< RESET << std::endl;
+    std::cout << BgBLUE << "getQuery |" << request_.getQuery()<< RESET << std::endl;
+    std::cout << BgBLUE << "getContentType |" << request_.getContentType()<< RESET << std::endl;
+    std::cout << BgBLUE << "getContentLength |" << request_.getContentLength()<< RESET << std::endl;
+    std::cout << BgBLUE << "getPathInfo |" << request_.getPathInfo()<< RESET << std::endl;
+
+
+
+
+
+	// FILE	*in = tmpfile();
+	// FILE	*out = tmpfile();
+	char	**envs = getNewEnviroment();
+	int		res, pid;
+
+	pid = fork();
+	if (!pid){
+		if (env_["SCRIPT_NAME"] == "python") {
+			const char *args[] = {
+				"python3",
+				"-m",
+				env_["PATH_INFO"].c_str(),
+				0};
+			execve(args[0], (char **)args, envs);
+		}
+
+		else {
+			const char *args[] = {
+				"php?",
+				env_["PATH_INFO"].c_str(),
+				0};
+			execve(args[0], (char **)args, envs);
+		}
+		perror("not running");
+	}
+
+
+
 
 	std::pair <int, std::string> best_sgi;
-
 	best_sgi.first = 200;
 	best_sgi.second = "Our sgi is working";
-
 	return best_sgi;
 
 }

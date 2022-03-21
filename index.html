@@ -233,7 +233,7 @@
 		}
 
 	async function sendSignUpForm() {
-		const raw = "\n" + JSON.stringify({
+		const raw = JSON.stringify({
 			name: name,
 			password: password
 		}) + "0\r\n\r\n";

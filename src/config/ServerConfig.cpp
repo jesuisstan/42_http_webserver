@@ -22,12 +22,21 @@ ServerConfig::ServerConfig(std::ifstream &ifs):
 			setLocation(ifs);
 		else if (cmnd == "client_max_body_size")
 			setClientMaxBodySize(ifs);
+		else if (cmnd == "cgi")
+			setCgi(ifs);
+		else if (cmnd == "cgi_ext")
+			setCgiExt(ifs);
 		else if (cmnd == "}")
 		{
 			if (host.empty() or not locations.size())
 				baseError("Not configure hostName or location");
 			if (!errorPages.size())
 				errorPages[404] = DEFAULT_ERROR_PAGE;
+			if (cgi.empty() + cgiExt.empty() == 1)
+				baseError("fill only one from cgi and cgi_extention");
+			if (!cgi.empty() and cgi != "python" and cgi != "php" and cgi != "tester")
+				baseError("unknown type cgi. Allow cgis: 'python', 'php' and 'tester");
+
 			return ;
 		}
 		else
@@ -131,6 +140,20 @@ void ServerConfig::setLocation(std::istream &ifs)
 	// std::cout << "parsed location \n" << locations[path];
 }
 
+void	ServerConfig::setCgi(std::istream &ifs) {
+	if (!(ifs >> cgi))
+		baseError("Failed parsing cgi");
+	cgi = cutSemicolon(cgi);
+	// std::cout << "parced cgi " << cgi << std::endl;
+}
+
+void	ServerConfig::setCgiExt(std::istream &ifs) {
+	if (!(ifs >> cgiExt))
+		baseError("Failed parsing cgiExt");
+	cgiExt = cutSemicolon(cgiExt);
+//	 std::cout  << GREEN << "parsed cgiExt "<< cgiExt << RESET << std::endl;
+}
+
 
 const std::string &ServerConfig::getHost() const { return host; }
 
@@ -144,21 +167,28 @@ const std::map<int, std::string> &ServerConfig::getErrorPages() const { return e
 
 const std::map<std::string, Location> &ServerConfig::getLocations() const { return locations; }
 
+const std::string &ServerConfig::getCgi() const { return cgi; }
+
+const std::string &ServerConfig::getCgiExt() const { return cgiExt; }
+
+
 ServerConfig::ServerConfig(const ServerConfig &other) {
-	*this = other;
+    *this = other;
 }
 
 ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
-	if (this != &other) {
-		_cmnd = other._cmnd;
-		host = other.host;
-		serverName = other.serverName;
-		port = other.port;
-		clientMaxBodySize = other.clientMaxBodySize;
-		errorPages = other.errorPages;
-		locations = other.locations;
-	}
-	return *this;
+    if (this != &other) {
+        _cmnd = other._cmnd;
+        host = other.host;
+        serverName = other.serverName;
+        port = other.port;
+        clientMaxBodySize = other.clientMaxBodySize;
+        errorPages = other.errorPages;
+        locations = other.locations;
+        cgi = other.cgi;
+        cgiExt = other.cgiExt;
+    }
+    return *this;
 }
 
 std::ostream &operator<<(std::ostream &out, const ServerConfig &sc)
@@ -167,6 +197,8 @@ std::ostream &operator<<(std::ostream &out, const ServerConfig &sc)
 		<< "\n\tserverName: " << sc.getServerName()
 		<< "\n\tPort: " << sc.getPort()
 		<< "\n\tmax_body_size: " << sc.getClientMaxBodySize()
+		<< "\n\tcgi: " << sc.getCgi()
+		<< "\n\tcgiExt: " << sc.getCgiExt()
 		<< "\n\tErrorPages:";
 	std::map<int, std::string> pages = sc.getErrorPages();
 	std::map<int, std::string>::iterator pi;

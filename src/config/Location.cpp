@@ -2,7 +2,6 @@
 
 Location::Location(std::istream &ifs):
 					alias(""),
-					cgi(""),
 					clientMaxBodySize(-1),
 					autoindex(false)
 {
@@ -20,10 +19,6 @@ Location::Location(std::istream &ifs):
 			setRedirection(ifs);
 		else if (cmnd == "alias")
 			setAlias(ifs);
-		else if (cmnd == "cgi")
-			setCgi(ifs);
-		else if (cmnd == "cgi_ext")
-			setCgiExt(ifs);
 		else if (cmnd == "autoindex")
 			setAutoindex(ifs);
 		else if (cmnd == "client_max_body_size")
@@ -37,10 +32,6 @@ Location::Location(std::istream &ifs):
 			methods.insert("GET");
 		if (index.empty())
 			index.insert(DEFAULT_INDEX);
-		if (cgi.empty() + cgiExt.empty() == 1)
-			baseError("fill only one from cgi and cgi_extention");
-		if (!cgi.empty() and cgi != "python" and cgi != "php")
-			baseError("unknown type cgi. Allow only 'python' and 'php'");
 		return;
 	}
 	else
@@ -123,20 +114,6 @@ void	Location::setAlias(std::istream &ifs) {
 	// std::cout << "parced root " << root << std::endl;
 }
 
-void	Location::setCgi(std::istream &ifs) {
-	if (!(ifs >> cgi))
-		baseError("Failed parsing cgi");
-	cgi = cutSemicolon(cgi);
-	// std::cout << "parced cgi " << cgi << std::endl;
-}
-
-void	Location::setCgiExt(std::istream &ifs) {
-	if (!(ifs >> cgiExt))
-		baseError("Failed parsing cgiExt");
-	cgiExt = cutSemicolon(cgiExt);
-	// std::cout << "parced cgiExt " << cgiExt << std::endl;
-}
-
 
 void	Location::setAutoindex(std::istream &ifs) {
 	std::string	line;
@@ -169,10 +146,6 @@ const std::string &Location::getAlias() const { return alias; }
 
 const std::string &Location::getRedirection() const { return redirection; }
 
-const std::string &Location::getCgi() const { return cgi; }
-
-const std::string &Location::getCgiExt() const { return cgiExt; }
-
 const int &Location::getClientMaxBodySize() const { return clientMaxBodySize; }
 
 const bool &Location::getAutoindex() const { return autoindex; }
@@ -187,8 +160,6 @@ std::ostream& operator<< (std::ostream &out, const Location &loca)
 	std::set<std::string> index = loca.getIndex();
 	std::copy(index.begin(), index.end(), std::ostream_iterator<std::string>(out, ", "));
 	out	<< "\n\t\talias: " << loca.getAlias() 
-		<< "\n\t\tcgi: " << loca.getCgi()
-		<< "\n\t\tcgiExt: " << loca.getCgiExt()
 		<< "\n\t\tmax_body: " << loca.getClientMaxBodySize()
 		<< "\n\t\tautoindex: " << loca.getAutoindex()
 		<< std::endl;
