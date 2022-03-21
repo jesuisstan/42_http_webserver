@@ -242,16 +242,9 @@ std::string Response::handleChunkedBody() {
         lineEnd = restBody.find("\n");
         if (lineEnd != std::string::npos) {
             std::string chunkSize = restBody.substr(0, lineEnd - 1);
-            int decChunkSize;
-            if (!isPositiveDigit(chunkSize)) {
-                decChunkSize = hexToDec(chunkSize);
-            } else {
-                decChunkSize = stringToNumber(chunkSize);
-            }
+            int decChunkSize = hexToDec(chunkSize);
             newBody += restBody.substr(lineEnd + 1, decChunkSize);
-//            std::cout << BgCYAN "|" << decChunkSize << "|"RESET << std::endl;
             restBody = restBody.substr(decChunkSize + lineEnd + 1);
-//            std::cout << RED "|" << restBody.substr(0, 50) << "|"RESET << std::endl;
         } else
             break;
     }
@@ -274,6 +267,7 @@ void Response::savePostBody() {
     else
         postBodyFile << requestBody_;
     postBodyFile.close();
+    closedir(dh);
 }
 
 std::string Response::findMaxPossibleLocation(const std::string &location) {
@@ -354,8 +348,12 @@ int Response::checkPathForLocation() {
         if (locationIndex_[0][0] != '.') {
             std::string file = stringFilename + locationIndex_[0];
             int fd = open(file.c_str(), O_RDONLY);
-            if (fd == -1 && requestMethod_ != "PUT")
+            if (fd == -1 && requestMethod_ != "PUT") {
+                if (requestMethod_ == "PUT")
+                   close(fd);
                 return -1;
+            }
+            close(fd);
             index = readContent(stringFilename + "/" + locationIndex_[0]);
         }
         else
@@ -374,10 +372,14 @@ std::string Response::findFileWithExtension(std::string extension, std::string d
         size_t dotPos = file.find('.');
         if (dotPos != std::string::npos) {
             std::string fileExtension = file.substr(dotPos);
-            if (fileExtension == extension)
+            if (fileExtension == extension) {
+                closedir(dh);
                 return readContent(dir + "/" + file);
+            }
+
         }
     }
+    closedir(dh);
     return "";
 }
 
@@ -396,8 +398,8 @@ void    Response::createAutoIndexPage(const char *dir) {
         autoIndexPage +=  (std::string)d->d_name + "</a>\n";
     }
     autoIndexPage += "<div>\n</body>\n</html>\n";
-
     setResponseBody(autoIndexPage);
+    closedir(dh);
 }
 
 std::string Response::readContent(const std::string &filename) {

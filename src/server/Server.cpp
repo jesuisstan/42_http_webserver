@@ -129,10 +129,13 @@ void	Server::handleConnection(int i, ServerConfig &config, std::string *requestB
 		memset(buffer, 0, BUFFER_SIZE);
 		if (findReqEnd(*requestBuffer, *requestLength))
 		{
-			std::cout << YELLOW << *requestBuffer << RESET << std::endl;
 			try {
 				RequestParser request = RequestParser(*requestBuffer, *requestLength);
-				*requestBuffer = "";
+                if (request.getBody().length() > 10000)
+                    request.showHeaders();
+                else
+                    std::cout << "|"YELLOW  << request.getRequest() << RESET"|" << std::endl;
+                *requestBuffer = "";
 				*requestLength = 0;
 				Response response = Response(request, config);
 				char *responseStr = const_cast<char *>(response.getResponse().c_str());
@@ -173,7 +176,7 @@ void	Server::handleConnection(int i, ServerConfig &config, std::string *requestB
 }
 
 void	Server::runServer(int timeout,  ServerConfig &config) {
-	signal(SIGINT, interruptHandler);
+//	signal(SIGINT, interruptHandler);
 	_fds[0].fd = _listenSocket;
 	_fds[0].events = POLLIN;
 	this->setTimeout(timeout);
@@ -216,17 +219,18 @@ void	Server::closeConnections(void) {
 	}
 }
 
-bool Server::findReqEnd(std::string requestBuffer, size_t requestLength) {
-	std::string method = requestBuffer;
-	method = method.substr(0, requestBuffer.find_first_of(' '));
-	if (requestBuffer[requestLength - 1] == '\n' &&
-	requestBuffer[requestLength - 2] == '\r' &&
-	requestBuffer[requestLength - 3] == '\n' &&
-	requestBuffer[requestLength - 4] == '\r') {
-		if (method != "POST" || requestBuffer[requestLength - 5] == '0')
-			return true;
-	}
-	return false;
+bool Server::findReqEnd(std::string request_buffer, size_t request_len) {
+    std::string method = request_buffer;
+    method = method.substr(0, request_buffer.find_first_of(' '));
+//	std::cout << "|" << request_buffer[request_len - 5] << "|" << std::endl;
+    if (request_buffer[request_len - 1] == '\n' &&
+        request_buffer[request_len - 2] == '\r' &&
+        request_buffer[request_len - 3] == '\n' &&
+        request_buffer[request_len - 4] == '\r') {
+        if ((method != "POST" && method != "PUT") || request_buffer[request_len - 5] == '0')
+            return true;
+    }
+    return false;
 }
 
 void	interruptHandler(int sig_int) {
