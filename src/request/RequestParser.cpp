@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   RequestParser.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: St.Krivtsov <1987stanislav@gmail.com>      +#+  +:+       +#+        */
+/*   By: ymanfryd <ymanfryd@student.21-school.ru    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/20 19:06:27 by ymanfryd          #+#    #+#             */
-/*   Updated: 2022/02/26 17:23:49 by St.Krivtsov      ###   ########.fr       */
+/*   Updated: 2022/03/22 12:53:17 by ymanfryd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 

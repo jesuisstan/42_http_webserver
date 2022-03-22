@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: St.Krivtsov <1987stanislav@gmail.com>      +#+  +:+       +#+        */
+/*   By: ymanfryd <ymanfryd@student.21-school.ru    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/20 19:06:46 by ymanfryd          #+#    #+#             */
-/*   Updated: 2022/02/26 17:23:54 by St.Krivtsov      ###   ########.fr       */
+/*   Updated: 2022/03/22 12:11:23 by ymanfryd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,10 +187,10 @@ void Response::createResponse() {
     setContentType();
     if (!locationRedirection_.empty())
         setResponseCode(301);
-    else if (!locationMethods_.count(requestMethod_) && !requestedFile_.length())
-        setResponseCode(405);
     else if (checkPathForLocation() == -1)
         setResponseCode(404);
+    else if (!locationMethods_.count(requestMethod_) && !requestedFile_.length() && !cgiRequested_)
+        setResponseCode(405);
     else if (requestBody_.length() > ClientMaxBodySize_ && !cgiRequested_)
         setResponseCode(413);
     else if (!cgiRequested_ && requestMethod_ != "PUT" && requestMethod_ != "POST")

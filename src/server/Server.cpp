@@ -139,7 +139,7 @@ void	Server::handleConnection(int i, ServerConfig &config, std::string *requestB
 				*requestLength = 0;
 				Response response = Response(request, config);
 				char *responseStr = const_cast<char *>(response.getResponse().c_str());
-				std::cout << CYAN << response.getResponseCode() << RESET << std::endl;
+				std::cout << CYAN << response.getResponse() << RESET << std::endl;
 				ret = send(_fds[i].fd, responseStr, strlen(responseStr), 0);
 				if (ret < 0) {
 					std::cout << "send() failed" << std::endl;

@@ -137,7 +137,7 @@ std::pair<int, std::string> Cgi::execute() {
 
 	std::pair <int, std::string> best_sgi;
 	best_sgi.first = 200;
-	best_sgi.second = "Our sgi is working";
+	best_sgi.second = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 18\n\r\n\rOur sgi is working";
 	return best_sgi;
 
 }
