@@ -185,14 +185,17 @@ void Response::createResponse() {
 
     readLocationData();
     setContentType();
+
     if (!locationRedirection_.empty())
         setResponseCode(301);
     else if (checkPathForLocation() == -1)
         setResponseCode(404);
-    else if (!locationMethods_.count(requestMethod_) && !requestedFile_.length() && !cgiRequested_)
+    else if (!locationMethods_.count(requestMethod_) && !cgiRequested_)
         setResponseCode(405);
     else if (requestBody_.length() > ClientMaxBodySize_ && !cgiRequested_)
         setResponseCode(413);
+    else if (!checkContentLength())
+        setResponseCode(400);
     else if (!cgiRequested_ && requestMethod_ != "PUT" && requestMethod_ != "POST")
         setResponseCode(200);
     else if (!cgiRequested_)
@@ -216,7 +219,17 @@ void Response::createResponse() {
         }
         setResponse();
     }
+}
 
+bool Response::checkContentLength() {
+    size_t contentLength = RequestParser_.getContentLength();
+    if (contentLength) {
+        size_t bodyLength = RequestParser_.getBody().length();
+//        std::cout << BgGREEN << contentLength << " | " << bodyLength << "|"<<  RequestParser_.getBody() << "|"<< RESET << std::endl;
+        if (contentLength != bodyLength)
+            return false;
+    }
+    return true;
 }
 
 void Response::checkFileRequested() {
@@ -316,15 +329,13 @@ int Response::checkPathForLocation() {
         stringFilename = locationRoot_ + "/" + requestRoute_.substr(1, requestRoute_.length() - 2);
     char *filename = const_cast<char *>(stringFilename.c_str());
     int openRes = open(filename, O_RDONLY);
-    if (openRes == -1 && requestMethod_ != "PUT")
+    if (openRes == -1 && requestMethod_ != "PUT" && requestMethod_ != "POST")
         return -1;
     close(openRes);
-    if (requestMethod_ == "PUT") {
-        requestedFile_ = requestRoute_.substr(1);
-        return 1;
-    }
     if (requestedFile_.find('.') != std::string::npos) {
         std::string extension = requestedFile_.substr(requestedFile_.find('.'));
+        if (extension[extension.length() - 1] == '/')
+            extension = extension.substr(0, extension.length() -1);
         if (extension == ServerConfig_.getCgiExt()) {
             cgiRequested_ = true;
             RequestParser_.setPathInfo(stringFilename);
@@ -333,7 +344,13 @@ int Response::checkPathForLocation() {
             std::pair<int, std::string> cgiResult = cgi->execute();
             setResponseCode(cgiResult.first);
             response_ = cgiResult.second;
+        } else if (requestMethod_ == "PUT" || requestMethod_ == "POST") {
+            requestedFile_ = requestRoute_.substr(1);
+            return 1;
         }
+    } else if (requestMethod_ == "PUT" || requestMethod_ == "POST") {
+        requestedFile_ = requestRoute_.substr(1);
+        return 1;
     }
     std::string content = readContent(filename);
     if (!content.empty()) {

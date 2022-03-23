@@ -265,9 +265,9 @@ void RequestParser::setBody() {
     size_t bodyStart = request_.find("\r\n\r\n");
     if (bodyStart != std::string::npos) {
         erasedRequest = erasedRequest.substr(bodyStart + 4);
-        size_t bodyEnd = erasedRequest.find("0\r\n\r\n");
+        size_t bodyEnd = erasedRequest.find("\r\n\r\n");
         if (bodyEnd != std::string::npos)
-            body_ = erasedRequest.substr(0, bodyEnd - 2);
+            body_ = erasedRequest.substr(0, bodyEnd);
 //std::cout << "__BODY_______________|"<< erasedRequest << body_ << "|" << std::endl;
 }}
 

@@ -72,6 +72,7 @@ class Response {
             std::string                    	getScreen();
             std::string                    	handleChunkedBody();
             void                           	savePostBody();
+            bool                            checkContentLength();
 
             Response(): responseCode_(0), contentLength_(0) {};
     public:

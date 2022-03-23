@@ -219,16 +219,37 @@ void	Server::closeConnections(void) {
 	}
 }
 
+bool isChunked(std::string request_buffer) {
+    size_t headersEnd = request_buffer.find("\r\n\r\n");
+    if (headersEnd != std::string::npos) {
+        std::string headers = request_buffer.substr(0, headersEnd);
+        size_t transferEncodingHeaderPosition = headers.find("Transfer-Encoding: ");
+        if (transferEncodingHeaderPosition != std::string::npos) {
+            std::string encoding = headers.substr(transferEncodingHeaderPosition + 19);
+            size_t lineEnd = encoding.find("\n");
+            if (lineEnd != std::string::npos) {
+                encoding = encoding.substr(0, lineEnd - 1);
+                if (encoding == "chunked")
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool Server::findReqEnd(std::string request_buffer, size_t request_len) {
     std::string method = request_buffer;
     method = method.substr(0, request_buffer.find_first_of(' '));
-//	std::cout << "|" << request_buffer[request_len - 5] << "|" << std::endl;
     if (request_buffer[request_len - 1] == '\n' &&
         request_buffer[request_len - 2] == '\r' &&
         request_buffer[request_len - 3] == '\n' &&
         request_buffer[request_len - 4] == '\r') {
-        if ((method != "POST" && method != "PUT") || request_buffer[request_len - 5] == '0')
+        if (isChunked(request_buffer)) {
+           if ((method != "POST" && method != "PUT" ) || request_buffer[request_len - 5] == '0')
             return true;
+        } else
+            return true;
+
     }
     return false;
 }
