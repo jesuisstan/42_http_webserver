@@ -194,14 +194,14 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 		for (int i = 0; i < currentSize; i++) {
 			if (_fds[i].revents == 0)
 				continue;
-			if (_fds[i].revents && POLLIN) {
-				if( _fds[i].fd == _listenSocket)
+			if (_fds[i].revents) {
+				if ( _fds[i].fd == _listenSocket  && POLLIN)
 					acceptConnection();
-				else
+				if ( _fds[i].fd != _listenSocket  && POLLIN)
 					receiveRequest(i);
+				if (POLLOUT)
+					handleRequest(i, config);
 			}
-			if (_fds[i].revents && POLLOUT)
-				handleRequest(i, config);
 		}
 	}
 }
