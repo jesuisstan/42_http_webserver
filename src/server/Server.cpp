@@ -88,22 +88,19 @@ void	Server::initiate(const char *ipAddr, int port) {
 }
 
 void	Server::acceptConnection(void) {
-	int newSD = -1;
-	do {
-		newSD = accept(_listenSocket, NULL, NULL);
-		if (newSD < 0)
-			break;
-		int ret = fcntl(newSD, F_SETFL, fcntl(newSD, F_GETFL, 0) | O_NONBLOCK);
-		if (ret < 0) {
-			std::cout << "fcntl() failed" << std::endl;
-			close(_listenSocket);
-			exit(-1);
-		}
-		std::cout << "New incoming connection:\t" << newSD << std::endl;
-		_fds[_numberFds].fd = newSD;
-		_fds[_numberFds].events = POLLIN;
-		_numberFds++;
-	} while (newSD != -1);
+	int newSD = accept(_listenSocket, NULL, NULL);
+	if (newSD < 0)
+		return ;
+	int ret = fcntl(newSD, F_SETFL, fcntl(newSD, F_GETFL, 0) | O_NONBLOCK);
+	if (ret < 0) {
+		std::cout << "fcntl() failed" << std::endl;
+		close(_listenSocket);
+		exit(-1);
+	}
+	std::cout << "New incoming connection:\t" << newSD << std::endl;
+	_fds[_numberFds].fd = newSD;
+	_fds[_numberFds].events = POLLIN;
+	_numberFds++;
 }
 
 void	Server::handleConnection(int socket, ServerConfig &config) {
