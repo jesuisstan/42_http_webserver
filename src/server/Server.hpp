@@ -1,14 +1,17 @@
 #pragma once
 
-#include "../config/Config.hpp"
-#include "../../inc/webserv.hpp"
+#include "webserv.hpp"
+#include "Config.hpp"
+#include "RequestParser.hpp"
+#include "Response.hpp"
 
 class RequestParser;
 class ServerConfig;
 
 typedef struct s_reqData {
 	std::string	reqString;
-	size_t		regLength;
+	size_t		reqLength;
+	RequestParser request;
 }	t_reqData;
 
 class Server {
@@ -18,7 +21,7 @@ private:
 	struct pollfd				_fds[BACKLOG];
 	int							_timeout;
 	int							_numberFds;
-	std::map<long, t_reqData>	_reqBuffer;
+	std::map<long, t_reqData>	_clientsPool;
 
 public:
 	Server();
@@ -31,12 +34,11 @@ public:
 	int		getNumberFds(void) const;
 	void	initiate(const char *ipAddr, int port);
 	void	acceptConnection(void);
-	void	receiveRequest(int socket);
-	void	handleRequest(int socket, ServerConfig &config);
+	void	handleConnection(int i, ServerConfig &config);
 	void	runServer(int timeout, ServerConfig &config);
 	void	closeConnections(void);
 
-	static bool findReqEnd(std::string requestBuffer, size_t requestLength);
+	static bool findReqEnd(std::string request_buffer, size_t request_len);
 };
 
 void	interruptHandler(int sig_int);

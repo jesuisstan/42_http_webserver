@@ -1,12 +1,9 @@
-#include "webserv.hpp"
 #include "Server.hpp"
-#include "RequestParser.hpp"
-#include "Response.hpp"
 
 Server::Server() {
+	signal(SIGINT, interruptHandler);
 	memset(&_servAddr, 0, sizeof(_servAddr));
 	memset(_fds, 0, sizeof(_fds));
-	signal(SIGINT, interruptHandler);
 }
 
 Server::~Server() {
@@ -19,6 +16,7 @@ Server::~Server() {
 		}
 	}
 }
+
 Server::Server(const Server &other) {
 	*this = other;
 	return ;
@@ -90,49 +88,69 @@ void	Server::initiate(const char *ipAddr, int port) {
 }
 
 void	Server::acceptConnection(void) {
-	int newSD = accept(_listenSocket, NULL, NULL);
-	if (newSD < 0) {
-		std::cout << "accept() failed. Unable to add a new client" << std::endl;
-		return ;
-	}
-	int ret = fcntl(newSD, F_SETFL, fcntl(newSD, F_GETFL, 0) | O_NONBLOCK);
-	if (ret < 0) {
-		std::cout << "fcntl() failed" << std::endl;
-		close(_listenSocket);
-		exit(-1);
-	}
-	std::cout << "New incoming connection:\t" << newSD << std::endl;
-	_fds[_numberFds].fd = newSD;
-	_fds[_numberFds].events = POLLIN;
-	t_reqData newReqData;
-	_reqBuffer.insert(std::make_pair(_fds[_numberFds].fd, newReqData));
-	_numberFds++;
+	int newSD = -1;
+	do {
+		newSD = accept(_listenSocket, NULL, NULL);
+		if (newSD < 0)
+			break;
+		int ret = fcntl(newSD, F_SETFL, fcntl(newSD, F_GETFL, 0) | O_NONBLOCK);
+		if (ret < 0) {
+			std::cout << "fcntl() failed" << std::endl;
+			close(_listenSocket);
+			exit(-1);
+		}
+		std::cout << "New incoming connection:\t" << newSD << std::endl;
+		_fds[_numberFds].fd = newSD;
+		_fds[_numberFds].events = POLLIN;
+		_numberFds++;
+	} while (newSD != -1);
 }
 
-void	Server::receiveRequest(int socket) {
+void	Server::handleConnection(int socket, ServerConfig &config) {
 	std::cout << "Event detected on descriptor:\t" << _fds[socket].fd << std::endl;
 	bool closeConnection = false;
 	bool compressArray = false;
+
 	while (!closeConnection) {
 		char buffer[BUFFER_SIZE] = {0};
-		int ret = recv(_fds[socket].fd, buffer, BUFFER_SIZE - 1, 0);
+		int ret = recv(_fds[socket].fd, buffer, sizeof(buffer), 0);
 		if (ret <= 0) {
 			if (ret == 0)
 				closeConnection = true;
 			break;
 		}
-		_reqBuffer[socket].reqString += static_cast<std::string>(buffer).substr(0, ret);
-		_reqBuffer[socket].regLength += ret;
-		std::cout << _reqBuffer[socket].regLength << " bytes received from sd:\t" << _fds[socket].fd <<  std::endl;
+		_clientsPool[socket].reqString += static_cast<std::string>(buffer).substr(0, ret);
+		_clientsPool[socket].reqLength += ret;
+		std::cout << _clientsPool[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd <<  std::endl;
 		memset(buffer, 0, BUFFER_SIZE);
+		if (findReqEnd(_clientsPool[socket].reqString, _clientsPool[socket].reqLength))
+		{
+			try {
+				_clientsPool[socket].request = RequestParser(_clientsPool[socket].reqString, _clientsPool[socket].reqLength);
+				if (_clientsPool[socket].request.getBody().length() > 10000)
+					_clientsPool[socket].request.showHeaders();
+				else
+					std::cout << "|" << YELLOW  << _clientsPool[socket].request.getRequest() << RESET"|" << std::endl;
+				_clientsPool[socket].reqString = "";
+				_clientsPool[socket].reqLength = 0;
+				Response response = Response(_clientsPool[socket].request, config);
+				char *responseStr = const_cast<char *>(response.getResponse().c_str());
+				std::cout << CYAN << response.getResponseCode() << RESET << std::endl;
+				ret = send(_fds[socket].fd, responseStr, strlen(responseStr), 0);
+				if (ret < 0) {
+					std::cout << "send() failed" << std::endl;
+					closeConnection = true;
+					break;
+				}
+			}
+			catch (RequestParser::UnsupportedMethodException &e) {
+				std::cout << e.what() << std::endl;
+			}
+		}
 	}
-	if (findReqEnd(_reqBuffer[socket].reqString, _reqBuffer[socket].regLength))
-		_fds[socket].events = POLLOUT;
 	if (closeConnection) {
-		std::cout << "Connection has been closed:\t" << _fds[socket].fd << std::endl;
 		close(_fds[socket].fd);
-		_reqBuffer[socket].reqString = "";
-		_reqBuffer[socket].regLength = 0;
+		std::cout << "Connection has been closed:\t" << _fds[socket].fd << std::endl;
 		_fds[socket].fd = -1;
 		compressArray = true;
 	}
@@ -141,7 +159,8 @@ void	Server::receiveRequest(int socket) {
 		for (int i = 0; i < _numberFds; i++) {
 			if (_fds[i].fd == -1)
 			{
-				for (int j = i; j < _numberFds; j++) {
+				for (int j = i; j < _numberFds; j++)
+				{
 					_fds[j].fd = _fds[j + 1].fd;
 				}
 				i--;
@@ -152,33 +171,13 @@ void	Server::receiveRequest(int socket) {
 	}
 }
 
-void	Server::handleRequest(int socket, ServerConfig &config) {
-	std::cout << YELLOW << _reqBuffer[socket].reqString << RESET << std::endl;
-	try {
-		RequestParser request = RequestParser(_reqBuffer[socket].reqString, _reqBuffer[socket].regLength);
-		_reqBuffer[socket].reqString = "";
-		_reqBuffer[socket].regLength = 0;
-		Response response = Response(request, config);
-		char *responseStr = const_cast<char *>(response.getResponse().c_str());
-		std::cout << CYAN << response.getResponseCode() << RESET << std::endl;
-		int ret = send(_fds[socket].fd, responseStr, strlen(responseStr), 0);
-		if (ret < 0) {
-			std::cout << "send() failed" << std::endl;
-			return ;
-		}
-		_fds[socket].events = POLLIN;
-	}
-	catch (RequestParser::UnsupportedMethodException &e ) {
-		std::cout << e.what() << std::endl;
-	}
-}
-
 void	Server::runServer(int timeout,  ServerConfig &config) {
 	_fds[0].fd = _listenSocket;
 	_fds[0].events = POLLIN;
 	this->setTimeout(timeout);
 	this->_numberFds = 1;
 	int currentSize = 0;
+		std::string requestBuffer = "";
 	while (true) {
 		std::cout << "Waiting on poll()...\n";
 		int ret = poll(_fds, _numberFds, _timeout);
@@ -194,13 +193,12 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 		for (int i = 0; i < currentSize; i++) {
 			if (_fds[i].revents == 0)
 				continue;
-			if (_fds[i].revents) {
-				if ( _fds[i].fd == _listenSocket  && POLLIN)
+			if (_fds[i].revents && POLLIN) {
+				if( _fds[i].fd == _listenSocket)
 					acceptConnection();
-				if ( _fds[i].fd != _listenSocket  && POLLIN)
-					receiveRequest(i);
-				if (POLLOUT)
-					handleRequest(i, config);
+				else {
+					handleConnection(i, config);
+				}
 			}
 		}
 	}
@@ -215,17 +213,18 @@ void	Server::closeConnections(void) {
 	}
 }
 
-bool Server::findReqEnd(std::string requestBuffer, size_t requestLength) {
-	std::string method = requestBuffer;
-	method = method.substr(0, requestBuffer.find_first_of(' '));
-	if (requestBuffer[requestLength - 1] == '\n' &&
-	requestBuffer[requestLength - 2] == '\r' &&
-	requestBuffer[requestLength - 3] == '\n' &&
-	requestBuffer[requestLength - 4] == '\r') {
-		if (method != "POST" || requestBuffer[requestLength - 5] == '0')
-			return true;
-	}
-	return false;
+bool Server::findReqEnd(std::string request_buffer, size_t request_len) {
+    std::string method = request_buffer;
+    method = method.substr(0, request_buffer.find_first_of(' '));
+//	std::cout << "|" << request_buffer[request_len - 5] << "|" << std::endl;
+    if (request_buffer[request_len - 1] == '\n' &&
+        request_buffer[request_len - 2] == '\r' &&
+        request_buffer[request_len - 3] == '\n' &&
+        request_buffer[request_len - 4] == '\r') {
+        if ((method != "POST" && method != "PUT") || request_buffer[request_len - 5] == '0')
+            return true;
+    }
+    return false;
 }
 
 void	interruptHandler(int sig_int) {
