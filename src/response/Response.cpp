@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ymanfryd <ymanfryd@student.21-school.ru    +#+  +:+       +#+        */
+/*   By: alchrist <alchrist@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/20 19:06:46 by ymanfryd          #+#    #+#             */
-/*   Updated: 2022/03/22 12:11:23 by ymanfryd         ###   ########.fr       */
+/*   Updated: 2022/03/26 22:13:23 by alchrist         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -341,12 +341,13 @@ int Response::checkPathForLocation() {
             RequestParser_.setPathInfo(stringFilename);
             std::cout << BgRED << "CGI START" << RESET << std::endl;
             Cgi* cgi = new Cgi(ServerConfig_, Location_, RequestParser_);
-            std::pair<int, std::string> cgiResult = cgi->execute();
-            setResponseCode(cgiResult.first);
-            response_ = cgiResult.second;
-        } else if (requestMethod_ == "PUT" || requestMethod_ == "POST") {
-            requestedFile_ = requestRoute_.substr(1);
-            return 1;
+			int fd_to_write = cgi->exec();
+            setResponseCode(55);
+
+            response_ = "cgi zaglushka";
+            // std::pair<int, std::string> cgiResult = cgi->execute();
+            // setResponseCode(cgiResult.first);
+            // response_ = cgiResult.second;
         }
     } else if (requestMethod_ == "PUT" || requestMethod_ == "POST") {
         requestedFile_ = requestRoute_.substr(1);

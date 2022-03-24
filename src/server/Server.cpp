@@ -173,7 +173,7 @@ void	Server::sendResponse(int socket, ServerConfig &config) {
 		_clients[socket].foundHeaders = 0;
 		_clients[socket].response = Response(_clients[socket].request, config); 
 		char *responseStr = const_cast<char *>(_clients[socket].response.getResponse().c_str());
-		std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET << std::endl;
+		std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET  << _clients[socket].response.getResponse() << std::endl;
 		int ret = send(_fds[socket].fd, responseStr, strlen(responseStr), 0);
 		if (ret < 0) {
 			std::cout << "send() failed" << std::endl;

@@ -1,13 +1,5 @@
 #include "Cgi.hpp"
 
-
-
-// default values from request 
-// location /YoupiBananae/
-// alias ./testers/
-// cgi_ext = .cgi
-// cgi = "python"
-// and uri = "/YoupiBananae/alch.sgi?a=1&b=2"
 Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 {
 	env_["SERVER_NAME"] = serv.getHost();
@@ -29,47 +21,7 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 	env_["CONTENT_TYPE"] = req.getContentType(); //req.getContentType()
 	env_["CONTENT_LENGTH"] =  req.getContentLength(); //req.getContentLength()
 	
-	// Еще сюда нужно добавить все поля с запроса, которые начинаются на http
-	// идеально, если ты их в мапу считала
-	// пример чужого кода 
-	/*
-	for (std::map<std::string, std::string, ft::comp>::iterator it = req_headers_.begin(); it != req_headers_.end(); it++) {
-	if (!it->second.empty()) {
-	  std::string header = "HTTP_" + ft::to_upper(it->first);
-	  std::replace(header.begin(), header.end(), '-', '_');
-	  cgi_env_[header] = it->second;
-	}
-	*/
-	// ну или можно забить хуй)
-
-	// не хочу ничего решать
-	// и хуй тоже не хочу
-	// вот сиськи
-//	.| : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : :”-'\,,
-//	..\: : : : : : : : : : :'\: : : : : : : : : : : : : :~,,: : : : : : : : : “~-.,_
-//	...\ : : : : : : : : : : :\: /: : : : : : : : : : : : : : : “,: : : : : : : : : : :"~,_
-//	... .\: : : : : : : : : : :\|: : : : : : : : :_._ : : : : : : \: : : : : : : : : : : : :”- .
-//	... ...\: : : : : : : : : : \: : : : : : : : ( O ) : : : : : : \: : : : : : : : : : : : : : '\._
-//	... ... .\ : : : : : : : : : '\': : : : : : : :"*": : : : : : : :|: : : : : : : : : : : : : : : |0)
-//	... ... ...\ : : : : : : : : : '\: : : : : : : : : : : : : : : :/: : : : : : : : : : : : : : : /""
-//	... ... .....\ : : : : : : : : : \: : : : : : : : : : : : : ,-“: : : : : : : : : : : : : : : :/
-//	... ... ... ...\ : : : : : : : : : \: : : : : : : : : _=" : : : : : ',_.: : : : : : : :,-“
-//	... ... ... ... \,: : : : : : : : : \: :"”'~---~”" : : : : : : : : : : : : = :"”~~
-
-
-
-	// std::vector<string> vector;
-	// const char *programname = "abc";
-
-
-	// const char **argv = new const char* [vector.size()+2];   // extra room for program name and sentinel
-	// argv [0] = programname;         // by convention, argv[0] is program name
-	// for (int j = 0;  j < vector.size()+1;  ++j)     // copy args
-	// 		argv [j+1] = vector[j] .c_str();
-
-	// argv [vector.size()+1] = NULL;  // end of arguments sentinel is NULL
-
-	// execv (programname, (char **)argv);
+	emptyBody = req.getBody().empty();
 }
 
 
@@ -91,53 +43,68 @@ char ** Cgi::getNewEnviroment() const {
 }
 
 std::pair<int, std::string> Cgi::execute() {
-//	FILE *in = tmpfile();
-//	FILE *out = tmpfile();
-
-	// тут будет execve
-    std::cout << BgBLUE << "getMethod |" << request_.getMethod()<< RESET << std::endl;
-    std::cout << BgBLUE << "getRoute |" << request_.getRoute() + request_.getQuery()<< RESET << std::endl;
-    std::cout << BgBLUE << "getQuery |" << request_.getQuery()<< RESET << std::endl;
-    std::cout << BgBLUE << "getContentType |" << request_.getContentType()<< RESET << std::endl;
-    std::cout << BgBLUE << "getContentLength |" << request_.getContentLength()<< RESET << std::endl;
-    std::cout << BgBLUE << "getPathInfo |" << request_.getPathInfo()<< RESET << std::endl;
-
-
-
-
-
-	// FILE	*in = tmpfile();
-	// FILE	*out = tmpfile();
-	char	**envs = getNewEnviroment();
-	int		res, pid;
-
-	pid = fork();
-	if (!pid){
-		if (env_["SCRIPT_NAME"] == "python") {
-			const char *args[] = {
-				"python3",
-				"-m",
-				env_["PATH_INFO"].c_str(),
-				0};
-			execve(args[0], (char **)args, envs);
-		}
-
-		else {
-			const char *args[] = {
-				"php?",
-				env_["PATH_INFO"].c_str(),
-				0};
-			execve(args[0], (char **)args, envs);
-		}
-		perror("not running");
-	}
-
-
-
-
-	std::pair <int, std::string> best_sgi;
-	best_sgi.first = 200;
-	best_sgi.second = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 18\n\r\n\rOur sgi is working";
-	return best_sgi;
+	
+	FILE	*in = tmpfile();
+	FILE	*out = tmpfile();
+	std::pair <int, std::string> simple_sgi;
+	simple_sgi.first = 200;
+	simple_sgi.second = "Our sgi is working";
+	return simple_sgi;
 
 }
+
+int Cgi::exec() {
+	char	**envs = getNewEnviroment();
+	char	*args[4];
+	int		res, pid;
+	int		input[2];
+	int		output[2];
+
+	cgiOut = -1; //todo unset
+	bzero(args, sizeof(*args) * 4);
+	if (env_["SCRIPT_NAME"] == "python")
+		args[0] = "sgi_python.py";
+	else if (env_["SCRIPT_NAME"] == "tester")
+		args[0] = "cgi_tester";
+	else
+		args[0] = "php?";
+	if (pipe(input) < 0 || pipe(output) < 0)
+    	return 0;
+	pid = fork();
+	if (!pid){ 
+		
+		send(2, args[0], std::strlen(args[0]), 0); // todo del
+		close(input[1]);
+      	close(output[0]);
+		if (dup2(input[0], STDERR_FILENO) < 0 || dup2(output[1], STDOUT_FILENO) < 0) {
+			close(output[1]);
+      		close(input[0]);
+			exit(-1);
+		}
+      	close(output[1]);
+      	close(input[0]);
+
+		char cgi_bin[] = "cgi_bin"; // вообще нихуя не понятно зачем это делать :/ мб чтобы скрипт работал только в его папке
+		if (chdir(cgi_bin) < 0) { // todo
+			exit(-1);
+		}
+		execve(args[0], args, envs);
+		perror("cgi cann't run");
+		exit(-1);
+	}
+
+	startTime = clock();
+	close(input[0]);
+    close(output[1]);
+    env_.clear();
+	cgiOut = output[0];
+	fcntl(cgiOut, F_SETFL, O_NONBLOCK);
+	if (emptyBody) {
+    	close(input[1]);
+		return 0;
+	}
+	fcntl(input[1], F_SETFL, O_NONBLOCK);
+	return input[1];
+}
+
+int		Cgi::getCgiOut() const {return cgiOut; }
