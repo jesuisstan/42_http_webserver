@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Response.hpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ymanfryd <marvin@42.fr>                    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/02/20 19:07:21 by ymanfryd          #+#    #+#             */
-/*   Updated: 2022/02/20 19:07:27 by ymanfryd         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef HTTP_WEBSERVER_RESPONSE_HPP
 #define HTTP_WEBSERVER_RESPONSE_HPP
 
@@ -75,8 +63,8 @@ class Response {
             std::string                     handleChunkedBody();
             void                            savePostBody();
 
-            Response(): responseCode_(0), contentLength_(0) {};
     public:
+            Response(): responseCode_(0), contentLength_(0) {};
 
             const std::string  &getResponse()          const;
             const std::string  &getResponseBody()      const;

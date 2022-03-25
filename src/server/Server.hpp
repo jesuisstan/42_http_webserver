@@ -5,13 +5,15 @@
 #include "RequestParser.hpp"
 #include "Response.hpp"
 
-class RequestParser;
 class ServerConfig;
+class RequestParser;
+class Response;
 
 typedef struct s_reqData {
-	std::string	reqString;
-	size_t		reqLength;
-	RequestParser request;
+	std::string		reqString;
+	size_t			reqLength;
+	RequestParser 	request;
+	Response		response;
 }	t_reqData;
 
 class Server {
@@ -21,7 +23,7 @@ private:
 	struct pollfd				_fds[BACKLOG];
 	int							_timeout;
 	int							_numberFds;
-	std::map<long, t_reqData>	_clientsPool;
+	std::map<long, t_reqData>	_clients;
 
 public:
 	Server();
@@ -34,7 +36,8 @@ public:
 	int		getNumberFds(void) const;
 	void	initiate(const char *ipAddr, int port);
 	void	acceptConnection(void);
-	void	handleConnection(int i, ServerConfig &config);
+	void	receiveRequest(int socket, ServerConfig &config);
+	void	sendResponse(int socket);
 	void	runServer(int timeout, ServerConfig &config);
 	void	closeConnections(void);
 

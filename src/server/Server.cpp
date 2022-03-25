@@ -103,47 +103,50 @@ void	Server::acceptConnection(void) {
 	_numberFds++;
 }
 
-void	Server::handleConnection(int socket, ServerConfig &config) {
+void	Server::receiveRequest(int socket, ServerConfig &config) {
 	std::cout << "Event detected on descriptor:\t" << _fds[socket].fd << std::endl;
 	bool closeConnection = false;
 	bool compressArray = false;
-
-	while (!closeConnection) {
-		char buffer[BUFFER_SIZE] = {0};
-		int ret = recv(_fds[socket].fd, buffer, sizeof(buffer), 0);
-		if (ret <= 0) {
-			if (ret == 0)
-				closeConnection = true;
-			break;
-		}
-		_clientsPool[socket].reqString += static_cast<std::string>(buffer).substr(0, ret);
-		_clientsPool[socket].reqLength += ret;
-		std::cout << _clientsPool[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd <<  std::endl;
+	int ret = 0;
+	char buffer[BUFFER_SIZE] = {0};
+	ret = recv(_fds[socket].fd, buffer, BUFFER_SIZE - 1, 0);
+	if (ret > 0)
+	{
+		_clients[socket].reqString += std::string(buffer, ret);
+		_clients[socket].reqLength += ret;
+		std::cout << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd <<  std::endl;
 		memset(buffer, 0, BUFFER_SIZE);
-		if (findReqEnd(_clientsPool[socket].reqString, _clientsPool[socket].reqLength))
+		if (findReqEnd(_clients[socket].reqString, _clients[socket].reqLength))
 		{
 			try {
-				_clientsPool[socket].request = RequestParser(_clientsPool[socket].reqString, _clientsPool[socket].reqLength);
-				if (_clientsPool[socket].request.getBody().length() > 10000)
-					_clientsPool[socket].request.showHeaders();
+				_clients[socket].request = RequestParser(_clients[socket].reqString, _clients[socket].reqLength);
+				if (_clients[socket].request.getBody().length() > 10000)
+					_clients[socket].request.showHeaders();
 				else
-					std::cout << "|" << YELLOW  << _clientsPool[socket].request.getRequest() << RESET"|" << std::endl;
-				_clientsPool[socket].reqString = "";
-				_clientsPool[socket].reqLength = 0;
-				Response response = Response(_clientsPool[socket].request, config);
-				char *responseStr = const_cast<char *>(response.getResponse().c_str());
-				std::cout << CYAN << response.getResponseCode() << RESET << std::endl;
+					std::cout << "|" << YELLOW  << _clients[socket].request.getRequest() << RESET"|" << std::endl;
+				_clients[socket].reqString = "";
+				_clients[socket].reqLength = 0;
+				_clients[socket].response = Response(_clients[socket].request, config);
+				char *responseStr = const_cast<char *>(_clients[socket].response.getResponse().c_str());
+				std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET << std::endl;
 				ret = send(_fds[socket].fd, responseStr, strlen(responseStr), 0);
 				if (ret < 0) {
 					std::cout << "send() failed" << std::endl;
 					closeConnection = true;
-					break;
 				}
 			}
 			catch (RequestParser::UnsupportedMethodException &e) {
 				std::cout << e.what() << std::endl;
 			}
 		}
+	}
+	if (ret == 0 || ret == -1)
+	{
+		closeConnection = true;
+		if (!ret)
+			std::cout << "Request to close connection:\t" << _fds[socket].fd << std::endl;
+		else
+			std::cout << "recv() failed" << std::endl;
 	}
 	if (closeConnection) {
 		close(_fds[socket].fd);
@@ -194,7 +197,7 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 				if( _fds[i].fd == _listenSocket)
 					acceptConnection();
 				else {
-					handleConnection(i, config);
+					receiveRequest(i, config);
 				}
 			}
 		}
