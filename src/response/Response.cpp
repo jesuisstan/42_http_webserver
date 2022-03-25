@@ -225,7 +225,7 @@ bool Response::checkContentLength() {
     size_t contentLength = RequestParser_.getContentLength();
     if (contentLength) {
         size_t bodyLength = RequestParser_.getBody().length();
-//        std::cout << BgGREEN << contentLength << " | " << bodyLength << "|"<<  RequestParser_.getBody() << "|"<< RESET << std::endl;
+        std::cout << BgGREEN << contentLength << " | " << bodyLength << "|"<<  RequestParser_.getBody() << "|"<< RESET << std::endl;
         if (contentLength != bodyLength)
             return false;
     }

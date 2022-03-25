@@ -264,11 +264,9 @@ void RequestParser::setBody() {
     std::string erasedRequest = request_;
     size_t bodyStart = request_.find("\r\n\r\n");
     if (bodyStart != std::string::npos) {
-        erasedRequest = erasedRequest.substr(bodyStart + 4);
-        size_t bodyEnd = erasedRequest.find("\r\n\r\n");
-        if (bodyEnd != std::string::npos)
-            body_ = erasedRequest.substr(0, bodyEnd);
-//std::cout << "__BODY_______________|"<< erasedRequest << body_ << "|" << std::endl;
+        body_ = erasedRequest.substr(bodyStart + 4);
+//        body_ = erasedRequest.substr(0, bodyEnd);
+std::cout << "__BODY_______________|"<< body_ << "|" << std::endl;
 }}
 
 void RequestParser::setHeaders() {
@@ -342,10 +340,10 @@ void RequestParser::parse() {
         setSecFetchSite();
         setSecFetchUser();
         setCacheControl();
-        if (method_ == "POST" || method_ == "PUT")
-            setBody();
         setHeaders();
         setContentLength();
+        if (method_ == "POST" || method_ == "PUT")
+            setBody();
     } else {
         throw UnsupportedMethodException(method_);
     }

@@ -127,7 +127,8 @@ void	Server::handleConnection(int i, ServerConfig &config, std::string *requestB
 		*requestLength += ret;
 		std::cout << requestLength << " bytes received from sd:\t" << _fds[i].fd <<  std::endl;
 		memset(buffer, 0, BUFFER_SIZE);
-		if (findReqEnd(*requestBuffer, *requestLength))
+
+        if (findReqEnd(*requestBuffer, *requestLength))
 		{
 			try {
 				RequestParser request = RequestParser(*requestBuffer, *requestLength);
@@ -238,19 +239,17 @@ bool isChunked(std::string request_buffer) {
 }
 
 bool Server::findReqEnd(std::string request_buffer, size_t request_len) {
+    std::cout << "|"BLUE  << request_buffer << RESET"|" << std::endl;
     std::string method = request_buffer;
     method = method.substr(0, request_buffer.find_first_of(' '));
-    if (request_buffer[request_len - 1] == '\n' &&
-        request_buffer[request_len - 2] == '\r' &&
-        request_buffer[request_len - 3] == '\n' &&
-        request_buffer[request_len - 4] == '\r') {
-        if (isChunked(request_buffer)) {
-           if ((method != "POST" && method != "PUT" ) || request_buffer[request_len - 5] == '0')
+    if (isChunked(request_buffer)) {
+        if ((method != "POST" && method != "PUT") || request_buffer.find("0\r\n\r\n") != std::string::npos)
             return true;
-        } else
+        else if (request_buffer.find("\r\n\r\n") != std::string::npos)
             return true;
+    } else
+        return true;
 
-    }
     return false;
 }
 
