@@ -102,7 +102,7 @@ void	Server::acceptConnection(void) {
 	_numberFds++;
 }
 
-void	Server::receiveRequest(int socket, ServerConfig &config) {
+void	Server::receiveRequest(int socket) {
 	std::cout << "Event detected on descriptor:\t" << _fds[socket].fd << std::endl;
 	bool closeConnection = false;
 	bool compressArray = false;
@@ -199,7 +199,7 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 				if ( _fds[i].fd == _listenSocket  && _fds[i].events == POLLIN)
 					acceptConnection();
 				if ( _fds[i].fd != _listenSocket  && _fds[i].events == POLLIN)
-					receiveRequest(i, config);
+					receiveRequest(i);
 				if (_fds[i].events == POLLOUT)
 					sendResponse(i, config);
 			}
