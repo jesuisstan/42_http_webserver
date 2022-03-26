@@ -14,6 +14,9 @@ typedef struct s_reqData {
 	size_t			reqLength;
 	RequestParser 	request;
 	Response		response;
+	bool			isTransfer;
+	bool			foundHeaders;
+	std::string		method;
 }	t_reqData;
 
 class Server {
@@ -41,7 +44,9 @@ public:
 	void	runServer(int timeout, ServerConfig &config);
 	void	closeConnections(void);
 
-	static bool findReqEnd(std::string request_buffer, size_t request_len);
+	// static bool findReqEnd(std::string request_buffer, size_t request_len);
+	static bool findReqEnd(t_reqData &req, std::string &tail);
+	bool	endByTimeout(t_reqData &req);
 };
 
 void	interruptHandler(int sig_int);
