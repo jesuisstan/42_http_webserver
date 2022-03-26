@@ -200,7 +200,7 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 					acceptConnection();
 				if ( _fds[i].fd != _listenSocket  && _fds[i].events == POLLIN)
 					receiveRequest(i);
-				if (_fds[i].events == POLLOUT)
+				if (_fds[i].fd != _listenSocket && _fds[i].events == POLLOUT)
 					sendResponse(i, config);
 			}
 		}
