@@ -266,7 +266,7 @@ void RequestParser::setBody() {
     if (bodyStart != std::string::npos) {
         body_ = erasedRequest.substr(bodyStart + 4);
 //        body_ = erasedRequest.substr(0, bodyEnd);
-std::cout << "__BODY_______________|"<< body_ << "|" << std::endl;
+//std::cout << "__BODY_______________|"<< body_ << "|" << std::endl;
 }}
 
 void RequestParser::setHeaders() {

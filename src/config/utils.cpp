@@ -45,6 +45,22 @@ int hexToDec(std::string hex)
     return dec;
 }
 
+void printStrWithUnprintableChars(std::string string) {
+    const char *str = string.c_str();
+    while(*str){
+        switch(*str){
+            case '\t': std::cout << "\\t"; break;
+            case '\n': std::cout << "\\n"; break;
+            case '\v': std::cout << "\\v"; break;
+            case '\f': std::cout << "\\f"; break;
+            case '\r': std::cout << "\\r"; break;
+            default: std::cout << *str; break;
+        }
+        str++;
+    }
+    std::cout << "\n" << std::endl;
+}
+
 
 void	readSemicolon(std::istream &ifs)
 {

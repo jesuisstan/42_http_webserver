@@ -127,7 +127,6 @@ void	Server::handleConnection(int i, ServerConfig &config, std::string *requestB
 		*requestLength += ret;
 		std::cout << requestLength << " bytes received from sd:\t" << _fds[i].fd <<  std::endl;
 		memset(buffer, 0, BUFFER_SIZE);
-
         if (findReqEnd(*requestBuffer, *requestLength))
 		{
 			try {
@@ -140,7 +139,7 @@ void	Server::handleConnection(int i, ServerConfig &config, std::string *requestB
 				*requestLength = 0;
 				Response response = Response(request, config);
 				char *responseStr = const_cast<char *>(response.getResponse().c_str());
-				std::cout << CYAN << response.getResponse() << RESET << std::endl;
+				std::cout << CYAN << response.getResponseCode() << RESET << std::endl;
 				ret = send(_fds[i].fd, responseStr, strlen(responseStr), 0);
 				if (ret < 0) {
 					std::cout << "send() failed" << std::endl;
@@ -239,17 +238,17 @@ bool isChunked(std::string request_buffer) {
 }
 
 bool Server::findReqEnd(std::string request_buffer, size_t request_len) {
-    std::cout << "|"BLUE  << request_buffer << RESET"|" << std::endl;
+//    std::cout << "|"BLUE  << request_buffer << RESET"|" << std::endl;
     std::string method = request_buffer;
     method = method.substr(0, request_buffer.find_first_of(' '));
+//    printStrWithUnprintableChars(request_buffer);
     if (isChunked(request_buffer)) {
         if ((method != "POST" && method != "PUT") || request_buffer.find("0\r\n\r\n") != std::string::npos)
             return true;
-        else if (request_buffer.find("\r\n\r\n") != std::string::npos)
+        else if ((method != "POST" && method != "PUT") && request_buffer.find("\r\n\r\n") != std::string::npos)
             return true;
-    } else
+    } else if (request_buffer.find("\r\n\r\n") != std::string::npos)
         return true;
-
     return false;
 }
 

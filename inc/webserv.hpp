@@ -66,3 +66,4 @@ bool		isPositiveDigit(std::string &s);
 void		readSemicolon(std::istream &ifs);
 std::string	&cutSemicolon(std::string &line);
 int         hexToDec(std::string hex);
+void printStrWithUnprintableChars(std::string string);
