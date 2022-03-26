@@ -86,6 +86,17 @@ void	Server::initiate(const char *ipAddr, int port) {
 	}
 }
 
+void	Server::initReqDataStruct(int clientFD) {
+	_clients[_fds[clientFD].fd].reqLength = 0;
+	_clients[_fds[clientFD].fd].reqString = "";
+	_clients[_fds[clientFD].fd].request = RequestParser();
+	_clients[_fds[clientFD].fd].response = Response();
+	_clients[_fds[clientFD].fd].isTransfer = false;
+	_clients[_fds[clientFD].fd].foundHeaders = false;
+	_clients[_fds[clientFD].fd].method = "";
+	return ;
+}
+
 void	Server::acceptConnection(void) {
 	int newSD = accept(_listenSocket, NULL, NULL);
 	if (newSD < 0)
@@ -100,7 +111,7 @@ void	Server::acceptConnection(void) {
 	_fds[_numberFds].fd = newSD;
 	_fds[_numberFds].events = POLLIN;
 	_numberFds++;
-	bzero(&_clients[newSD], sizeof(_clients[newSD]));
+	initReqDataStruct(_fds[_numberFds].fd);
 }
 
 void	Server::receiveRequest(int socket) {
@@ -236,7 +247,7 @@ bool Server::endByTimeout(t_reqData &req) {
 bool Server::findReqEnd(t_reqData &req, std::string &tail) {
 	if (!req.foundHeaders) {
 		size_t headersEnd = req.reqString.find("\r\n\r\n");
-		if (headersEnd == std::string::npos) // заголовок еще не пришел до конца
+		if (headersEnd == std::string::npos) // todo заголовок еще не пришел до конца
 			return false;
 		req.foundHeaders = true;
 		req.method = req.reqString.substr(0, req.reqString.find_first_of(' '));

@@ -42,6 +42,7 @@ public:
 	void	receiveRequest(int socket);
 	void	sendResponse(int socket, ServerConfig &config);
 	void	runServer(int timeout, ServerConfig &config);
+	void	initReqDataStruct(int clientFD);
 	void	closeConnections(void);
 
 	// static bool findReqEnd(std::string request_buffer, size_t request_len);
