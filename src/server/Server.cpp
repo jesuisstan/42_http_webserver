@@ -1,19 +1,13 @@
-#include "webserv.hpp"
 #include "Server.hpp"
-#include "RequestParser.hpp"
-#include "Response.hpp"
-
-bool	g_serverOnAir;
 
 Server::Server() {
-	g_serverOnAir = true;
+	signal(SIGINT, interruptHandler);
 	memset(&_servAddr, 0, sizeof(_servAddr));
 	memset(_fds, 0, sizeof(_fds));
 }
 
 Server::~Server() {
-	for (int i = 0; i < _numberFds; i++)
-	{
+	for (int i = 0; i < _numberFds; i++) {
 		if (_fds[i].fd >= 0)
 		{
 			close(_fds[i].fd);
@@ -21,6 +15,7 @@ Server::~Server() {
 		}
 	}
 }
+
 Server::Server(const Server &other) {
 	*this = other;
 	return ;
@@ -92,70 +87,48 @@ void	Server::initiate(const char *ipAddr, int port) {
 }
 
 void	Server::acceptConnection(void) {
-	int newSD = -1;
-	do {
-		newSD = accept(_listenSocket, NULL, NULL);
-		if (newSD < 0)
-			break;
-		int ret = fcntl(newSD, F_SETFL, fcntl(newSD, F_GETFL, 0) | O_NONBLOCK);
-		if (ret < 0) {
-			std::cout << "fcntl() failed" << std::endl;
-			close(_listenSocket);
-			exit(-1);
-		}
-		std::cout << "New incoming connection:\t" << newSD << std::endl;
-		_fds[_numberFds].fd = newSD;
-		_fds[_numberFds].events = POLLIN;
-		_numberFds++;
-	} while (newSD != -1);
+	int newSD = accept(_listenSocket, NULL, NULL);
+	if (newSD < 0)
+		return ;
+	int ret = fcntl(newSD, F_SETFL, fcntl(newSD, F_GETFL, 0) | O_NONBLOCK);
+	if (ret < 0) {
+		std::cout << "fcntl() failed" << std::endl;
+		close(_listenSocket);
+		exit(-1);
+	}
+	std::cout << "New incoming connection:\t" << newSD << std::endl;
+	_fds[_numberFds].fd = newSD;
+	_fds[_numberFds].events = POLLIN;
+	_numberFds++;
 }
 
-void	Server::handleConnection(int i, ServerConfig &config, std::string *requestBuffer, size_t  *requestLength) {
-	std::cout << "Event detected on descriptor:\t" << _fds[i].fd << std::endl;
+void	Server::receiveRequest(int socket, ServerConfig &config) {
+	std::cout << "Event detected on descriptor:\t" << _fds[socket].fd << std::endl;
 	bool closeConnection = false;
 	bool compressArray = false;
-
-	while (!closeConnection) {
-		char buffer[BUFFER_SIZE] = {0};
-		int ret = recv(_fds[i].fd, buffer, sizeof(buffer), 0);
-		if (ret <= 0) {
-			if (ret == 0)
-				closeConnection = true;
-			break;
-		}
-		*requestBuffer += static_cast<std::string>(buffer).substr(0, ret);
-		*requestLength += ret;
-		std::cout << requestLength << " bytes received from sd:\t" << _fds[i].fd <<  std::endl;
+	int ret = 0;
+	char buffer[BUFFER_SIZE] = {0};
+	ret = recv(_fds[socket].fd, buffer, BUFFER_SIZE - 1, 0);
+	if (ret > 0)
+	{
+		_clients[socket].reqString += std::string(buffer, ret);
+		_clients[socket].reqLength += ret;
+		std::cout << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd <<  std::endl;
 		memset(buffer, 0, BUFFER_SIZE);
-        if (findReqEnd(*requestBuffer, *requestLength))
-		{
-			try {
-				RequestParser request = RequestParser(*requestBuffer, *requestLength);
-                if (request.getBody().length() > 10000)
-                    request.showHeaders();
-                else
-                    std::cout << "|"YELLOW  << request.getRequest() << RESET"|" << std::endl;
-                *requestBuffer = "";
-				*requestLength = 0;
-				Response response = Response(request, config);
-				char *responseStr = const_cast<char *>(response.getResponse().c_str());
-				std::cout << CYAN << response.getResponseCode() << RESET << std::endl;
-				ret = send(_fds[i].fd, responseStr, strlen(responseStr), 0);
-				if (ret < 0) {
-					std::cout << "send() failed" << std::endl;
-					closeConnection = true;
-					break;
-				}
-			}
-			catch (RequestParser::UnsupportedMethodException &e ) {
-				std::cout << e.what() << std::endl;
-			}
-		}
+		if (findReqEnd(_clients[socket].reqString, _clients[socket].reqLength))
+			_fds[socket].events = POLLOUT;
+	}
+	if (ret == 0 || ret == -1) {
+		closeConnection = true;
+		if (!ret)
+			std::cout << "Request to close connection:\t" << _fds[socket].fd << std::endl;
+		else
+			std::cout << "recv() failed" << std::endl;
 	}
 	if (closeConnection) {
-		close(_fds[i].fd);
-		std::cout << "Connection has been closed:\t" << _fds[i].fd << std::endl;
-		_fds[i].fd = -1;
+		close(_fds[socket].fd);
+		std::cout << "Connection has been closed:\t" << _fds[socket].fd << std::endl;
+		_fds[socket].fd = -1;
 		compressArray = true;
 	}
 	if (compressArray) {
@@ -175,16 +148,39 @@ void	Server::handleConnection(int i, ServerConfig &config, std::string *requestB
 	}
 }
 
+void	Server::sendResponse(int socket, ServerConfig &config) {
+	std::cout << YELLOW << _clients[socket].reqString << RESET << std::endl;
+	try {
+		_clients[socket].request = RequestParser(_clients[socket].reqString, _clients[socket].reqLength);
+		if (_clients[socket].request.getBody().length() > 10000)
+			_clients[socket].request.showHeaders();
+		else
+			std::cout << "|" << YELLOW  << _clients[socket].request.getRequest() << RESET"|" << std::endl;
+		_clients[socket].reqString = "";
+		_clients[socket].reqLength = 0;
+		_clients[socket].response = Response(_clients[socket].request, config);
+		char *responseStr = const_cast<char *>(_clients[socket].response.getResponse().c_str());
+		std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET << std::endl;
+		int ret = send(_fds[socket].fd, responseStr, strlen(responseStr), 0);
+		if (ret < 0) {
+			std::cout << "send() failed" << std::endl;
+			return ;
+		}
+	}
+	catch (RequestParser::UnsupportedMethodException &e) {
+		std::cout << e.what() << std::endl;
+	}
+	_fds[socket].events = POLLIN;
+}
+
 void	Server::runServer(int timeout,  ServerConfig &config) {
-//	signal(SIGINT, interruptHandler);
 	_fds[0].fd = _listenSocket;
 	_fds[0].events = POLLIN;
 	this->setTimeout(timeout);
 	this->_numberFds = 1;
 	int currentSize = 0;
 		std::string requestBuffer = "";
-	size_t requestLength = 0;
-	while (g_serverOnAir != false) {
+	while (true) {
 		std::cout << "Waiting on poll()...\n";
 		int ret = poll(_fds, _numberFds, _timeout);
 		if (ret < 0) {
@@ -199,12 +195,13 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 		for (int i = 0; i < currentSize; i++) {
 			if (_fds[i].revents == 0)
 				continue;
-			if (_fds[i].revents && POLLIN) {
-				if( _fds[i].fd == _listenSocket)
+			if (_fds[i].revents) {
+				if ( _fds[i].fd == _listenSocket  && POLLIN)
 					acceptConnection();
-				else {
-					handleConnection(i, config, &requestBuffer, &requestLength);
-				}
+				if ( _fds[i].fd != _listenSocket  && POLLIN)
+					receiveRequest(i, config);
+				if (POLLOUT)
+					sendResponse(i, config);
 			}
 		}
 	}
@@ -254,6 +251,6 @@ bool Server::findReqEnd(std::string request_buffer, size_t request_len) {
 
 void	interruptHandler(int sig_int) {
 	(void)sig_int;
-	std::cout << "\nAttention! Interruption signal caught\n";
-	g_serverOnAir = false;
+	std::cout << BgMAGENTA << "\nAttention! Interruption signal caught. Web server stopped\n";
+	exit (EXIT_SUCCESS);
 }

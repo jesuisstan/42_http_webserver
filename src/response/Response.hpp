@@ -50,7 +50,7 @@ class Response {
             std::string                    	locationRedirection_;
             std::string                    	requestedFile_;
             std::map<int, std::string>		errorPages_;
-            bool                           	cgiRequested_;	
+            bool                           	cgiRequested_;
             void                           	setResponse();
             void                           	setResponseCodes();
             void                           	setResponseHeaders();
@@ -61,7 +61,7 @@ class Response {
             void                           	setLocationRedirection(const std::string& locationRedirection);
             void                           	setResponseCode(int code);
             void                           	setContentLength(size_t len);
-            void                           	setResponseBody(const std::string& body);	
+            void                           	setResponseBody(const std::string& body);
             void                           	createResponse();
             void                           	checkFileRequested();
             void                           	createAutoIndexPage(const char *dir);
@@ -74,8 +74,8 @@ class Response {
             void                           	savePostBody();
             bool                            checkContentLength();
 
-            Response(): responseCode_(0), contentLength_(0) {};
     public:
+            Response(): responseCode_(0), contentLength_(0) {};
 
             const std::string  &getResponse()          const;
             const std::string  &getResponseBody()      const;
