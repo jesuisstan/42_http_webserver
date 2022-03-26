@@ -100,6 +100,7 @@ void	Server::acceptConnection(void) {
 	_fds[_numberFds].fd = newSD;
 	_fds[_numberFds].events = POLLIN;
 	_numberFds++;
+	bzero(&_clients[newSD], sizeof(_clients[newSD]));
 }
 
 void	Server::receiveRequest(int socket, ServerConfig &config) {
@@ -111,11 +112,12 @@ void	Server::receiveRequest(int socket, ServerConfig &config) {
 	ret = recv(_fds[socket].fd, buffer, BUFFER_SIZE - 1, 0);
 	if (ret > 0)
 	{
-		_clients[socket].reqString += std::string(buffer, ret);
+		std::string tail = std::string(buffer, ret);
 		_clients[socket].reqLength += ret;
+		_clients[socket].reqString += tail;
 		std::cout << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd <<  std::endl;
 		memset(buffer, 0, BUFFER_SIZE);
-		if (findReqEnd(_clients[socket].reqString, _clients[socket].reqLength))
+		if (findReqEnd(_clients[socket], tail))
 			_fds[socket].events = POLLOUT;
 	}
 	if (ret == 0 || ret == -1) {
@@ -149,7 +151,6 @@ void	Server::receiveRequest(int socket, ServerConfig &config) {
 }
 
 void	Server::sendResponse(int socket, ServerConfig &config) {
-	std::cout << YELLOW << _clients[socket].reqString << RESET << std::endl;
 	try {
 		_clients[socket].request = RequestParser(_clients[socket].reqString, _clients[socket].reqLength);
 		if (_clients[socket].request.getBody().length() > 10000)
@@ -158,7 +159,8 @@ void	Server::sendResponse(int socket, ServerConfig &config) {
 			std::cout << "|" << YELLOW  << _clients[socket].request.getRequest() << RESET"|" << std::endl;
 		_clients[socket].reqString = "";
 		_clients[socket].reqLength = 0;
-		_clients[socket].response = Response(_clients[socket].request, config);
+		_clients[socket].foundHeaders = 0;
+		_clients[socket].response = Response(_clients[socket].request, config); 
 		char *responseStr = const_cast<char *>(_clients[socket].response.getResponse().c_str());
 		std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET << std::endl;
 		int ret = send(_fds[socket].fd, responseStr, strlen(responseStr), 0);
@@ -216,37 +218,37 @@ void	Server::closeConnections(void) {
 	}
 }
 
-bool isChunked(std::string request_buffer) {
-    size_t headersEnd = request_buffer.find("\r\n\r\n");
-    if (headersEnd != std::string::npos) {
-        std::string headers = request_buffer.substr(0, headersEnd);
-        size_t transferEncodingHeaderPosition = headers.find("Transfer-Encoding: ");
-        if (transferEncodingHeaderPosition != std::string::npos) {
-            std::string encoding = headers.substr(transferEncodingHeaderPosition + 19);
-            size_t lineEnd = encoding.find("\n");
-            if (lineEnd != std::string::npos) {
-                encoding = encoding.substr(0, lineEnd - 1);
-                if (encoding == "chunked")
-                    return true;
-            }
-        }
-    }
-    return false;
+bool isChunked(std::string headers) {
+	size_t startPos = headers.find("Transfer-Encoding:");
+	if (startPos != std::string::npos) {
+		size_t endLine = headers.find("\n", startPos);
+		std::string transferEncodingLine = headers.substr(startPos, endLine - startPos);
+		return (transferEncodingLine.find("chunked") != std::string::npos);
+	}
+	return false;
 }
 
-bool Server::findReqEnd(std::string request_buffer, size_t request_len) {
-//    std::cout << "|"BLUE  << request_buffer << RESET"|" << std::endl;
-    std::string method = request_buffer;
-    method = method.substr(0, request_buffer.find_first_of(' '));
-//    printStrWithUnprintableChars(request_buffer);
-    if (isChunked(request_buffer)) {
-        if ((method != "POST" && method != "PUT") || request_buffer.find("0\r\n\r\n") != std::string::npos)
-            return true;
-        else if ((method != "POST" && method != "PUT") && request_buffer.find("\r\n\r\n") != std::string::npos)
-            return true;
-    } else if (request_buffer.find("\r\n\r\n") != std::string::npos)
-        return true;
-    return false;
+bool Server::endByTimeout(t_reqData &req) {
+	// todo add for too long request 
+	return false;
+}
+
+bool Server::findReqEnd(t_reqData &req, std::string &tail) {
+	if (!req.foundHeaders) {
+		size_t headersEnd = req.reqString.find("\r\n\r\n");
+		if (headersEnd == std::string::npos) // заголовок еще не пришел до конца
+			return false;
+		req.foundHeaders = true;
+		req.method = req.reqString.substr(0, req.reqString.find_first_of(' '));
+		req.isTransfer = isChunked(req.reqString.substr(0, headersEnd));
+	}
+	if (!req.isTransfer)
+		return true;
+	if (req.isTransfer and req.reqString.find("0\r\n\r\n") != std::string::npos)
+		return true;
+	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find("\r\n\r\n") != std::string::npos)
+		return true;
+	return false;
 }
 
 void	interruptHandler(int sig_int) {
