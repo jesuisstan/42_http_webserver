@@ -7,8 +7,7 @@ Server::Server() {
 }
 
 Server::~Server() {
-	for (int i = 0; i < _numberFds; i++)
-	{
+	for (int i = 0; i < _numberFds; i++) {
 		if (_fds[i].fd >= 0)
 		{
 			close(_fds[i].fd);
@@ -117,31 +116,9 @@ void	Server::receiveRequest(int socket, ServerConfig &config) {
 		std::cout << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd <<  std::endl;
 		memset(buffer, 0, BUFFER_SIZE);
 		if (findReqEnd(_clients[socket].reqString, _clients[socket].reqLength))
-		{
-			try {
-				_clients[socket].request = RequestParser(_clients[socket].reqString, _clients[socket].reqLength);
-				if (_clients[socket].request.getBody().length() > 10000)
-					_clients[socket].request.showHeaders();
-				else
-					std::cout << "|" << YELLOW  << _clients[socket].request.getRequest() << RESET"|" << std::endl;
-				_clients[socket].reqString = "";
-				_clients[socket].reqLength = 0;
-				_clients[socket].response = Response(_clients[socket].request, config);
-				char *responseStr = const_cast<char *>(_clients[socket].response.getResponse().c_str());
-				std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET << std::endl;
-				ret = send(_fds[socket].fd, responseStr, strlen(responseStr), 0);
-				if (ret < 0) {
-					std::cout << "send() failed" << std::endl;
-					closeConnection = true;
-				}
-			}
-			catch (RequestParser::UnsupportedMethodException &e) {
-				std::cout << e.what() << std::endl;
-			}
-		}
+			_fds[socket].events = POLLOUT;
 	}
-	if (ret == 0 || ret == -1)
-	{
+	if (ret == 0 || ret == -1) {
 		closeConnection = true;
 		if (!ret)
 			std::cout << "Request to close connection:\t" << _fds[socket].fd << std::endl;
@@ -171,6 +148,31 @@ void	Server::receiveRequest(int socket, ServerConfig &config) {
 	}
 }
 
+void	Server::sendResponse(int socket, ServerConfig &config) {
+	std::cout << YELLOW << _clients[socket].reqString << RESET << std::endl;
+	try {
+		_clients[socket].request = RequestParser(_clients[socket].reqString, _clients[socket].reqLength);
+		if (_clients[socket].request.getBody().length() > 10000)
+			_clients[socket].request.showHeaders();
+		else
+			std::cout << "|" << YELLOW  << _clients[socket].request.getRequest() << RESET"|" << std::endl;
+		_clients[socket].reqString = "";
+		_clients[socket].reqLength = 0;
+		_clients[socket].response = Response(_clients[socket].request, config);
+		char *responseStr = const_cast<char *>(_clients[socket].response.getResponse().c_str());
+		std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET << std::endl;
+		int ret = send(_fds[socket].fd, responseStr, strlen(responseStr), 0);
+		if (ret < 0) {
+			std::cout << "send() failed" << std::endl;
+			return ;
+		}
+	}
+	catch (RequestParser::UnsupportedMethodException &e) {
+		std::cout << e.what() << std::endl;
+	}
+	_fds[socket].events = POLLIN;
+}
+
 void	Server::runServer(int timeout,  ServerConfig &config) {
 	_fds[0].fd = _listenSocket;
 	_fds[0].events = POLLIN;
@@ -193,12 +195,13 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 		for (int i = 0; i < currentSize; i++) {
 			if (_fds[i].revents == 0)
 				continue;
-			if (_fds[i].revents && POLLIN) {
-				if( _fds[i].fd == _listenSocket)
+			if (_fds[i].revents) {
+				if ( _fds[i].fd == _listenSocket  && POLLIN)
 					acceptConnection();
-				else {
+				if ( _fds[i].fd != _listenSocket  && POLLIN)
 					receiveRequest(i, config);
-				}
+				if (POLLOUT)
+					sendResponse(i, config);
 			}
 		}
 	}

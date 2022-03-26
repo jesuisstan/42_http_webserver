@@ -37,7 +37,7 @@ public:
 	void	initiate(const char *ipAddr, int port);
 	void	acceptConnection(void);
 	void	receiveRequest(int socket, ServerConfig &config);
-	void	sendResponse(int socket);
+	void	sendResponse(int socket, ServerConfig &config);
 	void	runServer(int timeout, ServerConfig &config);
 	void	closeConnections(void);
 
