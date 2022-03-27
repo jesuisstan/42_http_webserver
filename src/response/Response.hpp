@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ymanfryd <ymanfryd@student.21-school.ru    +#+  +:+       +#+        */
+/*   By: alchrist <alchrist@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/20 19:07:21 by ymanfryd          #+#    #+#             */
-/*   Updated: 2022/03/22 11:52:05 by ymanfryd         ###   ########.fr       */
+/*   Updated: 2022/03/26 23:46:03 by alchrist         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,8 @@ class Response {
             std::string                    	handleChunkedBody();
             void                           	savePostBody();
             bool                            checkContentLength();
+
+			void							fillCgiAnswer();
 
     public:
             Response(): responseCode_(0), contentLength_(0) {};

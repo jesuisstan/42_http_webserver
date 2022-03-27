@@ -11,7 +11,8 @@ client
 post_body/*
 put_test/*
 
-
+#local testings
+test_strings.cpp
 
 # Compiled Object files
 *.slo

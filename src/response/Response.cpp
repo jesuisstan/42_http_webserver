@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ymanfryd <ymanfryd@student.21-school.ru    +#+  +:+       +#+        */
+/*   By: alchrist <alchrist@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/20 19:06:46 by ymanfryd          #+#    #+#             */
-/*   Updated: 2022/03/22 12:11:23 by ymanfryd         ###   ########.fr       */
+/*   Updated: 2022/03/27 00:22:08 by alchrist         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -341,12 +341,14 @@ int Response::checkPathForLocation() {
             RequestParser_.setPathInfo(stringFilename);
             std::cout << BgRED << "CGI START" << RESET << std::endl;
             Cgi* cgi = new Cgi(ServerConfig_, Location_, RequestParser_);
+			// int fd_to_write = cgi->exec();
+            // setResponseCode(55);
+
             std::pair<int, std::string> cgiResult = cgi->execute();
             setResponseCode(cgiResult.first);
             response_ = cgiResult.second;
-        } else if (requestMethod_ == "PUT" || requestMethod_ == "POST") {
-            requestedFile_ = requestRoute_.substr(1);
-            return 1;
+			fillCgiAnswer();
+			return 1;
         }
     } else if (requestMethod_ == "PUT" || requestMethod_ == "POST") {
         requestedFile_ = requestRoute_.substr(1);
@@ -378,6 +380,15 @@ int Response::checkPathForLocation() {
         setResponseBody(index);
         return 1;
     }
+}
+
+void Response::fillCgiAnswer() {
+	std::string ans;
+	ans = "HTTP/1.1 " + responseCodes_.find(responseCode_)->second;
+	ans += "Content-Length: " + numberToString(response_.size()) + "\n";
+	ans += "\n\r";
+	response_ = ans + response_;
+
 }
 
 std::string Response::findFileWithExtension(std::string extension, std::string dir) {
