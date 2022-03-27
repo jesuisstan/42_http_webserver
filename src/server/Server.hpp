@@ -50,4 +50,5 @@ public:
 	bool	endByTimeout(t_reqData &req);
 };
 
+char	*getCstring(const std::string &cppString);
 void	interruptHandler(int sig_int);
