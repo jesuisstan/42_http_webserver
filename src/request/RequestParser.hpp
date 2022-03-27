@@ -37,6 +37,7 @@ class RequestParser {
             std::string                                 cacheControl_;
             std::string                                 acceptLanguage_;
             std::string                                 acceptEncoding_;
+            std::string                                 pathTranslated_;
 
             std::vector<std::string>                    path_;
             size_t                                      iterator_;
@@ -78,6 +79,7 @@ public:
             ~RequestParser() {}
 
             void                                        setPathInfo(std::string pathInfo);
+            void                                        setPathTranslated(std::string pathTranslated);
 
             const   std::string                         &getRequest()            const;
             const   std::string                         &getMethod()             const;
@@ -97,6 +99,7 @@ public:
             const   std::string                         &getCacheControl()       const;
             const   std::string                         &getBody()               const;
             const   std::string                         &getPathInfo()           const;
+            const   std::string                         &getPathTranslated()     const;
             const   std::map<std::string, std::string>  &getHeaders()            const;
             const   std::string                         &getContentType()        const;
             const   size_t                              &getContentLength()      const;
