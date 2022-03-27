@@ -10,6 +10,8 @@ webserv
 client
 post_body/*
 put_test/*
+configs/stan.cfg
+src/main_stan.cpp
 
 #local testings
 test_strings.cpp
