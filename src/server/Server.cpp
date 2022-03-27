@@ -161,6 +161,19 @@ void	Server::receiveRequest(int socket) {
 	}
 }
 
+char	*getCstring(const std::string &cppString) {
+	size_t length = cppString.size();
+	char *res = (char *)malloc(cppString.size());
+	if (!res) {
+		std::cout << "malloc() failed" << std::endl;
+		exit(-1);
+	}
+	for (size_t i = 0; i < length; i++) {
+		res[i] = cppString[i];
+	}
+	return (res);
+}
+
 void	Server::sendResponse(int socket, ServerConfig &config) {
 	try {
 		_clients[socket].request = RequestParser(_clients[socket].reqString, _clients[socket].reqLength);
@@ -172,9 +185,11 @@ void	Server::sendResponse(int socket, ServerConfig &config) {
 		_clients[socket].reqLength = 0;
 		_clients[socket].foundHeaders = 0;
 		_clients[socket].response = Response(_clients[socket].request, config); 
-		char *responseStr = const_cast<char *>(_clients[socket].response.getResponse().c_str());
-		std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET  << _clients[socket].response.getResponse() << std::endl;
-		int ret = send(_fds[socket].fd, responseStr, strlen(responseStr), 0);
+		char *responseStr = getCstring(_clients[socket].response.getResponse());
+		size_t responseSize = _clients[socket].response.getResponse().size();
+		std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET << std::endl;
+		int ret = send(_fds[socket].fd, responseStr, responseSize, 0);
+		free (responseStr);
 		if (ret < 0) {
 			std::cout << "send() failed" << std::endl;
 			return ;
