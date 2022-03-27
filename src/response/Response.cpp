@@ -27,6 +27,7 @@ Response::Response(RequestParser &request, ServerConfig &config) :
         errorPages_(config.getErrorPages()),
         cgiRequested_(false) {
     setResponseCodes();
+    setImgExtensions();
     createResponse();
 }
 
@@ -93,7 +94,7 @@ const std::string &Response::getResponseHeaders() const {
 /**************************/
 
 void Response::setResponse() {
-    response_ = responseHeaders_ + "\n\r\n\r" + responseBody_;
+    response_ = responseHeaders_ + "\r\n\r\n" + responseBody_;
 }
 
 void Response::setResponseCode(int code) {
@@ -103,6 +104,7 @@ void Response::setResponseCode(int code) {
 void Response::setContentType() {
     size_t routeEnd = requestPath_.size() - 1;
     size_t dotPos = requestPath_[routeEnd].find('.');
+
     if (dotPos != std::string::npos) {
         std::string extension = requestPath_[routeEnd].substr(dotPos);
         if (extension == ".css") {
@@ -113,10 +115,18 @@ void Response::setContentType() {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "application/javascript\n";
             trimRequestPath();
+        }  else if (extension == ".html") {
+            requestedFile_ = requestPath_[routeEnd];
+            responseContentType_ = "text/html\n";
+            trimRequestPath();
+        } else if (imgExtensions_.count(extension)) {
+            requestedFile_ = requestPath_[routeEnd];
+            responseContentType_ = "image\n";
+            trimRequestPath();
         } else if (extension == ServerConfig_.getCgiExt())
             requestedFile_ = requestPath_[routeEnd];
          else
-            responseContentType_ = "text/html\n";
+            responseContentType_ = "application/octet-stream\n";
     } else
         responseContentType_ = "text/html\n";
 }
@@ -128,7 +138,7 @@ void Response::setResponseHeaders() {
         responseHeaders_ += "Location: " + locationRedirection_ + requestRoute_ + "\n";
     responseHeaders_ += "Content-Type: " + responseContentType_;
     responseHeaders_ += "Content-Length: ";
-    responseHeaders_ += std::to_string(contentLength_);
+    responseHeaders_ += numberToString(contentLength_);
 }
 
 void Response::setResponseBody(const std::string &body) {
@@ -175,6 +185,13 @@ void Response::setResponseCodes() {
     responseCodes_.insert(std::pair<int, std::string>(503, "503 Service Unavailable\n"));
 }
 
+void Response::setImgExtensions() {
+    imgExtensions_.insert(".png");
+    imgExtensions_.insert(".jpeg");
+    imgExtensions_.insert(".jpg");
+    imgExtensions_.insert(".gif");
+}
+
 /**************************/
 /******** HELPERS *********/
 /**************************/
@@ -182,7 +199,6 @@ void Response::setResponseCodes() {
 
 void Response::createResponse() {
     std::string body;
-
     readLocationData();
     setContentType();
 
@@ -437,11 +453,21 @@ void    Response::createAutoIndexPage(const char *dir) {
 std::string Response::readContent(const std::string &filename) {
     std::string buf;
     std::string content;
-    std::ifstream inFile(filename);
-
-    while (getline(inFile, buf))
-        content += buf + "\n";
-    inFile.close();
+    char buffer[SIZE_BUF_TO_RCV];
+    int received = 1;
+    int file = open(filename.c_str(), O_RDONLY);
+    while (received) {
+        received = read(file, buffer, SIZE_BUF_TO_RCV);
+        if (received < 0) {
+            close(file);
+            return "";
+        }
+        else if (received) {
+            buf = std::string(buffer, received);
+            content += buf;
+        }
+    }
+    close(file);
     return content;
 }
 

@@ -11,7 +11,7 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 	env_["SERVER_PORT"] = numberToString(serv.getPort());
 	env_["REQUEST_METHOD"] = req.getMethod(); // req.getMethod()
 	env_["REQUEST_URI"] = req.getRoute() + req.getQuery(); // req.getRoute() + req.getQuery()
-	env_["PATH_INFO"] = req.getPathInfo(); // req.getPathInfo()
+	env_["PATH_INFO"] = "/directory/youpi.bla"; // req.getPathInfo()
 	env_["REDIRECT_STATUS"] = ""; // ??? opyat kakayato hueta
 	env_["SCRIPT_NAME"] = serv.getCgi();
 	env_["QUERY_STRING"] =  req.getQuery();// req.getQuery();
