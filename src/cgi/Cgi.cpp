@@ -20,7 +20,7 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 	env_["REMOTE_IDENT"] = ""; //bonus
 	env_["REMOTE_USER"] = ""; //bonus
 	env_["CONTENT_TYPE"] = req.getContentType(); //req.getContentType()
-	env_["CONTENT_LENGTH"] =  req.getContentLength(); //req.getContentLength()
+	env_["CONTENT_LENGTH"] =  numberToString(req.getContentLength()); //req.getContentLength()
 	
 	emptyBody = req.getBody().empty(); // todo del
 	body_ = req.getBody();

@@ -261,7 +261,7 @@ std::string Response::handleChunkedBody() {
         } else
             break;
     }
-
+    setContentLength(newBody.length());
     return newBody;
 }
 
@@ -339,6 +339,10 @@ int Response::checkPathForLocation() {
         if (extension == ServerConfig_.getCgiExt()) {
             cgiRequested_ = true;
             RequestParser_.setPathInfo(stringFilename);
+            char cwd[1024];
+            getcwd(cwd, sizeof(cwd));
+            std::string path = (std::string) cwd;
+            RequestParser_.setPathTranslated(cwd + stringFilename.substr(1));
             std::cout << BgRED << "CGI START" << RESET << std::endl;
             Cgi* cgi = new Cgi(ServerConfig_, Location_, RequestParser_);
 			// int fd_to_write = cgi->exec();
