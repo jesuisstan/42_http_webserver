@@ -12,6 +12,7 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 	env_["REQUEST_METHOD"] = req.getMethod(); // req.getMethod()
 	env_["REQUEST_URI"] = req.getRoute() + req.getQuery(); // req.getRoute() + req.getQuery()
 	env_["PATH_INFO"] = req.getPathInfo(); // req.getPathInfo()
+	env_["PATH_TRANSLATED"] = req.getPathTranslated();
 	env_["REDIRECT_STATUS"] = ""; // ??? opyat kakayato hueta
 	env_["SCRIPT_NAME"] = serv.getCgi();
 	env_["QUERY_STRING"] =  req.getQuery();// req.getQuery();
@@ -52,14 +53,14 @@ std::pair<int, std::string> Cgi::execute() {
 	// simple_sgi.second = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 18\n\r\n\rOur sgi is working";
 	// return simple_sgi;
 
-	char	**envs = getNewEnviroment();
-	char	*args[4];
+	
+	
 	int		res, pid;
 	int		input[2];
 	int		output[2];
 
 	cgiOut = -1; //todo unset
-	bzero(args, sizeof(*args) * 4);
+	
 	if (env_["SCRIPT_NAME"] == "python")
 		args[0] = "sgi_python.py";
 	else if (env_["SCRIPT_NAME"] == "tester")
@@ -71,6 +72,8 @@ std::pair<int, std::string> Cgi::execute() {
 	pid = fork();
 	if (!pid){ 
 		std::cerr << "RUNS!" << std::endl;
+		char	**envs = getNewEnviroment();
+		char	*args[4];
 		// send(2, args[0], std::strlen(args[0]), 0); // todo del
 		close(input[1]);
       	close(output[0]);
