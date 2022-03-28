@@ -4,7 +4,7 @@ int	main(void) {
 	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd == -1)
 	{
-		std::cout << "Failed to create socket" << std::endl;
+		std::cerr << "Failed to create socket" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	sockaddr_in serv_addr;
@@ -15,12 +15,12 @@ int	main(void) {
 	int connection = connect(socket_fd, (struct sockaddr *)&serv_addr, addrlen);
 	if (connection < 0)
 	{
-		std::cout << "Failed to get data" << std::endl;
+		std::cerr << "Failed to get data" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	while (1) //todo
 	{	
-		std::cout << "Client sends the following msg: ";
+		std::cerr << "Client sends the following msg: ";
 		std::string response;
 		std::cin >> response;
 		send(socket_fd, response.c_str(), response.size(), 0);

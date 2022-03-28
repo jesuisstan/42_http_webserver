@@ -1,7 +1,7 @@
 #include "Cgi.hpp"
 #include <algorithm>
 
-Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
+Cgi::Cgi(ServerConfig &serv, RequestParser &req): request_(req)
 {
 	req.showHeaders();
 	env_["SERVER_NAME"] = "webserv"; //serv.getHost();
@@ -49,9 +49,9 @@ std::pair<int, std::string> Cgi::execute() {
 	simple_sgi.first = 500;
 	// simple_sgi.second = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 18\n\r\n\rOur sgi is working";
 	// return simple_sgi;
-	int		res, pid;
-	FILE *fsInput = tmpfile();
-    FILE *fsOutput = tmpfile();
+	int		pid;
+	FILE	*fsInput = tmpfile();
+    FILE	*fsOutput = tmpfile();
 
     int fdInput = fileno(fsInput);
     int fdOutput = fileno(fsOutput);
@@ -61,7 +61,7 @@ std::pair<int, std::string> Cgi::execute() {
 	if (!emptyBody) {
 		ssize_t record;
 		record = write(fdInput, body_.c_str(), body_.size());
-		if (DEBUG)
+		if (DEBUG > 2)
 			printf("zapisanot to file %lu\n", record);
 		if (record <= 0)
 			return error500_(fdInput, fdOutput, fsInput, fsOutput);
@@ -100,7 +100,7 @@ std::pair<int, std::string> Cgi::execute() {
 	int closeCode = 0;
 	waitpid(pid, &closeCode, 0);
 	closeCode = WEXITSTATUS(closeCode);
-	if (DEBUG)
+	if (DEBUG > 2)
 		printf("dogdalis' pid=%d, closecode=%d\n", pid, closeCode);
 	if (closeCode)
 		return error500_(fdInput, fdOutput, fsInput, fsOutput);
@@ -112,7 +112,7 @@ std::pair<int, std::string> Cgi::execute() {
 	lseek(fdOutput, 0, SEEK_SET);
 	while (recived) {
 		recived = read(fdOutput, buffer, SIZE_BUF_TO_RCV);
-		if (DEBUG)
+		if (DEBUG > 2)
 			printf("считали %d байт с %d\n", recived, fdOutput);
 		if (recived < 0) {
 			close (fdOutput);
@@ -145,58 +145,58 @@ std::pair <int, std::string> Cgi::error500_(int fdInput, int fdOutput, FILE *f1,
 	return sgi_answer;
 }
 
-int Cgi::exec() {
-	char	**envs = getNewEnviroment();
-	char	*args[4];
-	int		res, pid;
-	int		input[2];
-	int		output[2];
+// int Cgi::exec() {
+// 	char	**envs = getNewEnviroment();
+// 	char	*args[4];
+// 	int		res, pid;
+// 	int		input[2];
+// 	int		output[2];
 
-	cgiOut = -1; //todo unset
-	bzero(args, sizeof(*args) * 4);
-	if (env_["SCRIPT_NAME"] == "python")
-		args[0] = "sgi_python.py";
-	else if (env_["SCRIPT_NAME"] == "tester")
-		args[0] = "cgi_tester";
-	else
-		args[0] = "php?";
-	if (pipe(input) < 0 || pipe(output) < 0)
-    	return 0;
-	pid = fork();
-	if (!pid){ 
+// 	cgiOut = -1; //todo unset
+// 	bzero(args, sizeof(*args) * 4);
+// 	if (env_["SCRIPT_NAME"] == "python")
+// 		args[0] = "sgi_python.py";
+// 	else if (env_["SCRIPT_NAME"] == "tester")
+// 		args[0] = "cgi_tester";
+// 	else
+// 		args[0] = "php?";
+// 	if (pipe(input) < 0 || pipe(output) < 0)
+//     	return 0;
+// 	pid = fork();
+// 	if (!pid){ 
 		
-		send(2, args[0], std::strlen(args[0]), 0); // todo del
-		close(input[1]);
-      	close(output[0]);
-		if (dup2(input[0], STDERR_FILENO) < 0 || dup2(output[1], STDOUT_FILENO) < 0) {
-			close(output[1]);
-      		close(input[0]);
-			exit(-1);
-		}
-      	close(output[1]);
-      	close(input[0]);
+// 		send(2, args[0], std::strlen(args[0]), 0); // todo del
+// 		close(input[1]);
+//       	close(output[0]);
+// 		if (dup2(input[0], STDERR_FILENO) < 0 || dup2(output[1], STDOUT_FILENO) < 0) {
+// 			close(output[1]);
+//       		close(input[0]);
+// 			exit(-1);
+// 		}
+//       	close(output[1]);
+//       	close(input[0]);
 
-		char cgi_bin[] = "cgi_bin"; // вообще нихуя не понятно зачем это делать :/ мб чтобы скрипт работал только в его папке
-		if (chdir(cgi_bin) < 0) { // todo
-			exit(-1);
-		}
-		execve(args[0], args, envs);
-		perror("cgi cann't run");
-		exit(-1);
-	}
+// 		char cgi_bin[] = "cgi_bin"; // вообще нихуя не понятно зачем это делать :/ мб чтобы скрипт работал только в его папке
+// 		if (chdir(cgi_bin) < 0) { // todo
+// 			exit(-1);
+// 		}
+// 		execve(args[0], args, envs);
+// 		perror("cgi cann't run");
+// 		exit(-1);
+// 	}
 
-	startTime = clock();
-	close(input[0]);
-    close(output[1]);
-    env_.clear();
-	cgiOut = output[0];
-	fcntl(cgiOut, F_SETFL, O_NONBLOCK);
-	if (emptyBody) {
-    	close(input[1]);
-		return 0;
-	}
-	fcntl(input[1], F_SETFL, O_NONBLOCK);
-	return input[1];
-}
+// 	startTime = clock();
+// 	close(input[0]);
+//     close(output[1]);
+//     env_.clear();
+// 	cgiOut = output[0];
+// 	fcntl(cgiOut, F_SETFL, O_NONBLOCK);
+// 	if (emptyBody) {
+//     	close(input[1]);
+// 		return 0;
+// 	}
+// 	fcntl(input[1], F_SETFL, O_NONBLOCK);
+// 	return input[1];
+// }
 
 int		Cgi::getCgiOut() const {return cgiOut; }

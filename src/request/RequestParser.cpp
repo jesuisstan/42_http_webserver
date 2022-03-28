@@ -152,7 +152,7 @@ const std::string &RequestParser::getPathTranslated() const {
 
 void RequestParser::setMethod() {
     method_ = parseByChar(request_, ' ');
-//    std::cout << "__METHOD_____________|" << method_ << "|" << std::endl;
+//    std::cerr << "__METHOD_____________|" << method_ << "|" << std::endl;
 }
 
 void RequestParser::setRoute() {
@@ -175,7 +175,7 @@ void RequestParser::setRoute() {
         route_ = "./";
         path_.push_back("");
     }
-    std::cout << BgCYAN << "|" << route_ << "|" << RESET << std::endl;
+    std::cerr << BgCYAN << "|" << route_ << "|" << RESET << std::endl;
 }
 
 void RequestParser::setPath() {
@@ -195,62 +195,62 @@ void RequestParser::setProtocol() {
     size_t protocolStart = fistReqStr.find_last_of(' ') + 1;
     size_t protocolEnd = fistReqStr.find_last_of('/') - 1;
     protocol_ = fistReqStr.substr(protocolStart, protocolEnd);
-//    std::cout << "__PROTOCOL___________|" <<  protocol_ << "|" << std::endl;
+//    std::cerr << "__PROTOCOL___________|" <<  protocol_ << "|" << std::endl;
 }
 
 void RequestParser::setHost() {
     host_ = parseByHeaderName("Host:");
-//    std::cout << "__HOST_______________|" << host_ << "|" << std::endl;
+//    std::cerr << "__HOST_______________|" << host_ << "|" << std::endl;
 }
 
 void RequestParser::setUserAgent() {
     userAgent_ = parseByHeaderName("User-Agent:");
-//    std::cout << "__USER_AGENT_________|" << userAgent_ << "|" << std::endl;
+//    std::cerr << "__USER_AGENT_________|" << userAgent_ << "|" << std::endl;
 }
 
 void RequestParser::setAccept() {
     accept_ = parseByHeaderName("Accept:");
-//    std::cout << "__ACCEPT_____________|" << accept_ << "|" << std::endl;
+//    std::cerr << "__ACCEPT_____________|" << accept_ << "|" << std::endl;
 }
 
 void RequestParser::setAcceptLanguage() {
     acceptLanguage_ = parseByHeaderName("Accept-Language:");
-//    std::cout << "__ACCEPT_LANGUAGE____|" << acceptLanguage_ << "|" << std::endl;
+//    std::cerr << "__ACCEPT_LANGUAGE____|" << acceptLanguage_ << "|" << std::endl;
 }
 
 void RequestParser::setAcceptEncoding() {
     acceptEncoding_ = parseByHeaderName("Accept-Encoding:");
-//    std::cout << "__ACCEPT_ENCODING____|" << acceptEncoding_ << "|" << std::endl;
+//    std::cerr << "__ACCEPT_ENCODING____|" << acceptEncoding_ << "|" << std::endl;
 }
 
 void RequestParser::setConnection() {
     connection_ = parseByHeaderName("Connection:");
-//    std::cout << "__CONNECTION_________|" << connection_ << "|" << std::endl;
+//    std::cerr << "__CONNECTION_________|" << connection_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchDest() {
     secFetchDest_ = parseByHeaderName("Sec-Fetch-Dest:");
-//    std::cout << "__SEC_FETCH_DEST_____|" << secFetchDest_ << "|" << std::endl;
+//    std::cerr << "__SEC_FETCH_DEST_____|" << secFetchDest_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchMode() {
     secFetchMode_ = parseByHeaderName("Sec-Fetch-Mode:");
-//    std::cout << "__SEC_FETCH_MODE_____|" << secFetchMode_ << "|" << std::endl;
+//    std::cerr << "__SEC_FETCH_MODE_____|" << secFetchMode_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchSite() {
     secFetchSite_ = parseByHeaderName("Sec-Fetch-Site:");
-//    std::cout << "__SEC_FETCH_SITE_____|" << secFetchSite_ << "|" << std::endl;
+//    std::cerr << "__SEC_FETCH_SITE_____|" << secFetchSite_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchUser() {
     secFetchUser_ = parseByHeaderName("Sec-Fetch-User:");
-//    std::cout << "__SEC_FETCH_USER_____|" << secFetchUser_ << "|" << std::endl;
+//    std::cerr << "__SEC_FETCH_USER_____|" << secFetchUser_ << "|" << std::endl;
 }
 
 void RequestParser::setCacheControl() {
     cacheControl_ = parseByHeaderName("Cache-Control:");
-//    std::cout << "__CACHE_CONTROL______|" << cacheControl_ << "|" << std::endl;
+//    std::cerr << "__CACHE_CONTROL______|" << cacheControl_ << "|" << std::endl;
 }
 
 void RequestParser::setBody() {
@@ -258,7 +258,7 @@ void RequestParser::setBody() {
     size_t bodyStart = request_.find("\r\n\r\n");
     if (bodyStart != std::string::npos) {
         body_ = erasedRequest.substr(bodyStart + 4);
-//std::cout << "__BODY_______________|"<< body_.length() << "|" << std::endl;
+//std::cerr << "__BODY_______________|"<< body_.length() << "|" << std::endl;
 }}
 
 void RequestParser::setHeaders() {
@@ -279,14 +279,14 @@ void RequestParser::setHeaders() {
 void RequestParser::setContentLength() {
     std::string contentLengthStr = parseByHeaderName("Content-Length:");
     contentLength_ = stringToNumber(contentLengthStr);
-//    std::cout << "__CONTENT_LENGTH_____|" << contentLength_ << "|" << std::endl;
+//    std::cerr << "__CONTENT_LENGTH_____|" << contentLength_ << "|" << std::endl;
 }
 
 void RequestParser::setContentType() {
 	if (!headers_.count("Content-Type"))
 		headers_["Content-Type"] = "text/html";
 	contentType_ = headers_["Content-Type"];
-//    std::cout << "__CONTENT_TYPE_______|" << contentType_ << "|" << std::endl;
+//    std::cerr << "__CONTENT_TYPE_______|" << contentType_ << "|" << std::endl;
 }
 
 void RequestParser::setPathInfo(std::string pathInfo) {

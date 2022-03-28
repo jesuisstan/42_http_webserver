@@ -26,7 +26,7 @@ private:
 	
 
 public:
-	Cgi(ServerConfig &serv, Location &loca, RequestParser &req);
+	Cgi(ServerConfig &serv,  RequestParser &req);
 	std::pair<int, std::string>	execute();
 	int exec();
 

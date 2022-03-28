@@ -11,7 +11,7 @@ Server::~Server() {
 		{
 			close(_fds[i].fd);
 			pthread_mutex_lock(&g_write);
-			std::cout << "Connection successfully closed:\t" << _fds[i].fd << " (D)" << std::endl;
+			std::cerr << "Connection successfully closed:\t" << _fds[i].fd << " (D)" << std::endl;
 			pthread_mutex_unlock(&g_write);
 		}
 	}
@@ -55,7 +55,7 @@ void	Server::initiate(const char *ipAddr, int port) {
 	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (_listenSocket < 0) {
 		pthread_mutex_lock(&g_write);
-		std::cout << "socket() failed" << " on server " << this->serverID << std::endl;
+		std::cerr << "socket() failed" << " on server " << this->serverID << std::endl;
 		pthread_mutex_unlock(&g_write);
 		exit(-1);
 	}
@@ -63,7 +63,7 @@ void	Server::initiate(const char *ipAddr, int port) {
 	int ret = setsockopt(this->_listenSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval));
 	if (ret < 0) {
 		pthread_mutex_lock(&g_write);
-		std::cout << "setsockopt() failed" << " on server " << this->serverID << std::endl;
+		std::cerr << "setsockopt() failed" << " on server " << this->serverID << std::endl;
 		pthread_mutex_unlock(&g_write);
 		close(this->_listenSocket);
 		exit(-1);
@@ -71,7 +71,7 @@ void	Server::initiate(const char *ipAddr, int port) {
 	ret = fcntl(this->_listenSocket, F_SETFL, fcntl(_listenSocket, F_GETFL, 0) | O_NONBLOCK);
 	if (ret < 0) {
 		pthread_mutex_lock(&g_write);
-		std::cout << "fcntl() failed" << " on server " << this->serverID << std::endl;
+		std::cerr << "fcntl() failed" << " on server " << this->serverID << std::endl;
 		pthread_mutex_unlock(&g_write);
 		close(this->_listenSocket);
 		exit(-1);
@@ -82,7 +82,7 @@ void	Server::initiate(const char *ipAddr, int port) {
 	ret = bind(this->_listenSocket, (struct sockaddr *)&this->_servAddr, sizeof(this->_servAddr));
 	if (ret < 0) {
 		pthread_mutex_lock(&g_write);
-		std::cout << "bind() failed" << " on server " << this->serverID << std::endl;
+		std::cerr << "bind() failed" << " on server " << this->serverID << std::endl;
 		pthread_mutex_unlock(&g_write);
 		close(this->_listenSocket);
 		exit(-1);
@@ -90,7 +90,7 @@ void	Server::initiate(const char *ipAddr, int port) {
 	ret = listen(this->_listenSocket, BACKLOG);
 	if (ret < 0) {
 		pthread_mutex_lock(&g_write);
-		std::cout << "listen() failed" << " on server " << this->serverID << std::endl;
+		std::cerr << "listen() failed" << " on server " << this->serverID << std::endl;
 		pthread_mutex_unlock(&g_write);
 		close(this->_listenSocket);
 		exit(-1);
@@ -116,13 +116,13 @@ void	Server::acceptConnection(void) {
 	int ret = fcntl(newSD, F_SETFL, fcntl(newSD, F_GETFL, 0) | O_NONBLOCK);
 	if (ret < 0) {
 		pthread_mutex_lock(&g_write);
-		std::cout << "fcntl() failed" << " on server " << this->serverID << std::endl;
+		std::cerr << "fcntl() failed" << " on server " << this->serverID << std::endl;
 		pthread_mutex_unlock(&g_write);
 		close(_listenSocket);
 		exit(-1);
 	}
 	pthread_mutex_lock(&g_write);
-	std::cout << "New incoming connection:\t" << newSD << " on server " << this->serverID << std::endl;
+	std::cerr << "New incoming connection:\t" << newSD << " on server " << this->serverID << std::endl;
 	pthread_mutex_unlock(&g_write);
 	_fds[_numberFds].fd = newSD;
 	_fds[_numberFds].events = POLLIN;
@@ -134,7 +134,7 @@ void	Server::acceptConnection(void) {
 void	Server::closeConnection(int socket) {
 	close(_fds[socket].fd);
 	pthread_mutex_lock(&g_write);
-	std::cout << "Connection has been closed:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
+	std::cerr << "Connection has been closed:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
 	pthread_mutex_unlock(&g_write);
 	_fds[socket].fd = -1;
 	bool compressArray = true;
@@ -150,7 +150,8 @@ void	Server::closeConnection(int socket) {
 				i--;
 				_numberFds--;
 				pthread_mutex_lock(&g_write);
-				std::cout << "Array of client's descriptors compressed" << " on server " << this->serverID << std::endl;
+				if (DEBUG > 1) 
+					std::cerr << "Array of client's descriptors compressed" << " on server " << this->serverID << std::endl;
 				pthread_mutex_unlock(&g_write);
 			}
 		}
@@ -160,7 +161,8 @@ void	Server::closeConnection(int socket) {
 
 void	Server::receiveRequest(int socket) {
 	pthread_mutex_lock(&g_write);
-	std::cout << "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
+	if (DEBUG > 0)
+		std::cerr << "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
 	pthread_mutex_unlock(&g_write);
 	bool closeConnectionFlag = false;
 	int ret = 0;
@@ -172,23 +174,26 @@ void	Server::receiveRequest(int socket) {
 		_clients[socket].reqLength += ret;
 		_clients[socket].reqString += tail;
 		pthread_mutex_lock(&g_write);
-		std::cout << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd << " on server " << this->serverID <<  std::endl;
+		if (DEBUG > 1)
+			std::cerr << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd << " on server " << this->serverID <<  std::endl;
 		pthread_mutex_unlock(&g_write);
-		memset(buffer, 0, BUFFER_SIZE);
-		if (findReqEnd(_clients[socket], tail))
+		// memset(buffer, 0, BUFFER_SIZE);
+		if (findReqEnd(_clients[socket]))
 			_fds[socket].events = POLLOUT;
 	}
 	if (ret == 0 || ret == -1) {
 		closeConnectionFlag = true;
-		if (!ret) {
-			pthread_mutex_lock(&g_write);
-			std::cout << "Request to close connection:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
-			pthread_mutex_unlock(&g_write);
-		}
-		else {
-			pthread_mutex_lock(&g_write);
-			std::cout << "recv() failed" << " on server " << this->serverID << std::endl;
-			pthread_mutex_unlock(&g_write);
+		if (DEBUG > 1) {
+			if (!ret) {
+				pthread_mutex_lock(&g_write);
+				std::cerr << "Request to close connection:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
+				pthread_mutex_unlock(&g_write);
+			}
+			else {
+				pthread_mutex_lock(&g_write);
+				std::cerr << "recv() failed" << " on server " << this->serverID << std::endl;
+				pthread_mutex_unlock(&g_write);
+			}
 		}
 	}
 	if (closeConnectionFlag)
@@ -200,7 +205,7 @@ char	*getCstring(const std::string &cppString) {
 	size_t length = cppString.size();
 	char *res = (char *)malloc(cppString.size());
 	if (!res) {
-		std::cout << "malloc() failed" << std::endl;
+		std::cerr << "malloc() failed" << std::endl;
 		exit(-1);
 	}
 	for (size_t i = 0; i < length; i++) {
@@ -215,20 +220,20 @@ void	Server::sendResponse(int socket) {
 		if (_clients[socket].request.getBody().length() > 10000)
 			_clients[socket].request.showHeaders();
 		else
-			std::cout << "|" << YELLOW  << _clients[socket].request.getRequest() << RESET"|" << std::endl;
+			std::cerr << "|" << YELLOW  << _clients[socket].request.getRequest() << RESET"|" << std::endl;
 		_clients[socket].reqString = "";
 		_clients[socket].reqLength = 0;
 		_clients[socket].foundHeaders = 0;
 		_clients[socket].response = Response(_clients[socket].request, webConfig); 
 		char *responseStr = getCstring(_clients[socket].response.getResponse());
 		size_t responseSize = _clients[socket].response.getResponse().size();
-		if (DEBUG)
-			std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET" with size="  << _clients[socket].response.getResponse().size() << std::endl;
+		if (DEBUG > 0)
+			std::cerr << CYAN << _clients[socket].response.getResponseCode() << RESET" with size="  << _clients[socket].response.getResponse().size() << std::endl;
 		int ret = send(_fds[socket].fd, responseStr, responseSize, 0);
 		free (responseStr);
 		if (ret < 0) {
 			pthread_mutex_lock(&g_write);
-			std::cout << "send() failed" << " on server " << this->serverID << std::endl;
+			std::cerr << "send() failed" << " on server " << this->serverID << std::endl;
 			pthread_mutex_unlock(&g_write);
 			closeConnection(socket);
 			return ;
@@ -236,7 +241,7 @@ void	Server::sendResponse(int socket) {
 	}
 	catch (RequestParser::UnsupportedMethodException &e) {
 		pthread_mutex_lock(&g_write);
-		std::cout << e.what() << std::endl;
+		std::cerr << e.what() << std::endl;
 		pthread_mutex_unlock(&g_write);
 	}
 	_fds[socket].events = POLLIN;
@@ -252,18 +257,19 @@ void	Server::runServer(int timeout) {
 		std::string requestBuffer = "";
 	while (true) {
 		pthread_mutex_lock(&g_write);
-		std::cout << "Waiting on poll() [server " << this->serverID << "]...\n";
+		if (DEBUG > 0)
+			std::cerr << "Waiting on poll() [server " << this->serverID << "]...\n";
 		pthread_mutex_unlock(&g_write);
 		int ret = poll(_fds, _numberFds, _timeout);
 		if (ret < 0) {
 			pthread_mutex_lock(&g_write);
-			std::cout << "poll() failed" << " on server " << this->serverID << std::endl;
+			std::cerr << "poll() failed" << " on server " << this->serverID << std::endl;
 			pthread_mutex_unlock(&g_write);
 			break;
 		}
 		if (ret == 0) {
 			pthread_mutex_lock(&g_write);
-			std::cout << "poll() timed out. End program." << " on server " << this->serverID << std::endl; ;
+			std::cerr << "poll() timed out. End program." << " on server " << this->serverID << std::endl; ;
 			pthread_mutex_unlock(&g_write);
 			break;
 		}
@@ -296,10 +302,12 @@ bool isChunked(std::string headers) {
 
 bool Server::endByTimeout(t_reqData &req) {
 	// todo add for too long request 
+	(void)req;
 	return false;
 }
 
-bool Server::findReqEnd(t_reqData &req, std::string &tail) {
+bool Server::findReqEnd(t_reqData &req) {
+	size_t	pos;
 	if (!req.foundHeaders) {
 		size_t headersEnd = req.reqString.find("\r\n\r\n");
 		if (headersEnd == std::string::npos) // todo заголовок еще не пришел до конца
@@ -310,7 +318,8 @@ bool Server::findReqEnd(t_reqData &req, std::string &tail) {
 	}
 	if (!req.isTransfer)
 		return true;
-	if (req.isTransfer and req.reqString.find("0\r\n\r\n") != std::string::npos)
+	pos = std::max(0, (int)req.reqString.size() - 10);
+	if (req.isTransfer and req.reqString.find("0\r\n\r\n", pos) != std::string::npos)
 		return true;
 	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find("\r\n\r\n") != std::string::npos)
 		return true;

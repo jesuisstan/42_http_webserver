@@ -130,14 +130,14 @@ void ServerConfig::setLocation(std::istream &ifs)
 	if (locations.find(path) != locations.end())
 		baseError("Double locations config for path" + path);
 	locations[path] = Location(ifs);
-	// std::cout << "parsed location \n" << locations[path];
+	// std::cerr << "parsed location \n" << locations[path];
 }
 
 void	ServerConfig::setCgi(std::istream &ifs) {
 	if (!(ifs >> cgi))
 		baseError("Failed parsing cgi");
 	cgi = cutSemicolon(cgi);
-	// std::cout << "parced cgi " << cgi << std::endl;
+	// std::cerr << "parced cgi " << cgi << std::endl;
 }
 
 void	ServerConfig::setCgiExt(std::istream &ifs) {

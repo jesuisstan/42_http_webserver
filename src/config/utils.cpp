@@ -49,17 +49,17 @@ void printStrWithUnprintableChars(std::string string) {
     const char *str = string.c_str();
     while(*str){
         switch(*str){
-            case '\t': std::cout << "\\t"; break;
-            case '\n': std::cout << "\\n"; break;
-            case '\v': std::cout << "\\v"; break;
-            case '\f': std::cout << "\\f"; break;
-            case '\r': std::cout << "\\r"; break;
-            case '\0': std::cout << "\\0"; break;
-            default: std::cout << *str; break;
+            case '\t': std::cerr << "\\t"; break;
+            case '\n': std::cerr << "\\n"; break;
+            case '\v': std::cerr << "\\v"; break;
+            case '\f': std::cerr << "\\f"; break;
+            case '\r': std::cerr << "\\r"; break;
+            case '\0': std::cerr << "\\0"; break;
+            default: std::cerr << *str; break;
         }
         str++;
     }
-    std::cout << "\n" << std::endl;
+    std::cerr << "\n" << std::endl;
 }
 
 

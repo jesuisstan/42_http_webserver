@@ -50,7 +50,7 @@ public:
 	void	initReqDataStruct(int clientFD);
 
 	// static bool findReqEnd(std::string request_buffer, size_t request_len);
-	static bool findReqEnd(t_reqData &req, std::string &tail);
+	static bool findReqEnd(t_reqData &req);
 	bool	endByTimeout(t_reqData &req);
 };
 

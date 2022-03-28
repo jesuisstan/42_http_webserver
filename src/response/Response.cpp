@@ -229,7 +229,7 @@ bool Response::checkContentLength() {
     size_t contentLength = RequestParser_.getContentLength();
     if (contentLength) {
         size_t bodyLength = RequestParser_.getBody().length();
-//        std::cout << BgGREEN << contentLength << " | " << bodyLength << "|"<<  RequestParser_.getBody() << "|"<< RESET << std::endl;
+//        std::cerr << BgGREEN << contentLength << " | " << bodyLength << "|"<<  RequestParser_.getBody() << "|"<< RESET << std::endl;
         if (contentLength != bodyLength)
             return false;
     }
@@ -348,8 +348,8 @@ int Response::checkPathForLocation() {
             getcwd(cwd, sizeof(cwd));
             std::string path = (std::string) cwd;
             RequestParser_.setPathTranslated(cwd + stringFilename.substr(1));
-            std::cout << BgRED << "CGI START" << RESET << std::endl;
-            Cgi* cgi = new Cgi(ServerConfig_, Location_, RequestParser_);
+            std::cerr << BgRED << "CGI START" << RESET << std::endl;
+            Cgi* cgi = new Cgi(ServerConfig_, RequestParser_);
 			// int fd_to_write = cgi->exec();
             // setResponseCode(55);
 
