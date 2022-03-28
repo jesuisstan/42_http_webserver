@@ -357,7 +357,7 @@ int Response::checkPathForLocation() {
             std::pair<int, std::string> cgiResult = cgi->execute();
             setResponseCode(cgiResult.first);
             response_ = cgiResult.second;
-			fillCgiAnswer();
+			fillCgiAnswer_();
 			return 1;
         }
     } else if (requestMethod_ == "PUT" || requestMethod_ == "POST") {
@@ -392,12 +392,55 @@ int Response::checkPathForLocation() {
     }
 }
 
-void Response::fillCgiAnswer() {
+void Response::fillCgiAnswer_() {
 	std::string ans;
-	ans = "HTTP/1.1 " + responseCodes_.find(responseCode_)->second;
-	ans += "Content-Length: " + numberToString(response_.size()) + "\n";
-	ans += "\n\r";
-	response_ = ans + response_;
+	// ans = "HTTP/1.1 " + responseCodes_.find(responseCode_)->second;
+	// ans += "Content-Length: " + numberToString(response_.size()) + "\n";
+	// ans += "\n\r";
+	// response_ = response_ += "\n\r";
+	if (DEBUG > 0) {
+		std::cerr << BLUE"Total cgi answer\n"RESET;
+		std::cerr << response_.substr(0, 500);
+		if (response_.size() > 500)
+		std::cerr << BLUE" + " << response_.size() - 500 << "chars"RESET;
+		std::cerr << std::endl;
+	}
+	updateAnswer_();
+	if (DEBUG > 0) {
+		std::cerr << BLUE"Total cgi answer after \n"RESET;
+		std::cerr << response_.substr(0, 500);
+		if (response_.size() > 500)
+		std::cerr << BLUE" + " << response_.size() - 500 << "chars"RESET;
+		std::cerr << std::endl;
+	}
+	
+
+
+}
+
+void Response::updateAnswer_() {
+	// "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 18\n\r\n\rOur sgi is working"
+
+	
+	size_t	statusPos = response_.find("Status: ");
+	size_t	statusNumberPos = response_.substr(statusPos, 15).find("200", statusPos);
+	// std::string statusLine = response_.substr(statusPos, response_.find('\n', statusPos) - statusPos);
+	printf("statuspos %zu, numberpos %zu\n\n", statusPos, statusNumberPos);
+	if (statusPos != std::string::npos and statusNumberPos != std::string::npos)
+		response_ = "HTTP/1.1 200 OK\r\n" + response_;
+	else
+		response_ = "HTTP/1.1 500 KO\r\n" + response_;
+
+	size_t	headersEndPos = response_.find(ENDH);
+	if (headersEndPos != std::string::npos) {
+		size_t bodySize = response_.size() - headersEndPos - 4;
+		std::string contentLen = "\r\nContent-Length: " + numberToString(bodySize);
+		response_.insert(headersEndPos, contentLen);
+	}
+	else
+		response_ += "\r\nContent-Length: 0"ENDH;
+
+	std::string headers = response_.substr(0, response_.find(ENDH));
 
 }
 

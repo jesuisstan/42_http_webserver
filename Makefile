@@ -3,7 +3,7 @@ NAME			= webserv
 CXX				= g++
 
 FLAGS			= -MMD -Wall -g -pthread
-FLAGS			= -MMD -Wall -Wextra -Werror -pthread -std=c++98
+FLAGS			= -MMD -Wall -Wextra -Werror -g -pthread -std=c++98
 
 RM				= rm -rf
 

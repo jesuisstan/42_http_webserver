@@ -66,7 +66,8 @@ class Response {
             void                           	savePostBody();
             bool                            checkContentLength();
 
-			void							fillCgiAnswer();
+			void							fillCgiAnswer_();
+			void							updateAnswer_();
 
     public:
             Response(): responseCode_(0), contentLength_(0) {};

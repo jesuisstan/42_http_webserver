@@ -136,7 +136,8 @@ std::pair <int, std::string> Cgi::error500_(int fdInput, int fdOutput, FILE *f1,
 	std::pair <int, std::string> sgi_answer;
 
 	sgi_answer.first = 500;
-	sgi_answer.second = "";
+	sgi_answer.second = "Status: 500 Internal server error";
+	// "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 18\n\r\n\rOur sgi is working"
 	fclose(f1);
 	fclose(f2);
 	close(fdInput);
