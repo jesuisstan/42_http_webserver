@@ -51,8 +51,12 @@ class Response {
             std::string                    	requestedFile_;
             std::map<int, std::string>		errorPages_;
             bool                           	cgiRequested_;
+            std::set<std::string>           imgExtensions_;
+
+
             void                           	setResponse();
             void                           	setResponseCodes();
+            void                           	setImgExtensions();
             void                           	setResponseHeaders();
             void                           	setContentType();
             void                           	setLocationMethods(const std::set<std::string>& locationMethods);

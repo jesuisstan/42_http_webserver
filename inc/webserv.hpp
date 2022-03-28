@@ -11,8 +11,7 @@
 #include <iterator>
 #include <string>
 
-
-
+#include <pthread.h>
 #include <sys/socket.h> // For socket functions
 #include <netinet/in.h> // For sockaddr_in
 #include <arpa/inet.h> // For inet_addr("127.0.0.1")
@@ -42,7 +41,7 @@
 # define BgWHITE "\x1b[47m"
 
 # define PORT 8888
-# define BACKLOG 100 // the maximum number of connections that will be queued
+# define BACKLOG 1000 // the maximum number of connections that will be queued
 # define BUFFER_SIZE 102400
 
 # define DEFAULT_PORT		8080

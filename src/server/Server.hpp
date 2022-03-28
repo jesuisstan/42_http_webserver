@@ -5,6 +5,7 @@
 #include "RequestParser.hpp"
 #include "Response.hpp"
 
+extern pthread_mutex_t g_write;
 class ServerConfig;
 class RequestParser;
 class Response;
@@ -29,6 +30,9 @@ private:
 	std::map<long, t_reqData>	_clients;
 
 public:
+	class ServerConfig			webConfig;
+	int							serverID;
+	pthread_t					tid;
 	Server();
 	~Server();
 	Server(const Server &other);
@@ -39,15 +43,15 @@ public:
 	int		getNumberFds(void) const;
 	void	initiate(const char *ipAddr, int port);
 	void	acceptConnection(void);
+	void	closeConnection(int socket);
 	void	receiveRequest(int socket);
-	void	sendResponse(int socket, ServerConfig &config);
-	void	runServer(int timeout, ServerConfig &config);
+	void	sendResponse(int socket);
+	void	runServer(int timeout);
 	void	initReqDataStruct(int clientFD);
-	void	closeConnections(void);
 
 	// static bool findReqEnd(std::string request_buffer, size_t request_len);
 	static bool findReqEnd(t_reqData &req, std::string &tail);
 	bool	endByTimeout(t_reqData &req);
 };
 
-void	interruptHandler(int sig_int);
+char	*getCstring(const std::string &cppString);

@@ -54,6 +54,7 @@ void printStrWithUnprintableChars(std::string string) {
             case '\v': std::cout << "\\v"; break;
             case '\f': std::cout << "\\f"; break;
             case '\r': std::cout << "\\r"; break;
+            case '\0': std::cout << "\\0"; break;
             default: std::cout << *str; break;
         }
         str++;
