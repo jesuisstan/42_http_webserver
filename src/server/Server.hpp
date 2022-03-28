@@ -43,11 +43,11 @@ public:
 	int		getNumberFds(void) const;
 	void	initiate(const char *ipAddr, int port);
 	void	acceptConnection(void);
+	void	closeConnection(int socket);
 	void	receiveRequest(int socket);
 	void	sendResponse(int socket);
 	void	runServer(int timeout);
 	void	initReqDataStruct(int clientFD);
-	void	closeConnections(void);
 
 	// static bool findReqEnd(std::string request_buffer, size_t request_len);
 	static bool findReqEnd(t_reqData &req, std::string &tail);

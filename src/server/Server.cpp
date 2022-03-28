@@ -131,48 +131,13 @@ void	Server::acceptConnection(void) {
 	return ;
 }
 
-void	Server::receiveRequest(int socket) {
+void	Server::closeConnection(int socket) {
+	close(_fds[socket].fd);
 	pthread_mutex_lock(&g_write);
-	std::cout << "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
+	std::cout << "Connection has been closed:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
 	pthread_mutex_unlock(&g_write);
-	bool closeConnection = false;
-	bool compressArray = false;
-	int ret = 0;
-	char buffer[BUFFER_SIZE] = {0};
-	ret = recv(_fds[socket].fd, buffer, BUFFER_SIZE - 1, 0);
-	if (ret > 0)
-	{
-		std::string tail = std::string(buffer, ret);
-		_clients[socket].reqLength += ret;
-		_clients[socket].reqString += tail;
-		pthread_mutex_lock(&g_write);
-		std::cout << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd << " on server " << this->serverID <<  std::endl;
-		pthread_mutex_unlock(&g_write);
-		memset(buffer, 0, BUFFER_SIZE);
-		if (findReqEnd(_clients[socket], tail))
-			_fds[socket].events = POLLOUT;
-	}
-	if (ret == 0 || ret == -1) {
-		closeConnection = true;
-		if (!ret) {
-			pthread_mutex_lock(&g_write);
-			std::cout << "Request to close connection:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
-			pthread_mutex_unlock(&g_write);
-		}
-		else {
-			pthread_mutex_lock(&g_write);
-			std::cout << "recv() failed" << " on server " << this->serverID << std::endl;
-			pthread_mutex_unlock(&g_write);
-		}
-	}
-	if (closeConnection) {
-		close(_fds[socket].fd);
-		pthread_mutex_lock(&g_write);
-		std::cout << "Connection has been closed:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
-		pthread_mutex_unlock(&g_write);
-		_fds[socket].fd = -1;
-		compressArray = true;
-	}
+	_fds[socket].fd = -1;
+	bool compressArray = true;
 	if (compressArray) {
 		compressArray = false;
 		for (int i = 0; i < _numberFds; i++) {
@@ -190,6 +155,44 @@ void	Server::receiveRequest(int socket) {
 			}
 		}
 	}
+	return ;
+}
+
+void	Server::receiveRequest(int socket) {
+	pthread_mutex_lock(&g_write);
+	std::cout << "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
+	pthread_mutex_unlock(&g_write);
+	bool closeConnectionFlag = false;
+	int ret = 0;
+	char buffer[BUFFER_SIZE] = {0};
+	ret = recv(_fds[socket].fd, buffer, BUFFER_SIZE - 1, 0);
+	if (ret > 0)
+	{
+		std::string tail = std::string(buffer, ret);
+		_clients[socket].reqLength += ret;
+		_clients[socket].reqString += tail;
+		pthread_mutex_lock(&g_write);
+		std::cout << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd << " on server " << this->serverID <<  std::endl;
+		pthread_mutex_unlock(&g_write);
+		memset(buffer, 0, BUFFER_SIZE);
+		if (findReqEnd(_clients[socket], tail))
+			_fds[socket].events = POLLOUT;
+	}
+	if (ret == 0 || ret == -1) {
+		closeConnectionFlag = true;
+		if (!ret) {
+			pthread_mutex_lock(&g_write);
+			std::cout << "Request to close connection:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
+			pthread_mutex_unlock(&g_write);
+		}
+		else {
+			pthread_mutex_lock(&g_write);
+			std::cout << "recv() failed" << " on server " << this->serverID << std::endl;
+			pthread_mutex_unlock(&g_write);
+		}
+	}
+	if (closeConnectionFlag)
+		closeConnection(socket);
 	return ;
 }
 
@@ -226,6 +229,7 @@ void	Server::sendResponse(int socket) {
 			pthread_mutex_lock(&g_write);
 			std::cout << "send() failed" << " on server " << this->serverID << std::endl;
 			pthread_mutex_unlock(&g_write);
+			closeConnection(socket);
 			return ;
 		}
 	}
@@ -274,18 +278,6 @@ void	Server::runServer(int timeout) {
 				if (_fds[i].fd != _listenSocket && _fds[i].events == POLLOUT)
 					sendResponse(i);
 			}
-		}
-	}
-	return ;
-}
-
-void	Server::closeConnections(void) {
-	for (int i = 0; i < _numberFds; i++) {
-		if (_fds[i].fd >= 0) {
-			close(_fds[i].fd);
-			pthread_mutex_lock(&g_write);
-			std::cout << "Connection successfully closed:\t" << _fds[i].fd << " on server " << this->serverID << std::endl;
-			pthread_mutex_unlock(&g_write);
 		}
 	}
 	return ;
