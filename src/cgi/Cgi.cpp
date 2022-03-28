@@ -3,7 +3,7 @@
 
 Cgi::Cgi(ServerConfig &serv, RequestParser &req): request_(req)
 {
-	req.showHeaders();
+	// req.showHeaders();
 	env_["SERVER_NAME"] = "webserv"; //serv.getHost();
 	env_["SERVER_SOFTWARE"] = "C.y.b.e.r.s.e.r.v/0.077";
 	env_["GATEWAY_INTERFACE"] = "CGI/1.1";
@@ -34,7 +34,6 @@ char ** Cgi::getNewEnviroment() const {
 	std::string		line;
 
 	std::map<std::string, std::string>::const_iterator it;
-	std::cerr << GREEN"CGI_PENVS"RESET << std::endl;
 	for (it = env_.begin(); it != env_.end(); it++)
 		setenv(it->first.c_str(), it->second.c_str(), 1);
 	for (it = request_.getHeaders().begin(); it != request_.getHeaders().end(); it++)
@@ -71,7 +70,6 @@ std::pair<int, std::string> Cgi::execute() {
 
 	pid = fork();
 	if (!pid){ 
-		std::cerr << "RUNS!" << std::endl;
 		char	**envs;
 		char	*args[4];
 
@@ -79,11 +77,12 @@ std::pair<int, std::string> Cgi::execute() {
 		bzero(args, sizeof(*args) * 4);
 		args[0] = (char *)env_["SCRIPT_NAME"].c_str();
 		args[1] = (char *)env_["PATH_TRANSLATED"].c_str();
-		std::cerr << "RUNS!!: " << args[0]
-				<< "\n path_name: " << getenv("PATH_INFO") 
-				<< "\n content_lenght: " << getenv("CONTENT_LENGTH") 
-				<< "\n real size: " << body_.size() 
-				<< "\n content type: " << getenv("CONTENT_TYPE") << std::endl;
+		if (DEBUG > 1)
+			std::cerr << RED"RUN SGI!!: "RESET << args[0]
+					<< "\n path_name: " << getenv("PATH_INFO") 
+					<< "\n content_lenght: " << getenv("CONTENT_LENGTH") 
+					<< "\n real size: " << body_.size() 
+					<< "\n content type: " << getenv("CONTENT_TYPE") << std::endl;
 
 		if (dup2(fdInput, STDIN_FILENO) < 0 || dup2(fdOutput, STDOUT_FILENO) < 0)
 			exit(3);

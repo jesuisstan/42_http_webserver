@@ -348,7 +348,8 @@ int Response::checkPathForLocation() {
             getcwd(cwd, sizeof(cwd));
             std::string path = (std::string) cwd;
             RequestParser_.setPathTranslated(cwd + stringFilename.substr(1));
-            std::cerr << BgRED << "CGI START" << RESET << std::endl;
+			if (DEBUG > 1)
+            	std::cerr << BgRED << "CGI START" << RESET << std::endl;
             Cgi* cgi = new Cgi(ServerConfig_, RequestParser_);
 			// int fd_to_write = cgi->exec();
             // setResponseCode(55);
