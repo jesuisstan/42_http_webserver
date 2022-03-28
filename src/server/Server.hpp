@@ -29,6 +29,9 @@ private:
 	std::map<long, t_reqData>	_clients;
 
 public:
+	class ServerConfig			webConfig;
+	int							serverID;
+	pthread_t					tid;
 	Server();
 	~Server();
 	Server(const Server &other);
@@ -40,8 +43,8 @@ public:
 	void	initiate(const char *ipAddr, int port);
 	void	acceptConnection(void);
 	void	receiveRequest(int socket);
-	void	sendResponse(int socket, ServerConfig &config);
-	void	runServer(int timeout, ServerConfig &config);
+	void	sendResponse(int socket);
+	void	runServer(int timeout);
 	void	initReqDataStruct(int clientFD);
 	void	closeConnections(void);
 
@@ -51,4 +54,3 @@ public:
 };
 
 char	*getCstring(const std::string &cppString);
-void	interruptHandler(int sig_int);

@@ -1,7 +1,6 @@
 #include "Server.hpp"
 
 Server::Server() {
-	signal(SIGINT, interruptHandler);
 	memset(&_servAddr, 0, sizeof(_servAddr));
 	memset(_fds, 0, sizeof(_fds));
 }
@@ -53,19 +52,19 @@ int		Server::getNumberFds(void) const {
 void	Server::initiate(const char *ipAddr, int port) {
 	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (_listenSocket < 0) {
-		std::cout << "socket() failed" << std::endl;
+		std::cout << "socket() failed" << " on server " << this->serverID << std::endl;
 		exit(-1);
 	}
 	int optval = 1;
 	int ret = setsockopt(this->_listenSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval));
 	if (ret < 0) {
-		std::cout << "setsockopt() failed" << std::endl;
+		std::cout << "setsockopt() failed" << " on server " << this->serverID << std::endl;
 		close(this->_listenSocket);
 		exit(-1);
 	}
 	ret = fcntl(this->_listenSocket, F_SETFL, fcntl(_listenSocket, F_GETFL, 0) | O_NONBLOCK);
 	if (ret < 0) {
-		std::cout << "fcntl() failed" << std::endl;
+		std::cout << "fcntl() failed" << " on server " << this->serverID << std::endl;
 		close(this->_listenSocket);
 		exit(-1);
 	}
@@ -74,13 +73,13 @@ void	Server::initiate(const char *ipAddr, int port) {
 	this->_servAddr.sin_port = htons(port);
 	ret = bind(this->_listenSocket, (struct sockaddr *)&this->_servAddr, sizeof(this->_servAddr));
 	if (ret < 0) {
-		std::cout << "bind() failed" << std::endl;
+		std::cout << "bind() failed" << " on server " << this->serverID << std::endl;
 		close(this->_listenSocket);
 		exit(-1);
 	}
 	ret = listen(this->_listenSocket, BACKLOG);
 	if (ret < 0) {
-		std::cout << "listen() failed" << std::endl;
+		std::cout << "listen() failed" << " on server " << this->serverID << std::endl;
 		close(this->_listenSocket);
 		exit(-1);
 	}
@@ -103,11 +102,11 @@ void	Server::acceptConnection(void) {
 		return ;
 	int ret = fcntl(newSD, F_SETFL, fcntl(newSD, F_GETFL, 0) | O_NONBLOCK);
 	if (ret < 0) {
-		std::cout << "fcntl() failed" << std::endl;
+		std::cout << "fcntl() failed" << " on server " << this->serverID << std::endl;
 		close(_listenSocket);
 		exit(-1);
 	}
-	std::cout << "New incoming connection:\t" << newSD << std::endl;
+	std::cout << "New incoming connection:\t" << newSD << " on server " << this->serverID << std::endl;
 	_fds[_numberFds].fd = newSD;
 	_fds[_numberFds].events = POLLIN;
 	_numberFds++;
@@ -115,7 +114,7 @@ void	Server::acceptConnection(void) {
 }
 
 void	Server::receiveRequest(int socket) {
-	std::cout << "Event detected on descriptor:\t" << _fds[socket].fd << std::endl;
+	std::cout << "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
 	bool closeConnection = false;
 	bool compressArray = false;
 	int ret = 0;
@@ -126,7 +125,7 @@ void	Server::receiveRequest(int socket) {
 		std::string tail = std::string(buffer, ret);
 		_clients[socket].reqLength += ret;
 		_clients[socket].reqString += tail;
-		std::cout << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd <<  std::endl;
+		std::cout << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd << " on server " << this->serverID <<  std::endl;
 		memset(buffer, 0, BUFFER_SIZE);
 		if (findReqEnd(_clients[socket], tail))
 			_fds[socket].events = POLLOUT;
@@ -134,13 +133,13 @@ void	Server::receiveRequest(int socket) {
 	if (ret == 0 || ret == -1) {
 		closeConnection = true;
 		if (!ret)
-			std::cout << "Request to close connection:\t" << _fds[socket].fd << std::endl;
+			std::cout << "Request to close connection:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
 		else
-			std::cout << "recv() failed" << std::endl;
+			std::cout << "recv() failed" << " on server " << this->serverID << std::endl;
 	}
 	if (closeConnection) {
 		close(_fds[socket].fd);
-		std::cout << "Connection has been closed:\t" << _fds[socket].fd << std::endl;
+		std::cout << "Connection has been closed:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
 		_fds[socket].fd = -1;
 		compressArray = true;
 	}
@@ -155,7 +154,7 @@ void	Server::receiveRequest(int socket) {
 				}
 				i--;
 				_numberFds--;
-				std::cout << "Array of client's descriptors compressed" << std::endl;
+				std::cout << "Array of client's descriptors compressed" << " on server " << this->serverID << std::endl;
 			}
 		}
 	}
@@ -174,7 +173,7 @@ char	*getCstring(const std::string &cppString) {
 	return (res);
 }
 
-void	Server::sendResponse(int socket, ServerConfig &config) {
+void	Server::sendResponse(int socket) {
 	try {
 		_clients[socket].request = RequestParser(_clients[socket].reqString, _clients[socket].reqLength);
 		if (_clients[socket].request.getBody().length() > 10000)
@@ -184,14 +183,14 @@ void	Server::sendResponse(int socket, ServerConfig &config) {
 		_clients[socket].reqString = "";
 		_clients[socket].reqLength = 0;
 		_clients[socket].foundHeaders = 0;
-		_clients[socket].response = Response(_clients[socket].request, config); 
+		_clients[socket].response = Response(_clients[socket].request, webConfig); 
 		char *responseStr = getCstring(_clients[socket].response.getResponse());
 		size_t responseSize = _clients[socket].response.getResponse().size();
 		std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET << std::endl;
 		int ret = send(_fds[socket].fd, responseStr, responseSize, 0);
 		free (responseStr);
 		if (ret < 0) {
-			std::cout << "send() failed" << std::endl;
+			std::cout << "send() failed" << " on server " << this->serverID << std::endl;
 			return ;
 		}
 	}
@@ -201,7 +200,7 @@ void	Server::sendResponse(int socket, ServerConfig &config) {
 	_fds[socket].events = POLLIN;
 }
 
-void	Server::runServer(int timeout,  ServerConfig &config) {
+void	Server::runServer(int timeout) {
 	_fds[0].fd = _listenSocket;
 	_fds[0].events = POLLIN;
 	this->setTimeout(timeout);
@@ -209,14 +208,14 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 	int currentSize = 0;
 		std::string requestBuffer = "";
 	while (true) {
-		std::cout << "Waiting on poll()...\n";
+		std::cout << "Waiting on poll() [server " << this->serverID << "]...\n";
 		int ret = poll(_fds, _numberFds, _timeout);
 		if (ret < 0) {
-			std::cout << "poll() failed" << std::endl;
+			std::cout << "poll() failed" << " on server " << this->serverID << std::endl;
 			break;
 		}
 		if (ret == 0) {
-			std::cout << "poll() timed out. End program.\n";
+			std::cout << "poll() timed out. End program." << " on server " << this->serverID << std::endl; ;
 			break;
 		}
 		currentSize = _numberFds;
@@ -229,7 +228,7 @@ void	Server::runServer(int timeout,  ServerConfig &config) {
 				if ( _fds[i].fd != _listenSocket  && _fds[i].events == POLLIN)
 					receiveRequest(i);
 				if (_fds[i].fd != _listenSocket && _fds[i].events == POLLOUT)
-					sendResponse(i, config);
+					sendResponse(i);
 			}
 		}
 	}
@@ -239,7 +238,7 @@ void	Server::closeConnections(void) {
 	for (int i = 0; i < _numberFds; i++) {
 		if (_fds[i].fd >= 0) {
 			close(_fds[i].fd);
-			std::cout << "Connection successfully closed:\t" << _fds[i].fd << std::endl;
+			std::cout << "Connection successfully closed:\t" << _fds[i].fd << " on server " << this->serverID << std::endl;
 		}
 	}
 }
@@ -275,10 +274,4 @@ bool Server::findReqEnd(t_reqData &req, std::string &tail) {
 	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find("\r\n\r\n") != std::string::npos)
 		return true;
 	return false;
-}
-
-void	interruptHandler(int sig_int) {
-	(void)sig_int;
-	std::cout << BgMAGENTA << "\nAttention! Interruption signal caught. Web server stopped\n";
-	exit (EXIT_SUCCESS);
 }
