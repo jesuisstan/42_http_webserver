@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   RequestParser.cpp                                  :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ymanfryd <ymanfryd@student.21-school.ru    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/02/20 19:06:27 by ymanfryd          #+#    #+#             */
-/*   Updated: 2022/03/22 12:53:17 by ymanfryd         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "RequestParser.hpp"
 
 RequestParser::RequestParser() {
@@ -274,28 +262,19 @@ void RequestParser::setBody() {
 }}
 
 void RequestParser::setHeaders() {
-    std::string erasedRequest = request_;
-    size_t headersEnd = request_.find("\r\n\r\n");
-    std::string headers = erasedRequest.substr(0, headersEnd + 4);
-    if (headersEnd != std::string::npos)  {
-        size_t  lineEnd = headers.find("\n");
-        while (lineEnd != std::string::npos) {
-            std::string line = headers.substr(0,lineEnd - 1);
-            size_t colonPos = line.find(":");
-            if (colonPos != std::string::npos) {
-                std::string headerName = line.substr(0, colonPos);
-                std::string headerContent = line.substr(colonPos + 2);
-                headers_.insert(std::pair<std::string, std::string> (headerName, headerContent));
-            }
-            headers = headers.substr(lineEnd + 1);
-            lineEnd = headers.find("\n");
-        }
-    }
-//    std::map<std::string, std::string>::iterator it;
-//    for (it=headers_.begin(); it!=headers_.end(); it++) {
-//        std::cout << "__HEADERS____________|" << GREEN << it->first << RESET <<": " << BLUE << it->second << RESET <<"|"<< std::endl;
-//
-//    }
+    std::string headers = request_.substr(0, request_.find(ENDH));
+	std::stringstream ss(headers);
+	std::string line;
+	while (std::getline(ss, line)) {
+		line = line.substr(0, line.find("\r"));
+		// printf("line: %s |%d|%d|\n\n", line.c_str(), line[line.size() - 2], line[line.size() - 1]);
+		size_t colonPos = line.find(":");
+		if (colonPos != std::string::npos) {
+			std::string headerName = line.substr(0, colonPos);
+			std::string headerContent = line.substr(colonPos + 2);
+			headers_.insert(std::pair<std::string, std::string> (headerName, headerContent));
+		}
+	}
 }
 
 void RequestParser::setContentLength() {
@@ -305,7 +284,9 @@ void RequestParser::setContentLength() {
 }
 
 void RequestParser::setContentType() {
-    contentType_ = parseByHeaderName("Content-Type:");
+	if (!headers_.count("Content-Type"))
+		headers_["Content-Type"] = "text/html";
+	contentType_ = headers_["Content-Type"];
 //    std::cout << "__CONTENT_TYPE_______|" << contentType_ << "|" << std::endl;
 }
 
@@ -350,6 +331,7 @@ void RequestParser::parse() {
         setCacheControl();
         setHeaders();
         setContentLength();
+		setContentType();
         if (method_ == "POST" || method_ == "PUT")
             setBody();
     } else {
@@ -369,7 +351,10 @@ bool RequestParser::isSupportedMethod() {
 void RequestParser::showHeaders() {
     std::map<std::string, std::string>::iterator it;
     for (it=headers_.begin(); it!=headers_.end(); it++) {
-        std::cout << GREEN << it->first << RESET <<": " << BLUE << it->second << RESET << std::endl;
+        std::cerr << GREEN << it->first << RESET <<": " << BLUE << it->second << RESET << std::endl;
+		std::string s = it->second;
+		std::cerr << "CT: " <<  s << "|" << (int)s.c_str()[s.size() - 2] << "|" << (int)s.c_str()[s.size() - 1] << "|" << std::endl;
+	
     }
 }
 

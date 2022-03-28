@@ -34,9 +34,8 @@ ServerConfig::ServerConfig(std::ifstream &ifs):
 				errorPages[404] = DEFAULT_ERROR_PAGE;
 			if (cgi.empty() + cgiExt.empty() == 1)
 				baseError("fill only one from cgi and cgi_extention");
-			if (!cgi.empty() and cgi != "python" and cgi != "php" and cgi != "tester")
-				baseError("unknown type cgi. Allow cgis: 'python', 'php' and 'tester");
-
+			if (!cgi.empty() and cgi.compare(0, 8, "cgi-bin/"))
+				baseError("unknown sgi, use somthing line 'cgi-bin/tester");
 			return ;
 		}
 		else
@@ -52,7 +51,6 @@ void ServerConfig::setPort(std::istream &ifs)
 	if (port < 1 or port > 65535)
 		baseError("Invalid port number");
 	readSemicolon(ifs);
-	// std::cout << "parced port " << port << std::endl;
 }
 
 void ServerConfig::setClientMaxBodySize(std::istream &ifs)
@@ -63,7 +61,6 @@ void ServerConfig::setClientMaxBodySize(std::istream &ifs)
 	if (!isPositiveDigit(_cmnd))
 		baseError("Invalid bax body size: " + _cmnd);
 	clientMaxBodySize = stringToNumber(_cmnd);
-	// std::cout << "parced port " << port << std::endl;
 }
 
 void ServerConfig::setHost(std::istream &ifs)
@@ -71,7 +68,6 @@ void ServerConfig::setHost(std::istream &ifs)
 	if (!(ifs >> host))
 		baseError("Failed parsing host");
 	host = cutSemicolon(host);
-	// std::cout << "parced host " << host << std::endl;
 }
 
 void ServerConfig::setServerName(std::istream &ifs)
@@ -79,7 +75,6 @@ void ServerConfig::setServerName(std::istream &ifs)
 	if (!(ifs >> serverName))
 		baseError("Failed parsing serverName");
 	serverName = cutSemicolon(serverName);
-	// std::cout << "parced serverName " << serverName << std::endl;
 }
 
 void ServerConfig::setErrorPage(std::istream &ifs)
@@ -95,10 +90,8 @@ void ServerConfig::setErrorPage(std::istream &ifs)
 	if (_cmnd.empty())
 		baseError("Error read errorPages");
 	line << _cmnd;
-	// std::cout << "errorPages line " << line.str() << std::endl;
 	while ((line >> _cmnd))
 	{
-		// std::cout << _cmnd << std::endl;
 		if (_cmnd.size() and _cmnd[_cmnd.size() - 1] == ';')
 		{
 			page = cutSemicolon(_cmnd);
@@ -151,7 +144,6 @@ void	ServerConfig::setCgiExt(std::istream &ifs) {
 	if (!(ifs >> cgiExt))
 		baseError("Failed parsing cgiExt");
 	cgiExt = cutSemicolon(cgiExt);
-//	 std::cout  << GREEN << "parsed cgiExt "<< cgiExt << RESET << std::endl;
 }
 
 

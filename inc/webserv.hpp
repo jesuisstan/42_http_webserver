@@ -43,11 +43,14 @@
 # define PORT 8888
 # define BACKLOG 1000 // the maximum number of connections that will be queued
 # define BUFFER_SIZE 102400
+# define DEBUG 0
 
 # define DEFAULT_PORT		8080
 # define DEFAULT_ERROR_PAGE	"errors/404.html"
 # define DEFAULT_INDEX		"index.html"
 # define DEFAULT_MAX_BODY	1024 * 1024
+
+# define ENDH				"\r\n\r\n"
 
 
 

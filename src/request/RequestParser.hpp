@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   RequestParser.hpp                                  :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: St.Krivtsov <1987stanislav@gmail.com>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/02/20 19:07:06 by ymanfryd          #+#    #+#             */
-/*   Updated: 2022/03/24 14:53:28 by St.Krivtsov      ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef HTTP_WEBSERVER_REQUEST_PARSER_HPP
 #define HTTP_WEBSERVER_REQUEST_PARSER_HPP
 #include "../../inc/webserv.hpp"

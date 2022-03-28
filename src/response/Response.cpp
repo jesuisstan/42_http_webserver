@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Response.cpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: St.Krivtsov <1987stanislav@gmail.com>      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/02/20 19:06:46 by ymanfryd          #+#    #+#             */
-/*   Updated: 2022/03/28 18:40:49 by St.Krivtsov      ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "Response.hpp"
 
 Response::Response(RequestParser &request, ServerConfig &config) :
@@ -354,7 +342,8 @@ int Response::checkPathForLocation() {
             extension = extension.substr(0, extension.length() -1);
         if (extension == ServerConfig_.getCgiExt()) {
             cgiRequested_ = true;
-            RequestParser_.setPathInfo(stringFilename);
+			std::string pathInfo = stringFilename.substr(1);
+            RequestParser_.setPathInfo(pathInfo);
             char cwd[1024];
             getcwd(cwd, sizeof(cwd));
             std::string path = (std::string) cwd;

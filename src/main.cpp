@@ -25,12 +25,6 @@ int main(int argc, char *argv[]) {
 	signal(SIGINT, interruptHandler);
 	Config config(argc, argv);
 	std::vector<ServerConfig> servers = config.getServers();
-	//for (size_t i = 0; i < servers.size(); i++)
-	//{
-	//	std::cout << "Run server[" << i << "]\n" << servers[i];
-	//	webserv.initiate(servers[i].getHost().c_str(), servers[i].getPort()); // когда будет Config, метод сменится на .initiate(void)
-	//	webserv.runServer(-1, servers[i]);
-	//}
 	Server webserv[servers.size()];
 	for (size_t i = 0; i < servers.size(); i++) {
 		webserv[i].webConfig = servers[i];
