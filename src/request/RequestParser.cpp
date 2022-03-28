@@ -46,6 +46,7 @@ RequestParser &RequestParser::operator=(const RequestParser &other) {
         cacheControl_     = other.cacheControl_;
         acceptLanguage_   = other.acceptLanguage_;
         acceptEncoding_   = other.acceptEncoding_;
+        pathTranslated_   = other.pathTranslated_;
 
         path_             = other.path_;
         iterator_         = other.iterator_;
@@ -150,6 +151,10 @@ const std::vector <std::string> &RequestParser::getPath() const {
 
 const std::vector <std::string> &RequestParser::getSupportedMethods() const {
     return this->supportedMethods_;
+}
+
+const std::string &RequestParser::getPathTranslated() const {
+    return this->pathTranslated_;
 }
 
 /**************************/
@@ -265,7 +270,7 @@ void RequestParser::setBody() {
     size_t bodyStart = request_.find("\r\n\r\n");
     if (bodyStart != std::string::npos) {
         body_ = erasedRequest.substr(bodyStart + 4);
-//std::cout << "__BODY_______________|"<< body_ << "|" << std::endl;
+//std::cout << "__BODY_______________|"<< body_.length() << "|" << std::endl;
 }}
 
 void RequestParser::setHeaders() {
@@ -306,6 +311,10 @@ void RequestParser::setContentType() {
 
 void RequestParser::setPathInfo(std::string pathInfo) {
     pathInfo_ = pathInfo;
+}
+
+void RequestParser::setPathTranslated(std::string pathTranslated) {
+    pathTranslated_ = pathTranslated;
 }
 
 void RequestParser::setSupportedMethods() {
