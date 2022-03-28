@@ -5,6 +5,7 @@
 #include "RequestParser.hpp"
 #include "Response.hpp"
 
+extern pthread_mutex_t g_write;
 class ServerConfig;
 class RequestParser;
 class Response;
