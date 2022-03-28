@@ -23,7 +23,7 @@ Cgi::Cgi(ServerConfig &serv, Location &loca, RequestParser &req): request_(req)
 	env_["REMOTE_USER"] = ""; //bonus
 	env_["REMOTE_ADDR"] = "127.0.0.1";
 	env_["CONTENT_TYPE"] = req.getContentType();
-	env_["CONTENT_LENGTH"] =  numberToString(req.getBody().size());
+	env_["CONTENT_LENGTH"] =  numberToString(req.getContentLength());
 
 	emptyBody = req.getBody().empty(); // todo del
 	body_ = req.getBody();
@@ -34,6 +34,7 @@ char ** Cgi::getNewEnviroment() const {
 	std::string		line;
 
 	std::map<std::string, std::string>::const_iterator it;
+	size_t i = 0;
 	std::cerr << GREEN"CGI_PENVS"RESET << std::endl;
 	for (it = env_.begin(); it != env_.end(); it++)
 		setenv(it->first.c_str(), it->second.c_str(), 1);
@@ -47,47 +48,28 @@ std::pair<int, std::string> Cgi::execute() {
 	
 	std::pair <int, std::string> simple_sgi;
 	simple_sgi.first = 500;
-	// simple_sgi.second = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 18\n\r\n\rOur sgi is working";
-	// return simple_sgi;
 	int		res, pid;
 	FILE *fsInput = tmpfile();
     FILE *fsOutput = tmpfile();
-
     int fdInput = fileno(fsInput);
     int fdOutput = fileno(fsOutput);
 
-	cgiOut = -1; //todo unset
-
-	if (!emptyBody) {
-		ssize_t record;
-		record = write(fdInput, body_.c_str(), body_.size());
-		if (DEBUG)
-			printf("zapisanot to file %lu\n", record);
-		if (record <= 0)
-			return error500_(fdInput, fdOutput, fsInput, fsOutput);
-		
-    	lseek(fdInput, 0, SEEK_SET);
-	}
+	
 
 	pid = fork();
 	if (!pid){ 
-		std::cerr << "RUNS!" << std::endl;
 		char	**envs;
 		char	*args[4];
 
 		envs = getNewEnviroment();
 		bzero(args, sizeof(*args) * 4);
+		std::string nameScript = env_["SCRIPT_NAME"];
+		nameScript = nameScript.substr(nameScript.rfind('/') + 1);
 		args[0] = (char *)env_["SCRIPT_NAME"].c_str();
 		args[1] = (char *)env_["PATH_TRANSLATED"].c_str();
-		std::cerr << "RUNS!!: " << args[0]
-				<< "\n path_name: " << getenv("PATH_INFO") 
-				<< "\n content_lenght: " << getenv("CONTENT_LENGTH") 
-				<< "\n real size: " << body_.size() 
-				<< "\n content type: " << getenv("CONTENT_TYPE") << std::endl;
 
-		if (dup2(fdInput, STDIN_FILENO) < 0 || dup2(fdOutput, STDOUT_FILENO) < 0)
-			exit(3);
-
+		if (dup2(fdInput, STDERR_FILENO) < 0 || dup2(fdOutput, STDOUT_FILENO) < 0)
+			exit(1);
 		execve(args[0], (char *const *)args, envs);
 		exit(5);
 	}
@@ -95,54 +77,41 @@ std::pair<int, std::string> Cgi::execute() {
 	startTime = clock();
     env_.clear();
 
-	
-
 	int closeCode = 0;
 	waitpid(pid, &closeCode, 0);
 	closeCode = WEXITSTATUS(closeCode);
-	if (DEBUG)
-		printf("dogdalis' pid=%d, closecode=%d\n", pid, closeCode);
+	printf("dogdalis' pid=%d, closecode=%d\n", pid, closeCode);
 	if (closeCode)
-		return error500_(fdInput, fdOutput, fsInput, fsOutput);
+		return simple_sgi;
 		
 	std::string answer;
 	std::string tail;
 	char buffer[SIZE_BUF_TO_RCV];
 	int recived = 1;
+
 	lseek(fdOutput, 0, SEEK_SET);
 	while (recived) {
 		recived = read(fdOutput, buffer, SIZE_BUF_TO_RCV);
-		if (DEBUG)
-			printf("считали %d байт с %d\n", recived, fdOutput);
+		// printf("считали %d байт с %d\n", recived, fdOutput);
 		if (recived < 0) {
 			close (fdOutput);
-			return error500_(fdInput, fdOutput, fsInput, fsOutput);
+			return simple_sgi;
 		}
 		else if (recived) {
 			tail = std::string(buffer, recived);
 			answer += tail;
 		}
 	}
+
 	close(fdInput);
 	close(fdOutput);
 	fclose(fsInput);
 	fclose(fsOutput);
+
 	simple_sgi.first = 200;
 	simple_sgi.second = answer;
 
 	return simple_sgi;
-}
-
-std::pair <int, std::string> Cgi::error500_(int fdInput, int fdOutput, FILE *f1, FILE *f2) {
-	std::pair <int, std::string> sgi_answer;
-
-	sgi_answer.first = 500;
-	sgi_answer.second = "";
-	fclose(f1);
-	fclose(f2);
-	close(fdInput);
-	close(fdOutput);
-	return sgi_answer;
 }
 
 int Cgi::exec() {

@@ -222,7 +222,8 @@ void	Server::sendResponse(int socket) {
 		_clients[socket].response = Response(_clients[socket].request, webConfig); 
 		char *responseStr = getCstring(_clients[socket].response.getResponse());
 		size_t responseSize = _clients[socket].response.getResponse().size();
-		std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET << std::endl;
+		if (DEBUG)
+			std::cout << CYAN << _clients[socket].response.getResponseCode() << RESET" with size="  << _clients[socket].response.getResponse().size() << std::endl;
 		int ret = send(_fds[socket].fd, responseStr, responseSize, 0);
 		free (responseStr);
 		if (ret < 0) {

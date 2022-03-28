@@ -267,7 +267,6 @@ void RequestParser::setHeaders() {
 	std::string line;
 	while (std::getline(ss, line)) {
 		line = line.substr(0, line.find("\r"));
-		// printf("line: %s |%d|%d|\n\n", line.c_str(), line[line.size() - 2], line[line.size() - 1]);
 		size_t colonPos = line.find(":");
 		if (colonPos != std::string::npos) {
 			std::string headerName = line.substr(0, colonPos);
@@ -352,9 +351,6 @@ void RequestParser::showHeaders() {
     std::map<std::string, std::string>::iterator it;
     for (it=headers_.begin(); it!=headers_.end(); it++) {
         std::cerr << GREEN << it->first << RESET <<": " << BLUE << it->second << RESET << std::endl;
-		std::string s = it->second;
-		std::cerr << "CT: " <<  s << "|" << (int)s.c_str()[s.size() - 2] << "|" << (int)s.c_str()[s.size() - 1] << "|" << std::endl;
-	
     }
 }
 

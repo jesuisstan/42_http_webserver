@@ -7,8 +7,8 @@
 #include "../request/RequestParser.hpp"
 #include <sys/wait.h>
 
-#define SIZE_BUF_TO_SEND	100500
-#define SIZE_BUF_TO_RCV		100500
+#define SIZE_BUF_TO_SEND	1234
+#define SIZE_BUF_TO_RCV		456789
 class Cgi
 {
 private:
@@ -21,6 +21,7 @@ private:
 	int			cgiOut;  // fd for cgi result
 
 	char	**getNewEnviroment() const;
+	std::pair <int, std::string>	error500_(int fdInput, int fdOutput, FILE *f1, FILE *f2);
 
 	
 
