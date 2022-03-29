@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<meta charset="UTF-8">
+
+	<title>Webserver</title>
+	<link rel="icon" href=
+			"https://emoji.slack-edge.com/TE6FVDN1Y/peeposwing/5c6b407c5d7e3623.gif"
+		  type="image/x-icon">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<header>
+	<div class="header">
+		<a href="/" class="title" id="title">Welcome to CyberServ</a>
+	</div>
+</header>
+<body>
+
+<div class="mainContainer">
+	<div class="container">
+		<h1>Introduce yourself, cowboy</h1>
+		<form class="inputContainer" id="signUpForm">
+			<label>
+				<input placeholder="Name" id="nameInput"/>
+			</label>
+			<label>
+				<input placeholder="Password" id="passwordInput"/>
+			</label>
+			<button type="submit" class="signUpConfirm">Let's go!</button>
+		</form>
+	</div>
+</div>
+</body>
+<style>
+	@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap');
+
+	body {
+		margin: 0;
+		width: 100vw;
+	}
+
+	h1 {
+		color: white;
+		font-family: 'Open Sans', cursive;
+		text-shadow: 1px 2px #000065;
+	}
+
+	a {
+		text-decoration: none;
+		color: white;
+		font-size: 18px;
+		text-shadow: 1px 2px #000065;
+		font-family: 'Open Sans', cursive;
+	}
+
+	input {
+		font-family: 'Open Sans', cursive;
+		font-size: 17px;
+		margin: 5px;
+		border-radius: 7px;
+		padding: 3px;
+	}
+
+	a:hover {
+		color: rgba(101, 8, 97, 0.91);
+		text-shadow: 1px 1px rgba(110, 10, 105, 0.6);
+		font-size: 24px;
+	}
+
+	.header {
+		width: 100vw;
+		height: 80px;
+		background: linear-gradient(90deg, rgba(60, 145, 159, 0.56) 0%, rgb(2, 102, 151) 54%, rgb(0, 0, 60) 100%);
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		box-shadow: 15px 15px 50px 0 rgba(87, 144, 153, 0.8);
+	}
+
+	.title {
+		cursor: pointer;
+		font-family: 'Open Sans', cursive;
+		font-size: 25px;
+		padding-left: 20px;
+		font-weight: bold;
+		color: #FFF;
+		text-shadow: 1px 1px rgba(110, 10, 105, 0.6);
+	}
+
+	.signBtn {
+		padding: 13px;
+		margin: 10px;
+		font-family: 'Open Sans', cursive;
+		font-weight: 800;
+		background-color: rgba(255, 255, 255, 0);
+		border: none;
+		border-radius: 22px;
+		color: #fff;
+	}
+
+	.signBtn:hover {
+		cursor: pointer;
+		color: #9ab2ff;
+		text-shadow: 1px 1px rgba(0, 0, 0, 0.6);
+	}
+
+	.signUpConfirm {
+		width: 80px;
+		font-family: "Open Sans", serif;
+		padding: 5px;
+		margin: 5px;
+		background-color: #001C7B;
+		border: 1px solid white;
+		border-radius: 5px;
+		color: white;
+	}
+
+	.signUpConfirm:hover {
+		border: 1px solid rgba(101, 8, 97, 0.91);
+		color: rgba(255, 255, 255, 0.91);
+		text-shadow: 2px 2px rgba(101, 8, 97, 0.91);
+		font-size: 15px;
+	}
+
+	.signUpBtn {
+		background-color: rgba(149, 75, 239, 0.24);
+	}
+
+	.inputContainer {
+		display: flex;
+		flex-direction: column;
+	}
+
+
+	.buttons {
+		padding: 5%;
+	}
+
+	.autoIndexLink {
+		color: #001C7B;
+		padding: 5px;
+		border-bottom: 1px solid #450909;
+		text-shadow: none;
+	}
+	.autoIndexHeader {
+		color: #000a21;
+		padding: 30px;
+		text-shadow: none;
+	}
+
+	.mainContainer {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		align-items: center;
+		justify-content: center;
+	}
+	.simpleContainer {
+		display: flex;
+		flex-direction: column;
+		padding: 30px;
+		/*align-items: center;*/
+		justify-content: center;
+	}
+
+	.container {
+		border: 2px solid white;
+		border-radius: 100px;
+		background-image: url("https://dich.media/wp-content/uploads/2020/11/cyberpunk-2077-igra-kogda-viydet.jpg");
+		padding: 60px;
+		width: 600px;
+		height: 300px;
+		box-shadow: 13px 15px 31px 2px rgb(206, 226, 255);
+	}
+
+	.links {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+
+	@media (max-width: 800px) {
+		.container {
+			width: 500px;
+		}
+
+		h1 {
+			font-size: 26px;
+		}
+	}
+</style>
+<script>
+	const Title = document.getElementById("title")
+	const signInBtn = document.getElementById("signInBtn")
+	const signUpBtn = document.getElementById("signUpBtn")
+	const nameInput = document.getElementById("nameInput")
+	const passwordInput = document.getElementById("passwordInput")
+	const signUpForm = document.getElementById("signUpForm")
+
+	let name;
+	let password;
+	let status;
+
+	if (status === 200) {
+		signInBtn.hidden = true;
+		signUpBtn.hidden = true;
+	}
+
+	if (Title)
+		Title.onclick = function() {
+			window.location.href = "/"
+		}
+	if (signInBtn)
+		signInBtn.onclick = function() {
+			window.location.href = "/sign_in"
+		}
+	if (signUpBtn)
+		signUpBtn.onclick = function() {
+			window.location.href = "/sign_up"
+		}
+
+	if (nameInput)
+		nameInput.oninput = function () {
+			name = nameInput.value
+		}
+
+	if (passwordInput)
+		passwordInput.oninput = function () {
+			password = passwordInput.value
+		}
+
+	async function sendSignUpForm() {
+		const raw = JSON.stringify({
+			name: name,
+			password: password
+		});
+
+
+		const requestOptions = {
+			method: 'POST',
+			body: raw,
+			redirect: 'follow'
+		};
+
+		const result = await fetch("/post_body", requestOptions)
+		return result.status;
+	}
+
+	if (signUpForm)
+		signUpForm.onsubmit = async function (event) {
+			event.preventDefault();
+			if (name && password) {
+				status = await sendSignUpForm();
+				window.location.href = "/";
+				console.log(status)
+
+			}
+		}
+
+</script>
+</html>

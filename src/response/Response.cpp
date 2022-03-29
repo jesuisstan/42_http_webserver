@@ -425,8 +425,6 @@ void Response::updateAnswer_() {
 	
 	size_t	statusPos = response_.find("Status: ");
 	size_t	statusNumberPos = response_.substr(statusPos, 15).find("200", statusPos);
-	// std::string statusLine = response_.substr(statusPos, response_.find('\n', statusPos) - statusPos);
-	printf("statuspos %zu, numberpos %zu\n\n", statusPos, statusNumberPos);
 	if (statusPos != std::string::npos and statusNumberPos != std::string::npos)
 		response_ = "HTTP/1.1 200 OK\r\n" + response_;
 	else
@@ -508,18 +506,18 @@ std::string Response::readContent(const std::string &filename) {
 std::string Response::getScreen() {
     std::string filename = locationRoot_;
 
-    if (responseCode_ == 200 && !requestedFile_.length())
-        filename += "/index.html";
-    else if (responseCode_ == 200 && requestedFile_ == "style.css")
-        filename = "./src/screens/style.css";
-    else if (responseCode_ == 200 && requestedFile_ == "index.js")
-        filename = "./src/screens/index.js";
-    else if (errorPages_.find(responseCode_) != errorPages_.end())
-        filename = "./errors/" + errorPages_[responseCode_];
-    else if (responseCode_ != 200) {
+    // if (responseCode_ == 200 && !requestedFile_.length())
+    //     filename += "/index.html";
+    // else if (responseCode_ == 200 && requestedFile_ == "style.css")
+    //     filename = "./src/screens/style.css";
+    // else if (responseCode_ == 200 && requestedFile_ == "index.js")
+    //     filename = "./src/screens/index.js";
+    if (errorPages_.find(responseCode_) != errorPages_.end())
+        filename = errorPages_[responseCode_];
+    else {
         std::string errorDescription = responseCodes_.find(responseCode_)->second;
         setResponseBody(errorDescription);
-        return errorDescription;
+        filename =  errorDescription;
     }
     return filename;
 }
