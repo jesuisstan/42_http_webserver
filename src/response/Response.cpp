@@ -252,24 +252,6 @@ void Response::checkFileRequested() {
     }
 }
 
-std::string Response::handleChunkedBody() {
-    std::string newBody;
-    std::string restBody = requestBody_;
-    size_t lineEnd;
-    while (restBody.length()) {
-        lineEnd = restBody.find("\n");
-        if (lineEnd != std::string::npos) {
-            std::string chunkSize = restBody.substr(0, lineEnd - 1);
-            int decChunkSize = hexToDec(chunkSize);
-            newBody += restBody.substr(lineEnd + 1, decChunkSize);
-            restBody = restBody.substr(decChunkSize + lineEnd + 1);
-        } else
-            break;
-    }
-    setContentLength(newBody.length());
-    return newBody;
-}
-
 void Response::savePostBody() {
     int filesCount = 0;
     struct dirent *d;
@@ -281,11 +263,7 @@ void Response::savePostBody() {
     std::string filesCountStr = numberToString(filesCount - 1);
     std::string filename = requestedFile_.empty() ? filesCountStr : requestedFile_.substr(0, requestedFile_.length() - 1);
     std::ofstream	postBodyFile(locationRoot_ + "/" + filename);
-    std::string encoding = RequestParser_.getHeaders().find("Transfer-Encoding")->second;
-    if (encoding == "chunked" && requestBody_.length())
-        postBodyFile << handleChunkedBody();
-    else
-        postBodyFile << requestBody_;
+    postBodyFile << requestBody_;
     postBodyFile.close();
     closedir(dh);
 }
@@ -353,7 +331,7 @@ int Response::checkPathForLocation() {
             std::string path = (std::string) cwd;
             RequestParser_.setPathTranslated(cwd + stringFilename.substr(1));
 			if (DEBUG > 1)
-            	std::cerr << BgRED << "CGI START" << RESET << std::endl;
+				std::cerr << BgRED << "CGI START" << RESET << std::endl;
             Cgi* cgi = new Cgi(ServerConfig_, RequestParser_);
 			// int fd_to_write = cgi->exec();
             // setResponseCode(55);
@@ -403,18 +381,18 @@ void Response::fillCgiAnswer_() {
 	// ans += "\n\r";
 	// response_ = response_ += "\n\r";
 	if (DEBUG > 0) {
-		std::cerr << BLUE"Total cgi answer\n"RESET;
+		std::cerr << BLUE << "Total cgi answer\n" << RESET;
 		std::cerr << response_.substr(0, 500);
 		if (response_.size() > 500)
-		std::cerr << BLUE" + " << response_.size() - 500 << "chars"RESET;
+		std::cerr << BLUE" + " << response_.size() - 500 << "chars" << RESET;
 		std::cerr << std::endl;
 	}
 	updateAnswer_();
 	if (DEBUG > 0) {
-		std::cerr << BLUE"Total cgi answer after \n"RESET;
+		std::cerr << BLUE << "Total cgi answer after \n" << RESET;
 		std::cerr << response_.substr(0, 500);
 		if (response_.size() > 500)
-		std::cerr << BLUE" + " << response_.size() - 500 << "chars"RESET;
+		std::cerr << BLUE" + " << response_.size() - 500 << "chars" << RESET;
 		std::cerr << std::endl;
 	}
 	
@@ -428,8 +406,6 @@ void Response::updateAnswer_() {
 	
 	size_t	statusPos = response_.find("Status: ");
 	size_t	statusNumberPos = response_.substr(statusPos, 15).find("200", statusPos);
-	// std::string statusLine = response_.substr(statusPos, response_.find('\n', statusPos) - statusPos);
-	printf("statuspos %zu, numberpos %zu\n\n", statusPos, statusNumberPos);
 	if (statusPos != std::string::npos and statusNumberPos != std::string::npos)
 		response_ = "HTTP/1.1 200 OK\r\n" + response_;
 	else
@@ -441,11 +417,11 @@ void Response::updateAnswer_() {
 		std::string contentLen = "\r\nContent-Length: " + numberToString(bodySize);
 		response_.insert(headersEndPos, contentLen);
 	}
-	else
-		response_ += "\r\nContent-Length: 0"ENDH;
-
+	else {
+		response_ += "\r\nContent-Length: 0";
+		response_ += ENDH;
+	}
 	std::string headers = response_.substr(0, response_.find(ENDH));
-
 }
 
 std::string Response::findFileWithExtension(std::string extension, std::string dir) {
@@ -515,18 +491,18 @@ std::string Response::readContent(const std::string &filename) {
 std::string Response::getScreen() {
     std::string filename = locationRoot_;
 
-    if (responseCode_ == 200 && !requestedFile_.length())
-        filename += "/index.html";
-    else if (responseCode_ == 200 && requestedFile_ == "style.css")
-        filename = "./src/screens/style.css";
-    else if (responseCode_ == 200 && requestedFile_ == "index.js")
-        filename = "./src/screens/index.js";
-    else if (errorPages_.find(responseCode_) != errorPages_.end())
-        filename = "./errors/" + errorPages_[responseCode_];
-    else if (responseCode_ != 200) {
+    // if (responseCode_ == 200 && !requestedFile_.length())
+    //     filename += "/index.html";
+    // else if (responseCode_ == 200 && requestedFile_ == "style.css")
+    //     filename = "./src/screens/style.css";
+    // else if (responseCode_ == 200 && requestedFile_ == "index.js")
+    //     filename = "./src/screens/index.js";
+    if (errorPages_.find(responseCode_) != errorPages_.end())
+        filename = errorPages_[responseCode_];
+    else {
         std::string errorDescription = responseCodes_.find(responseCode_)->second;
         setResponseBody(errorDescription);
-        return errorDescription;
+        filename =  errorDescription;
     }
     return filename;
 }

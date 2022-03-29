@@ -3,7 +3,10 @@
 
 Cgi::Cgi(ServerConfig &serv, RequestParser &req): request_(req)
 {
-	// req.showHeaders();
+	req.showHeaders();
+	if (req.getBody().size())
+		std::cerr << BLUE << "first 500 from total " << req.getBody().size() << ":\n" << RESET << req.getBody().substr(0, 500) << std::endl;
+
 	env_["SERVER_NAME"] = "webserv"; //serv.getHost();
 	env_["SERVER_SOFTWARE"] = "C.y.b.e.r.s.e.r.v/0.077";
 	env_["GATEWAY_INTERFACE"] = "CGI/1.1";
@@ -78,7 +81,7 @@ std::pair<int, std::string> Cgi::execute() {
 		args[0] = (char *)env_["SCRIPT_NAME"].c_str();
 		args[1] = (char *)env_["PATH_TRANSLATED"].c_str();
 		if (DEBUG > 1)
-			std::cerr << RED"RUN SGI!!: "RESET << args[0]
+			std::cerr << RED << "RUN SGI!!: " << RESET << args[0]
 					<< "\n path_name: " << getenv("PATH_INFO") 
 					<< "\n content_lenght: " << getenv("CONTENT_LENGTH") 
 					<< "\n real size: " << body_.size() 

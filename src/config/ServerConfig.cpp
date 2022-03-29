@@ -34,7 +34,7 @@ ServerConfig::ServerConfig(std::ifstream &ifs):
 				errorPages[404] = DEFAULT_ERROR_PAGE;
 			if (cgi.empty() + cgiExt.empty() == 1)
 				baseError("fill only one from cgi and cgi_extention");
-			if (!cgi.empty() and cgi.compare(0, 8, "cgi-bin/"))
+			if (!cgi.empty() and cgi.find("cgi-bin/") == std::string::npos)
 				baseError("unknown sgi, use somthing line 'cgi-bin/tester");
 			return ;
 		}

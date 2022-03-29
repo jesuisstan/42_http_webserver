@@ -11,7 +11,8 @@ Server::~Server() {
 		{
 			close(_fds[i].fd);
 			pthread_mutex_lock(&g_write);
-			std::cerr << "Connection successfully closed:\t" << _fds[i].fd << " (D)" << std::endl;
+			std::cerr << BgMAGENTA << "Web server [" << this->serverID <<
+					"] successfully closed on socket " << _fds[i].fd << " (D)" << RESET << std::endl;
 			pthread_mutex_unlock(&g_write);
 		}
 	}
@@ -32,6 +33,10 @@ Server	&Server::operator = (const Server &other) {
 	for (int i = 0; i < _numberFds; i++) {
 		this->_fds[i].fd = other._fds[i].fd;
 	}
+	this->_clients = other._clients;
+	this->webConfig = other.webConfig;
+	this->serverID = other.serverID;
+	this->tid = other.tid;
 	return (*this);
 }
 
@@ -149,10 +154,11 @@ void	Server::closeConnection(int socket) {
 				}
 				i--;
 				_numberFds--;
-				pthread_mutex_lock(&g_write);
-				if (DEBUG > 1) 
+				if (DEBUG > 1) { 
+					pthread_mutex_lock(&g_write);
 					std::cerr << "Array of client's descriptors compressed" << " on server " << this->serverID << std::endl;
-				pthread_mutex_unlock(&g_write);
+					pthread_mutex_unlock(&g_write);
+				}
 			}
 		}
 	}
@@ -160,10 +166,11 @@ void	Server::closeConnection(int socket) {
 }
 
 void	Server::receiveRequest(int socket) {
-	pthread_mutex_lock(&g_write);
-	if (DEBUG > 0)
+	if (DEBUG > 1) {
+		pthread_mutex_lock(&g_write);
 		std::cerr << "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
-	pthread_mutex_unlock(&g_write);
+		pthread_mutex_unlock(&g_write);
+	}
 	bool closeConnectionFlag = false;
 	int ret = 0;
 	char buffer[BUFFER_SIZE] = {0};
@@ -173,10 +180,11 @@ void	Server::receiveRequest(int socket) {
 		std::string tail = std::string(buffer, ret);
 		_clients[socket].reqLength += ret;
 		_clients[socket].reqString += tail;
-		pthread_mutex_lock(&g_write);
-		if (DEBUG > 1)
+		if (DEBUG > 1) {
+			pthread_mutex_lock(&g_write);
 			std::cerr << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd << " on server " << this->serverID <<  std::endl;
-		pthread_mutex_unlock(&g_write);
+			pthread_mutex_unlock(&g_write);
+		}
 		// memset(buffer, 0, BUFFER_SIZE);
 		if (findReqEnd(_clients[socket]))
 			_fds[socket].events = POLLOUT;
@@ -227,8 +235,11 @@ void	Server::sendResponse(int socket) {
 		_clients[socket].response = Response(_clients[socket].request, webConfig); 
 		char *responseStr = getCstring(_clients[socket].response.getResponse());
 		size_t responseSize = _clients[socket].response.getResponse().size();
-		if (DEBUG > 0)
+		if (DEBUG > 0) {
+			pthread_mutex_lock(&g_write);
 			std::cerr << CYAN << _clients[socket].response.getResponseCode() << RESET" with size="  << _clients[socket].response.getResponse().size() << std::endl;
+			pthread_mutex_unlock(&g_write);
+		}
 		int ret = send(_fds[socket].fd, responseStr, responseSize, 0);
 		free (responseStr);
 		if (ret < 0) {
@@ -256,10 +267,11 @@ void	Server::runServer(int timeout) {
 	int currentSize = 0;
 		std::string requestBuffer = "";
 	while (true) {
-		pthread_mutex_lock(&g_write);
-		if (DEBUG > 0)
+		if (DEBUG > 0) {
+			pthread_mutex_lock(&g_write);
 			std::cerr << "Waiting on poll() [server " << this->serverID << "]...\n";
-		pthread_mutex_unlock(&g_write);
+			pthread_mutex_unlock(&g_write);
+		}
 		int ret = poll(_fds, _numberFds, _timeout);
 		if (ret < 0) {
 			pthread_mutex_lock(&g_write);
