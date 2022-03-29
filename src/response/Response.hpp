@@ -67,8 +67,13 @@ class Response {
             void                           	savePostBody();
             bool                            checkContentLength();
 
+			// cgi block
 			void							fillCgiAnswer_();
-			void							updateAnswer_();
+			void							setCgiCode_();
+			void							setCgiBodyLength_();
+			void							splitToChunks_();
+			bool							chunked_;
+			std::vector<std::string>		chunks_;
 
     public:
             Response(): responseCode_(0), contentLength_(0) {};
