@@ -274,6 +274,8 @@ void Response::savePostBody() {
     int filesCount = 0;
     struct dirent *d;
     DIR *dh = opendir(locationRoot_.c_str());
+    if (dh == NULL)
+        return ;
     while ((d = readdir(dh)) != NULL)
     { filesCount++; }
     std::string filesCountStr = numberToString(filesCount - 1);
@@ -449,6 +451,8 @@ void Response::updateAnswer_() {
 std::string Response::findFileWithExtension(std::string extension, std::string dir) {
     struct dirent *d;
     DIR *dh = opendir(dir.c_str());
+    if (dh == NULL)
+        return "";
     while ((d = readdir(dh)) != NULL)
     {
         std::string file = (std::string) d->d_name;
@@ -469,6 +473,8 @@ std::string Response::findFileWithExtension(std::string extension, std::string d
 void    Response::createAutoIndexPage(const char *dir) {
     struct dirent *d;
     DIR *dh = opendir(dir);
+    if (dh == NULL)
+        return ;
     std::string strDir = (std::string)dir;
     std::string autoIndexPage = readContent("./src/screens/sample.html");
     autoIndexPage += "<body>\n <h1 class=\"autoIndexHeader\">";
