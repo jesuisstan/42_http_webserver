@@ -351,16 +351,16 @@ void RequestParser::parse() {
 std::string RequestParser::handleChunkedBody() {
 //    std::string restBody = body_;
     std::string newBody;
-    newBody.resize(body_.length());
+    newBody.reserve(body_.length());
     size_t lineEnd;
     size_t lineStart = 0;
     while (body_.length()) {
         lineEnd = body_.find("\n", lineStart);
         if (lineEnd != std::string::npos) {
-            std::string chunkSize = body_.substr(lineStart, lineEnd - 1);
+            std::string chunkSize = body_.substr(lineStart, lineEnd - lineStart - 1);
             int decChunkSize = hexToDec(chunkSize);
             newBody += body_.substr(lineEnd + 1, decChunkSize);
-            lineStart = lineEnd + decChunkSize + 2;
+            lineStart = lineEnd + decChunkSize + 3;
 //            restBody = restBody.substr(decChunkSize + lineEnd + 1);
         } else
             break;
