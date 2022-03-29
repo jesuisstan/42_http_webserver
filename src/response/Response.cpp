@@ -49,6 +49,7 @@ Response &Response::operator=(const Response &other) {
         ClientMaxBodySize_      = other.ClientMaxBodySize_;
         requestBody_            = other.requestBody_;
         cgiRequested_           = other.cgiRequested_;
+        maxPossibleLocation_    = other.maxPossibleLocation_;
     }
     return *this;
 }
@@ -322,6 +323,7 @@ void Response::readLocationData() {
     }
     if (maxPossibleLocation != "/")
         requestRoute_ = requestRoute_.substr(maxPossibleLocation.length() - 1);
+    maxPossibleLocation_ = maxPossibleLocation.substr(0, maxPossibleLocation.length() - 1);
 }
 
 
@@ -475,7 +477,7 @@ void    Response::createAutoIndexPage(const char *dir) {
     strDir = strDir[strDir.size() - 1] == '/' ? strDir.substr(0, strDir.size() - 1) : strDir;
     while ((d = readdir(dh)) != NULL)
     {
-        autoIndexPage += "<a class=\"autoIndexLink\"href=" + strDir + "/" + (std::string)d->d_name + ">";
+        autoIndexPage += "<a class=\"autoIndexLink\"href=" + maxPossibleLocation_ + requestRoute_ + (std::string)d->d_name + ">";
         autoIndexPage +=  (std::string)d->d_name + "</a>\n";
     }
     autoIndexPage += "<div>\n</body>\n</html>\n";
