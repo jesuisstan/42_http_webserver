@@ -78,7 +78,7 @@ std::pair<int, std::string> Cgi::execute() {
 		args[0] = (char *)env_["SCRIPT_NAME"].c_str();
 		args[1] = (char *)env_["PATH_TRANSLATED"].c_str();
 		if (DEBUG > 1)
-			std::cerr << RED"RUN SGI!!: "RESET << args[0]
+			std::cerr << RED << "RUN SGI!!: " << RESET << args[0]
 					<< "\n path_name: " << getenv("PATH_INFO") 
 					<< "\n content_lenght: " << getenv("CONTENT_LENGTH") 
 					<< "\n real size: " << body_.size() 

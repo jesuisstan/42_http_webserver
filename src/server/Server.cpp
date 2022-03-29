@@ -11,7 +11,8 @@ Server::~Server() {
 		{
 			close(_fds[i].fd);
 			pthread_mutex_lock(&g_write);
-			std::cerr << "Connection successfully closed:\t" << _fds[i].fd << " (D)" << std::endl;
+			std::cerr << BgMAGENTA << "Web server [" << this->serverID <<
+					"] successfully closed on socket " << _fds[i].fd << " (D)" << RESET << std::endl;
 			pthread_mutex_unlock(&g_write);
 		}
 	}
@@ -32,6 +33,10 @@ Server	&Server::operator = (const Server &other) {
 	for (int i = 0; i < _numberFds; i++) {
 		this->_fds[i].fd = other._fds[i].fd;
 	}
+	this->_clients = other._clients;
+	this->webConfig = other.webConfig;
+	this->serverID = other.serverID;
+	this->tid = other.tid;
 	return (*this);
 }
 

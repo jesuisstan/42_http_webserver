@@ -277,7 +277,8 @@ void Response::savePostBody() {
     { filesCount++; }
     std::string filesCountStr = numberToString(filesCount - 1);
     std::string filename = requestedFile_.empty() ? filesCountStr : requestedFile_.substr(0, requestedFile_.length() - 1);
-    std::ofstream	postBodyFile(locationRoot_ + "/" + filename);
+    std::string path = locationRoot_ + "/" + filename;
+    std::ofstream postBodyFile(path.c_str());
     std::string encoding = RequestParser_.getHeaders().find("Transfer-Encoding")->second;
     if (encoding == "chunked" && requestBody_.length())
         postBodyFile << handleChunkedBody();
@@ -349,7 +350,7 @@ int Response::checkPathForLocation() {
             std::string path = (std::string) cwd;
             RequestParser_.setPathTranslated(cwd + stringFilename.substr(1));
 			if (DEBUG > 1)
-            	std::cerr << BgRED << "CGI START" << RESET << std::endl;
+				std::cerr << BgRED << "CGI START" << RESET << std::endl;
             Cgi* cgi = new Cgi(ServerConfig_, RequestParser_);
 			// int fd_to_write = cgi->exec();
             // setResponseCode(55);
@@ -399,18 +400,18 @@ void Response::fillCgiAnswer_() {
 	// ans += "\n\r";
 	// response_ = response_ += "\n\r";
 	if (DEBUG > 0) {
-		std::cerr << BLUE"Total cgi answer\n"RESET;
+		std::cerr << BLUE << "Total cgi answer\n" << RESET;
 		std::cerr << response_.substr(0, 500);
 		if (response_.size() > 500)
-		std::cerr << BLUE" + " << response_.size() - 500 << "chars"RESET;
+		std::cerr << BLUE" + " << response_.size() - 500 << "chars" << RESET;
 		std::cerr << std::endl;
 	}
 	updateAnswer_();
 	if (DEBUG > 0) {
-		std::cerr << BLUE"Total cgi answer after \n"RESET;
+		std::cerr << BLUE << "Total cgi answer after \n" << RESET;
 		std::cerr << response_.substr(0, 500);
 		if (response_.size() > 500)
-		std::cerr << BLUE" + " << response_.size() - 500 << "chars"RESET;
+		std::cerr << BLUE" + " << response_.size() - 500 << "chars" << RESET;
 		std::cerr << std::endl;
 	}
 	
@@ -437,11 +438,11 @@ void Response::updateAnswer_() {
 		std::string contentLen = "\r\nContent-Length: " + numberToString(bodySize);
 		response_.insert(headersEndPos, contentLen);
 	}
-	else
-		response_ += "\r\nContent-Length: 0"ENDH;
-
+	else {
+		response_ += "\r\nContent-Length: 0";
+		response_ += ENDH;
+	}
 	std::string headers = response_.substr(0, response_.find(ENDH));
-
 }
 
 std::string Response::findFileWithExtension(std::string extension, std::string dir) {
