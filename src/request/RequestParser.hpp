@@ -26,6 +26,7 @@ class RequestParser {
             std::string                                 acceptLanguage_;
             std::string                                 acceptEncoding_;
             std::string                                 pathTranslated_;
+            bool                                        isChunked_;
 
             std::vector<std::string>                    path_;
             size_t                                      iterator_;
@@ -57,6 +58,7 @@ class RequestParser {
             void                                        setSupportedMethods();
             std::string                                 parseByChar(const std::string& string, char symbol);
             std::string                                 parseByHeaderName(const std::string& name);
+            std::string                                 handleChunkedBody();
             static std::string                          EraseSpaces(const std::string& string);
 
 public:
@@ -96,7 +98,6 @@ public:
 
             void                                        showHeaders();
             bool                                        isSupportedMethod();
-
             class UnsupportedMethodException: public std::exception
             {
                 private:

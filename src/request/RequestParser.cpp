@@ -35,6 +35,7 @@ RequestParser &RequestParser::operator=(const RequestParser &other) {
         acceptLanguage_   = other.acceptLanguage_;
         acceptEncoding_   = other.acceptEncoding_;
         pathTranslated_   = other.pathTranslated_;
+        isChunked_        = other.isChunked_;
 
         path_             = other.path_;
         iterator_         = other.iterator_;
@@ -259,7 +260,9 @@ void RequestParser::setBody() {
     size_t bodyStart = request_.find("\r\n\r\n");
     if (bodyStart != std::string::npos) {
         body_ = erasedRequest.substr(bodyStart + 4);
-//std::cerr << "__BODY_______________|"<< body_.length() << "|" << std::endl;
+        if (isChunked_)
+            body_ = handleChunkedBody();
+std::cerr << "__BODY_______________|"<< body_.length() << "|" << std::endl;
 }}
 
 void RequestParser::setHeaders() {
@@ -272,14 +275,20 @@ void RequestParser::setHeaders() {
 		if (colonPos != std::string::npos) {
 			std::string headerName = line.substr(0, colonPos);
 			std::string headerContent = line.substr(colonPos + 2);
+            if (headerName == "Transfer-Encoding" && headerContent == "chunked")
+                isChunked_ = true;
 			headers_.insert(std::pair<std::string, std::string> (headerName, headerContent));
 		}
 	}
 }
 
 void RequestParser::setContentLength() {
-    std::string contentLengthStr = parseByHeaderName("Content-Length:");
-    contentLength_ = stringToNumber(contentLengthStr);
+    if (!isChunked_) {
+        std::string contentLengthStr = parseByHeaderName("Content-Length:");
+        contentLength_ = stringToNumber(contentLengthStr);
+    } else {
+        contentLength_ = body_.length();
+    }
 //    std::cerr << "__CONTENT_LENGTH_____|" << contentLength_ << "|" << std::endl;
 }
 
@@ -330,13 +339,33 @@ void RequestParser::parse() {
         setSecFetchUser();
         setCacheControl();
         setHeaders();
-        setContentLength();
 		setContentType();
         if (method_ == "POST" || method_ == "PUT")
             setBody();
+        setContentLength();
     } else {
         throw UnsupportedMethodException(method_);
     }
+}
+
+std::string RequestParser::handleChunkedBody() {
+//    std::string restBody = body_;
+    std::string newBody;
+    newBody.resize(body_.length());
+    size_t lineEnd;
+    size_t lineStart = 0;
+    while (body_.length()) {
+        lineEnd = body_.find("\n", lineStart);
+        if (lineEnd != std::string::npos) {
+            std::string chunkSize = body_.substr(lineStart, lineEnd - 1);
+            int decChunkSize = hexToDec(chunkSize);
+            newBody += body_.substr(lineEnd + 1, decChunkSize);
+            lineStart = lineEnd + decChunkSize + 2;
+//            restBody = restBody.substr(decChunkSize + lineEnd + 1);
+        } else
+            break;
+    }
+    return newBody;
 }
 
 

@@ -252,24 +252,6 @@ void Response::checkFileRequested() {
     }
 }
 
-std::string Response::handleChunkedBody() {
-    std::string newBody;
-    std::string restBody = requestBody_;
-    size_t lineEnd;
-    while (restBody.length()) {
-        lineEnd = restBody.find("\n");
-        if (lineEnd != std::string::npos) {
-            std::string chunkSize = restBody.substr(0, lineEnd - 1);
-            int decChunkSize = hexToDec(chunkSize);
-            newBody += restBody.substr(lineEnd + 1, decChunkSize);
-            restBody = restBody.substr(decChunkSize + lineEnd + 1);
-        } else
-            break;
-    }
-    setContentLength(newBody.length());
-    return newBody;
-}
-
 void Response::savePostBody() {
     int filesCount = 0;
     struct dirent *d;
@@ -280,13 +262,8 @@ void Response::savePostBody() {
     { filesCount++; }
     std::string filesCountStr = numberToString(filesCount - 1);
     std::string filename = requestedFile_.empty() ? filesCountStr : requestedFile_.substr(0, requestedFile_.length() - 1);
-    std::string path = locationRoot_ + "/" + filename;
-    std::ofstream postBodyFile(path.c_str());
-    std::string encoding = RequestParser_.getHeaders().find("Transfer-Encoding")->second;
-    if (encoding == "chunked" && requestBody_.length())
-        postBodyFile << handleChunkedBody();
-    else
-        postBodyFile << requestBody_;
+    std::ofstream	postBodyFile(locationRoot_ + "/" + filename);
+    postBodyFile << requestBody_;
     postBodyFile.close();
     closedir(dh);
 }
