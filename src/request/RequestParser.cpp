@@ -175,7 +175,8 @@ void RequestParser::setRoute() {
         route_ = "./";
         path_.push_back("");
     }
-    std::cerr << BgCYAN << "|" << route_ << "|" << RESET << std::endl;
+    if (DEBUG > 1)
+        std::cerr << BgCYAN << "|" << route_ << "|" << RESET << std::endl;
 }
 
 void RequestParser::setPath() {
