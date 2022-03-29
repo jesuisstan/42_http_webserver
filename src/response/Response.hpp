@@ -20,6 +20,7 @@ class Response {
             Location                       	Location_;
             std::string                    	response_;
             std::string                    	requestRoute_;
+            std::string                    	maxPossibleLocation_;
             std::string                    	requestMethod_;
             std::string                    	requestBody_;
             std::string                    	responseHeaders_;
