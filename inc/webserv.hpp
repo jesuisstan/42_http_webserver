@@ -56,7 +56,6 @@
 # define CHUNK_SIZE			100000
 
 
-
 template <typename T>
 std::string numberToString ( T Number )
 {
@@ -79,4 +78,4 @@ bool		isPositiveDigit(std::string &s);
 void		readSemicolon(std::istream &ifs);
 std::string	&cutSemicolon(std::string &line);
 int         hexToDec(std::string hex);
-void printStrWithUnprintableChars(std::string string);
+void        printStrWithUnprintableChars(std::string string);

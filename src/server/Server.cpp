@@ -166,11 +166,15 @@ void	Server::closeConnection(int socket) {
 }
 
 void	Server::receiveRequest(int socket) {
-	if (DEBUG > 1) {
-		pthread_mutex_lock(&g_write);
-		std::cerr << "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
-		pthread_mutex_unlock(&g_write);
-	}
+//	if (DEBUG > 1) {
+//        std::stringstream message;
+//        message = "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID;
+    Logger::message_ << BLUE << "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID;
+    Logger::printDebugMessage();
+//		pthread_mutex_lock(&g_write);
+//		std::cerr << "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
+//		pthread_mutex_unlock(&g_write);
+//	}
 	bool closeConnectionFlag = false;
 	int ret = 0;
 	char buffer[BUFFER_SIZE] = {0};
@@ -267,11 +271,9 @@ void	Server::runServer(int timeout) {
 	int currentSize = 0;
 		std::string requestBuffer = "";
 	while (true) {
-		if (DEBUG > 0) {
-			pthread_mutex_lock(&g_write);
-			std::cerr << "Waiting on poll() [server " << this->serverID << "]...\n";
-			pthread_mutex_unlock(&g_write);
-		}
+//        std::stringstream message;
+        Logger::message_ << BLUE"Waiting on poll() [server " << this->serverID << "]...\n";
+        Logger::printInfoMessage();
 		int ret = poll(_fds, _numberFds, _timeout);
 		if (ret < 0) {
 			pthread_mutex_lock(&g_write);

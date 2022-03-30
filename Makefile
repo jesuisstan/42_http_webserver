@@ -9,7 +9,7 @@ RM				= rm -rf
 
 INCLUDES		= -I inc
 
-CLASS_HDRS		= -I src/server -I src/config -I src/request -I src/response -I src/cgi
+CLASS_HDRS		= -I src/server -I src/config -I src/request -I src/response -I src/cgi -I src/logger
 
 HEADERS			= webserv.hpp
 
@@ -18,6 +18,7 @@ SERVER			= Server
 REQUEST			= RequestParser
 RESPONSE		= Response
 CGI				= Cgi
+LOGGER			= Logger
 
 SRC_DIR 		= src
 SRC				= $(addsuffix .cpp, main) \
@@ -26,6 +27,7 @@ SRC				= $(addsuffix .cpp, main) \
 				$(addprefix request/, $(addsuffix .cpp, $(REQUEST))) \
 				$(addprefix response/, $(addsuffix .cpp, $(RESPONSE))) \
 				$(addprefix cgi/, $(addsuffix .cpp, $(CGI))) \
+				$(addprefix logger/, $(addsuffix .cpp, $(LOGGER))) \
 
 OBJ_DIR			= obj
 OBJ				= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, main)) \
@@ -34,8 +36,9 @@ OBJ				= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, main)) \
 				$(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(REQUEST))) \
 				$(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(RESPONSE))) \
 				$(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(CGI))) \
+				$(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(LOGGER))) \
 
-OBJ_SUBDIR		= $(addprefix $(OBJ_DIR)/, config server request response cgi)
+OBJ_SUBDIR		= $(addprefix $(OBJ_DIR)/, config server request response cgi logger)
 
 OBJ_BUILD		= $(addprefix $(OBJ_DIR)/, $(SRC:.cpp=.o))
 MMD_FILES		= $(OBJ_BUILD:.o=.d)

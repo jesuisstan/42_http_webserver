@@ -488,7 +488,7 @@ void    Response::createAutoIndexPage(const char *dir) {
     if (dh == NULL)
         return ;
     std::string strDir = (std::string)dir;
-    std::string autoIndexPage = readContent("./src/screens/sample.html");
+    std::string autoIndexPage = readContent("./www/screens/sample.html");
     autoIndexPage += "<body>\n <h1 class=\"autoIndexHeader\">";
     autoIndexPage += dir;
     autoIndexPage += "</h1>\n<div class=\"simpleContainer\">";
