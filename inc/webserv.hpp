@@ -51,6 +51,9 @@
 # define DEFAULT_MAX_BODY	1024 * 1024
 
 # define ENDH				"\r\n\r\n"
+# define CRLF				"\r\n"
+# define NEED_CHUNKS		500000
+# define CHUNK_SIZE			100000
 
 
 
@@ -60,6 +63,14 @@ std::string numberToString ( T Number )
 	std::ostringstream ss;
 	ss << Number;
 	return ss.str();
+}
+
+template <class T>
+std::string getHex(T Value)
+{
+   std::stringstream ss;
+   ss << std::hex << Value;
+   return std::string(ss.str());
 }
 
 void		baseError(std::string errorText);

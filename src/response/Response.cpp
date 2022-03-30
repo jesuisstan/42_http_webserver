@@ -387,7 +387,8 @@ void Response::fillCgiAnswer_() {
 		std::cerr << BLUE" + " << response_.size() - 500 << "chars" << RESET;
 		std::cerr << std::endl;
 	}
-	updateAnswer_();
+	setCgiCode_();
+	setCgiBodyLength_();
 	if (DEBUG > 0) {
 		std::cerr << BLUE << "Total cgi answer after \n" << RESET;
 		std::cerr << response_.substr(0, 500);
@@ -395,33 +396,68 @@ void Response::fillCgiAnswer_() {
 		std::cerr << BLUE" + " << response_.size() - 500 << "chars" << RESET;
 		std::cerr << std::endl;
 	}
-	
-
-
 }
 
-void Response::updateAnswer_() {
+void Response::setCgiCode_() {
 	// "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 18\n\r\n\rOur sgi is working"
-
-	
 	size_t	statusPos = response_.find("Status: ");
 	size_t	statusNumberPos = response_.substr(statusPos, 15).find("200", statusPos);
-	if (statusPos != std::string::npos and statusNumberPos != std::string::npos)
+	if (responseCode_ == 200 and statusPos != std::string::npos and statusNumberPos != std::string::npos)
 		response_ = "HTTP/1.1 200 OK\r\n" + response_;
 	else
 		response_ = "HTTP/1.1 500 KO\r\n" + response_;
+}
 
+
+void Response::setCgiBodyLength_() {
+	size_t bodySize  = 0;
 	size_t	headersEndPos = response_.find(ENDH);
-	if (headersEndPos != std::string::npos) {
-		size_t bodySize = response_.size() - headersEndPos - 4;
+	if (headersEndPos != std::string::npos)
+		bodySize = response_.size() - headersEndPos - 4;
+	setContentLength(bodySize);
+	if (bodySize < NEED_CHUNKS) {
 		std::string contentLen = "\r\nContent-Length: " + numberToString(bodySize);
 		response_.insert(headersEndPos, contentLen);
 	}
 	else {
-		response_ += "\r\nContent-Length: 0";
-		response_ += ENDH;
+		std::string contentLen = "\r\nTransfer-Encoding: chunked";
+		response_.insert(headersEndPos, contentLen);
+
+		splitToChunks_();
 	}
-	std::string headers = response_.substr(0, response_.find(ENDH));
+
+	// std::string headers = response_.substr(0, response_.find(ENDH));
+}
+
+void Response::splitToChunks_() {
+	size_t		pos;
+	size_t		headersEndPos;
+	size_t		leftSizeChunk;
+	std::string	hexString;
+	std::string first_chunk;
+	
+	chunked_ = true;
+	headersEndPos = response_.find(ENDH) + 4;
+
+	
+	leftSizeChunk = CHUNK_SIZE - headersEndPos;
+	hexString = getHex(leftSizeChunk) + CRLF;
+	first_chunk = response_.substr(0, headersEndPos) + hexString + response_.substr(headersEndPos, leftSizeChunk) + CRLF;
+	chunks_.push_back(first_chunk);
+	if (DEBUG > 1)
+		std::cerr << "chunks size: " << first_chunk.size() << ", first 50:\n" << first_chunk.substr(0, 50) << std::endl;
+	pos = CHUNK_SIZE;
+	do {
+		std::string chunk;
+		leftSizeChunk = std::min(response_.size() - pos, (size_t)CHUNK_SIZE);
+		hexString = getHex(leftSizeChunk) + CRLF;
+		chunk = hexString + response_.substr(pos, leftSizeChunk) + CRLF;
+		if (DEBUG > 1)
+			std::cerr << "chunks size: " << chunk.size() << ", first 50:\n" << chunk.substr(0, 50) << std::endl;
+		chunks_.push_back(chunk);
+		pos += leftSizeChunk;
+	}
+	while (pos < response_.size());
 }
 
 std::string Response::findFileWithExtension(std::string extension, std::string dir) {
