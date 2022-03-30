@@ -14,6 +14,7 @@ Response::Response(RequestParser &request, ServerConfig &config) :
         supportedMethods_(request.getSupportedMethods()),
         errorPages_(config.getErrorPages()),
         cgiRequested_(false) {
+	chunked_ = false;
     setResponseCodes();
     setImgExtensions();
     createResponse();
@@ -50,6 +51,8 @@ Response &Response::operator=(const Response &other) {
         requestBody_            = other.requestBody_;
         cgiRequested_           = other.cgiRequested_;
         maxPossibleLocation_    = other.maxPossibleLocation_;
+		chunked_				= other.chunked_;
+		chunks_					= other.chunks_;
     }
     return *this;
 }
@@ -76,6 +79,14 @@ const std::string &Response::getResponseBody() const {
 
 const std::string &Response::getResponseHeaders() const {
     return this->responseHeaders_;
+}
+
+const std::vector<std::string> &Response::getChunks() const {
+	return this->chunks_;
+}
+
+const bool &Response::getChunked() const {
+	return this->chunked_;
 }
 
 /**************************/
@@ -381,20 +392,19 @@ void Response::fillCgiAnswer_() {
 	// ans += "\n\r";
 	// response_ = response_ += "\n\r";
 	if (DEBUG > 0) {
-		std::cerr << BLUE << "Total cgi answer\n" << RESET;
-		std::cerr << response_.substr(0, 500);
-		if (response_.size() > 500)
-		std::cerr << BLUE" + " << response_.size() - 500 << "chars" << RESET;
-		std::cerr << std::endl;
+		ans = response_.substr(0, 500);
+		std::cerr << BLUE << "Cgi response. First 500 from " 
+					<< ans.size() << " chars\n" << RESET << ans << std::endl;
 	}
 	setCgiCode_();
 	setCgiBodyLength_();
 	if (DEBUG > 0) {
-		std::cerr << BLUE << "Total cgi answer after \n" << RESET;
-		std::cerr << response_.substr(0, 500);
-		if (response_.size() > 500)
-		std::cerr << BLUE" + " << response_.size() - 500 << "chars" << RESET;
-		std::cerr << std::endl;
+		if (chunked_)
+			ans = chunks_[0].substr(0, 500);
+		else
+			ans = response_.substr(0, 500);
+		std::cerr << BLUE << "Cgi after procceccing. First 500 from " 
+					<< ans.size() << " chars\n" << RESET << ans << std::endl;
 	}
 }
 
@@ -447,7 +457,7 @@ void Response::splitToChunks_() {
 	if (DEBUG > 1)
 		std::cerr << "chunks size: " << first_chunk.size() << ", first 50:\n" << first_chunk.substr(0, 50) << std::endl;
 	pos = CHUNK_SIZE;
-	do {
+	while (1) {
 		std::string chunk;
 		leftSizeChunk = std::min(response_.size() - pos, (size_t)CHUNK_SIZE);
 		hexString = getHex(leftSizeChunk) + CRLF;
@@ -456,8 +466,9 @@ void Response::splitToChunks_() {
 			std::cerr << "chunks size: " << chunk.size() << ", first 50:\n" << chunk.substr(0, 50) << std::endl;
 		chunks_.push_back(chunk);
 		pos += leftSizeChunk;
+		if (!leftSizeChunk)
+			break;
 	}
-	while (pos < response_.size());
 }
 
 std::string Response::findFileWithExtension(std::string extension, std::string dir) {
