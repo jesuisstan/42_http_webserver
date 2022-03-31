@@ -273,7 +273,7 @@ void Response::savePostBody() {
     { filesCount++; }
     std::string filesCountStr = numberToString(filesCount - 1);
     std::string filename = requestedFile_.empty() ? filesCountStr : requestedFile_.substr(0, requestedFile_.length() - 1);
-    std::ofstream	postBodyFile(locationRoot_ + "/" + filename);
+    std::ofstream	postBodyFile((locationRoot_ + "/" + filename).c_str());
     postBodyFile << requestBody_;
     postBodyFile.close();
     closedir(dh);

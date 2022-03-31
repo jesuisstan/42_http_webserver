@@ -11,8 +11,8 @@ Server::~Server() { //todo rework cleaning
 		{
 			close(_fds[i].fd);
 			pthread_mutex_lock(&g_write);
-			std::cerr << BgMAGENTA << "Web server [" << this->serverID <<
-					"] successfully closed on socket " << _fds[i].fd << " (D)" << RESET << std::endl;
+			std::cerr << BgMAGENTA << "Web server [" << this->serverID << "]: connection closed on socket "
+						<< _fds[i].fd << " (D)" << RESET << std::endl;
 			pthread_mutex_unlock(&g_write);
 		}
 	}
@@ -301,7 +301,7 @@ void	Server::sendResponse(pollfd &pfd) {
 	_clients[pfd.fd].responseSize = responseSize - ret;
 	if (ret > 0 and ret < (int)responseSize) {
 		if (DEBUG > 2)
-			std::cerr << RED"ret = " << ret << " but must be " << "responceSize"RESET << std::endl;
+			std::cerr << RED << "ret = " << ret << " but must be " << "responceSize" << RESET << std::endl;
 		return;
 	}
 	// free (responseStr);
