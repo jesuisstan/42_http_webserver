@@ -176,8 +176,9 @@ void RequestParser::setRoute() {
         route_ = "./";
         path_.push_back("");
     }
-    if (DEBUG > 1)
-        std::cerr << BgCYAN << "|" << route_ << "|" << RESET << std::endl;
+    std::stringstream str;
+    str << BgCYAN << "|" << route_ << "|";
+    Logger::printDebugMessage(&str);
 }
 
 void RequestParser::setPath() {
@@ -262,7 +263,7 @@ void RequestParser::setBody() {
         body_ = erasedRequest.substr(bodyStart + 4);
         if (isChunked_)
             body_ = handleChunkedBody();
-std::cerr << "__BODY_______________|"<< body_.length() << "|" << std::endl;
+// std::cerr << "__BODY_______________|"<< body_.length() << "|" << std::endl;
 }}
 
 void RequestParser::setHeaders() {
@@ -379,8 +380,10 @@ bool RequestParser::isSupportedMethod() {
 
 void RequestParser::showHeaders() {
     std::map<std::string, std::string>::iterator it;
+    std::stringstream str;
     for (it=headers_.begin(); it!=headers_.end(); it++) {
-        std::cerr << GREEN << it->first << RESET <<": " << BLUE << it->second << RESET << std::endl;
+        str << GREEN << it->first << RESET <<": " << BLUE << it->second << RESET << std::endl;
+        Logger::printDebugMessage(&str);
     }
 }
 
@@ -411,7 +414,7 @@ std::string RequestParser::EraseSpaces(const std::string &string) {
     size_t spacePos = string.find(' ');
     std::string result = string;
     while (spacePos != std::string::npos) {
-        result = result.replace(spacePos, spacePos, "");
+        result = result.replace(spacePos, 1, "");
         spacePos = result.find(' ');
     }
     return result;

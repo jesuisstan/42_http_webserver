@@ -241,7 +241,6 @@ bool Response::checkContentLength() {
     size_t contentLength = RequestParser_.getContentLength();
     if (contentLength) {
         size_t bodyLength = RequestParser_.getBody().length();
-//        std::cerr << BgGREEN << contentLength << " | " << bodyLength << "|"<<  RequestParser_.getBody() << "|"<< RESET << std::endl;
         if (contentLength != bodyLength)
             return false;
     }
@@ -340,9 +339,10 @@ int Response::checkPathForLocation() {
             char cwd[1024];
             getcwd(cwd, sizeof(cwd));
             std::string path = (std::string) cwd;
+            std::stringstream str;
             RequestParser_.setPathTranslated(cwd + stringFilename.substr(1));
-			if (DEBUG > 1)
-				std::cerr << BgRED << "CGI START" << RESET << std::endl;
+			str << BgRED << "CGI START" << RESET << std::endl;
+	        Logger::printDebugMessage(&str);
             Cgi* cgi = new Cgi(ServerConfig_, RequestParser_);
 			// int fd_to_write = cgi->exec();
             // setResponseCode(55);
@@ -391,21 +391,20 @@ void Response::fillCgiAnswer_() {
 	// ans += "Content-Length: " + numberToString(response_.size()) + "\n";
 	// ans += "\n\r";
 	// response_ = response_ += "\n\r";
-	if (DEBUG > 0) {
-		ans = response_.substr(0, 500);
-		std::cerr << BLUE << "Cgi response. First 500 from " 
-					<< ans.size() << " chars\n" << RESET << ans << std::endl;
-	}
+    std::stringstream str;
+    ans = response_.substr(0, 500);
+    str << BLUE << "Cgi response. First 500 from " 
+                << ans.size() << " chars\n" << RESET << ans;
+    Logger::printInfoMessage(&str);
 	setCgiCode_();
 	setCgiBodyLength_();
-	if (DEBUG > 0) {
-		if (chunked_)
-			ans = chunks_[0].substr(0, 500);
-		else
-			ans = response_.substr(0, 500);
-		std::cerr << BLUE << "Cgi after procceccing. First 500 from " 
-					<< ans.size() << " chars\n" << RESET << ans << std::endl;
-	}
+    if (chunked_)
+        ans = chunks_[0].substr(0, 500);
+    else
+        ans = response_.substr(0, 500);
+    str << BLUE << "Cgi after procceccing. First 500 from " 
+                << ans.size() << " chars\n" << RESET << ans << std::endl;
+    Logger::printInfoMessage(&str);
 }
 
 void Response::setCgiCode_() {
@@ -445,6 +444,7 @@ void Response::splitToChunks_() {
 	size_t		leftSizeChunk;
 	std::string	hexString;
 	std::string first_chunk;
+    std::stringstream str;
 	
 	chunked_ = true;
 	headersEndPos = response_.find(ENDH) + 4;
@@ -454,17 +454,17 @@ void Response::splitToChunks_() {
 	hexString = getHex(leftSizeChunk) + CRLF;
 	first_chunk = response_.substr(0, headersEndPos) + hexString + response_.substr(headersEndPos, leftSizeChunk) + CRLF;
 	chunks_.push_back(first_chunk);
-	if (DEBUG > 1)
-		std::cerr << "chunks size: " << first_chunk.size() << ", first 50:\n" << first_chunk.substr(0, 50) << std::endl;
-	pos = CHUNK_SIZE;
+	str << "chunks size: " << first_chunk.size() << ", first 50:\n" << first_chunk.substr(0, 50) << std::endl;
+	Logger::printDebugMessage(&str);
+    pos = CHUNK_SIZE;
 	while (1) {
 		std::string chunk;
 		leftSizeChunk = std::min(response_.size() - pos, (size_t)CHUNK_SIZE);
 		hexString = getHex(leftSizeChunk) + CRLF;
 		chunk = hexString + response_.substr(pos, leftSizeChunk) + CRLF;
-		if (DEBUG > 1)
-			std::cerr << "chunks size: " << chunk.size() << ", first 50:\n" << chunk.substr(0, 50) << std::endl;
-		chunks_.push_back(chunk);
+		str << "chunks size: " << chunk.size() << ", first 50:\n" << chunk.substr(0, 50) << std::endl;
+        Logger::printDebugMessage(&str);
+        chunks_.push_back(chunk);
 		pos += leftSizeChunk;
 		if (!leftSizeChunk)
 			break;
@@ -499,7 +499,7 @@ void    Response::createAutoIndexPage(const char *dir) {
     if (dh == NULL)
         return ;
     std::string strDir = (std::string)dir;
-    std::string autoIndexPage = readContent("./src/screens/sample.html");
+    std::string autoIndexPage = readContent("./www/screens/sample.html");
     autoIndexPage += "<body>\n <h1 class=\"autoIndexHeader\">";
     autoIndexPage += dir;
     autoIndexPage += "</h1>\n<div class=\"simpleContainer\">";

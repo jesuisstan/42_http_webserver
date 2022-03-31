@@ -43,7 +43,7 @@
 # define PORT 8888
 # define BACKLOG 1000 // the maximum number of connections that will be queued
 # define BUFFER_SIZE 500100
-# define DEBUG 1
+# define DEBUG 2
 
 # define DEFAULT_PORT		8080
 # define DEFAULT_ERROR_PAGE	"www/errors/404.html"
@@ -54,7 +54,6 @@
 # define CRLF				"\r\n"
 # define NEED_CHUNKS		1024000
 # define CHUNK_SIZE			256000
-
 
 
 template <typename T>
@@ -79,4 +78,4 @@ bool		isPositiveDigit(std::string &s);
 void		readSemicolon(std::istream &ifs);
 std::string	&cutSemicolon(std::string &line);
 int         hexToDec(std::string hex);
-void printStrWithUnprintableChars(std::string string);
+void        printStrWithUnprintableChars(std::string string);

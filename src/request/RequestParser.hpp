@@ -1,6 +1,7 @@
 #ifndef HTTP_WEBSERVER_REQUEST_PARSER_HPP
 #define HTTP_WEBSERVER_REQUEST_PARSER_HPP
 #include "../../inc/webserv.hpp"
+#include "../logger/Logger.hpp"
 #include <string>
 
 class RequestParser {

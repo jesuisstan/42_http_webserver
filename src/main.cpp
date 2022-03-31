@@ -4,25 +4,26 @@
 
 bool g_status = false;
 pthread_mutex_t g_write;
+std::stringstream message;
 
 static void	interruptHandler(int sig_int) {
 	(void)sig_int;
 	g_status = true;
-	std::cerr << BgMAGENTA << "\nAttention! Interruption signal caught.\n";
+	message << BgMAGENTA << "\nAttention! Interruption signal caught.\n";
+	Logger::printCriticalMessage(&message);
 }
 
 static void	*routine(void *webserv) {
-	pthread_mutex_lock(&g_write);
-	if (DEBUG > 1)
-		std::cerr << "Run server[" << reinterpret_cast<Server *>(webserv)->serverID << "]\n" << reinterpret_cast<Server *>(webserv)->webConfig;
-	pthread_mutex_unlock(&g_write);
+	message << "Run server[" << reinterpret_cast<Server *>(webserv)->serverID << "]\n" << reinterpret_cast<Server *>(webserv)->webConfig;
+	Logger::printDebugMessage(&message);
 	reinterpret_cast<Server *>(webserv)->initiate(reinterpret_cast<Server *>(webserv)->webConfig.getHost().c_str(), reinterpret_cast<Server *>(webserv)->webConfig.getPort()); // когда будет Config, метод сменится на .initiate(void)
 	reinterpret_cast<Server *>(webserv)->runServer(-1);
 	return (NULL);
 }
 
 int main(int argc, char *argv[]) {
-	std::cerr << "C++ version is " << __cplusplus << std::endl << std::endl;
+	message << "C++ version is " << __cplusplus << std::endl << std::endl;
+	Logger::printCriticalMessage(&message);
 	signal(SIGINT, interruptHandler);
 	Config config(argc, argv);
 	std::vector<ServerConfig> servers = config.getServers();
@@ -36,9 +37,8 @@ int main(int argc, char *argv[]) {
 	}
 	while(!g_status) {
 		if (g_status) {
-			pthread_mutex_lock(&g_write);
-			std::cerr << BgMAGENTA << "Closing connections... " << RESET << std::endl;
-			pthread_mutex_unlock(&g_write);
+			message << BgMAGENTA << "Closing connections... ";
+			Logger::printCriticalMessage(&message);
 		}
 	}
 	pthread_mutex_destroy(&g_write);

@@ -4,11 +4,13 @@
 #include "Config.hpp"
 #include "RequestParser.hpp"
 #include "Response.hpp"
+# include "../logger/Logger.hpp"
 
 extern pthread_mutex_t g_write;
 class ServerConfig;
 class RequestParser;
 class Response;
+class Logger;
 
 typedef struct s_reqData {
 	std::string		reqString;
@@ -32,6 +34,7 @@ private:
 	// int							_numberFds;
 	std::map<long, t_reqData>	_clients;
 	std::set<int>				_fdToDel;
+	std::stringstream 			_message;
 
 	bool	isChunked(std::string headers);
 	bool	findReqEnd(t_reqData &req);
