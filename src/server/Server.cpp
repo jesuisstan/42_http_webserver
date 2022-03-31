@@ -48,7 +48,7 @@ void	Server::initiate(const char *ipAddr, int port) {
 		close(this->_listenSocket);
 		exit(-1);
 	}
-	ret = fcntl(this->_listenSocket, F_SETFL, fcntl(_listenSocket, F_GETFL, 0) | O_NONBLOCK);
+	ret = fcntl(this->_listenSocket, F_SETFL, O_NONBLOCK);
 	if (ret < 0) {
 		_message << "fcntl() failed" << " on server " << this->serverID;
 		Logger::printCriticalMessage(&_message);
@@ -139,7 +139,7 @@ void	Server::acceptConnection(void) {
 	int newFd = accept(_listenSocket, NULL, NULL);
 	if (newFd < 0)
 		return ;
-	int ret = fcntl(newFd, F_SETFL, fcntl(newFd, F_GETFL, 0) | O_NONBLOCK);
+	int ret = fcntl(newFd, F_SETFL, O_NONBLOCK);
 	if (ret < 0) {
 		_message << "fcntl() failed" << " on server " << this->serverID;
 		Logger::printCriticalMessage(&_message);
