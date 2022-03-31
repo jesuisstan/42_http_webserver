@@ -3,7 +3,7 @@
 
 #include "webserv.hpp"
 #include "Location.hpp"
-
+extern pthread_mutex_t g_write;
 
 
 class ServerConfig {

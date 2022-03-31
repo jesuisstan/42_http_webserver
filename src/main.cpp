@@ -37,7 +37,9 @@ int main(int argc, char *argv[]) {
 	}
 	while(!g_status) {
 		if (g_status) {
+			pthread_mutex_lock(&g_write);
 			message << BgMAGENTA << "Closing connections... ";
+			pthread_mutex_unlock(&g_write);
 			Logger::printCriticalMessage(&message);
 		}
 	}

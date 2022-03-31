@@ -185,6 +185,7 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &other) {
 
 std::ostream &operator<<(std::ostream &out, const ServerConfig &sc)
 {
+	pthread_mutex_lock(&g_write);
 	out << "ServerConfig\n\thost: " << sc.getHost()
 		<< "\n\tserverName: " << sc.getServerName()
 		<< "\n\tPort: " << sc.getPort()
@@ -205,6 +206,6 @@ std::ostream &operator<<(std::ostream &out, const ServerConfig &sc)
 			<< it->second;
 
 	out << std::endl;
-
+	pthread_mutex_unlock(&g_write);
 	return out;
 }

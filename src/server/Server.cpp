@@ -10,8 +10,8 @@ Server::~Server() { //todo rework cleaning
 		if (_fds[i].fd >= 0)
 		{
 			close(_fds[i].fd);
-			_message << BgMAGENTA << "Web server [" << this->serverID <<
-					"] successfully closed on socket " << _fds[i].fd << " (D)" << RESET;
+			_message << BgMAGENTA << "Web server [" << this->serverID << "]: connection closed on socket "
+						<< _fds[i].fd << " (D)" << RESET;
 			Logger::printCriticalMessage(&_message);
 		}
 	}
