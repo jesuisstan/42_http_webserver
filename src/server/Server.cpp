@@ -88,6 +88,8 @@ void	Server::initReqDataStruct(int clientFD) {
 	req.reqString = "";
 	// req.request = NULL;
 	req.response = NULL;
+	req.responseStr = NULL;
+	req.responseSize = 0;
 	req.isTransfer = false;
 	req.foundHeaders = false;
 	req.method = "";	
@@ -257,13 +259,20 @@ void	Server::sendResponse(pollfd &pfd) {
 			pthread_mutex_lock(&g_write);
 			std::cerr << e.what() << std::endl;
 			pthread_mutex_unlock(&g_write);
+			return ;
 		}
 	}
 	Response *response = _clients[pfd.fd].response;
 	const char *responseStr;
 	size_t responseSize;
 	size_t chunkInd;
-	if (_clients[pfd.fd].response->getChunked()) {
+	if (_clients[pfd.fd].responseSize) {
+		// не получилось отправить в прошлый раз всю строку
+		responseStr = _clients[pfd.fd].responseStr;
+		responseSize = _clients[pfd.fd].responseSize;
+	}
+	else if (_clients[pfd.fd].response->getChunked()) {
+		// отправляем следующий чанк
 		chunkInd = _clients[pfd.fd].chunkInd;
 		
 		responseStr = &(response->getChunks()[chunkInd][0]);
@@ -273,10 +282,11 @@ void	Server::sendResponse(pollfd &pfd) {
 			std::cerr << "send chunk " << chunkInd << " data:\n" << response->getChunks()[chunkInd].substr(0, 130) << std::endl;
 			pthread_mutex_unlock(&g_write);
 		}
-		usleep(50000);
+		// usleep(50000);
 		_clients[pfd.fd].chunkInd = ++chunkInd;
 	}
 	else {
+		// отправляем весь ответ целиком
 		responseStr = &response->getResponse()[0];
 		responseSize = response->getResponse().size();
 	}
@@ -286,13 +296,18 @@ void	Server::sendResponse(pollfd &pfd) {
 		pthread_mutex_unlock(&g_write);
 	}
 	int ret = send(pfd.fd, responseStr, responseSize, 0);
+		// throw("AAAAAA");
+	_clients[pfd.fd].responseStr = (char *)responseStr + ret;
+	_clients[pfd.fd].responseSize = responseSize - ret;
 	if (ret > 0 and ret < (int)responseSize) {
-		std::cerr << RED"ret = " << ret << " but must be " << "responceSize"RESET << std::endl;
-		throw("AAAAAA");
+		if (DEBUG > 2)
+			std::cerr << RED"ret = " << ret << " but must be " << "responceSize"RESET << std::endl;
+		return;
 	}
 	// free (responseStr);
 	if (ret < 0) {
 		pthread_mutex_lock(&g_write);
+		
 		std::cerr << "send() failed " << " on server " << this->serverID << std::endl;
 		pthread_mutex_unlock(&g_write);
 		_fdToDel.insert(pfd.fd);

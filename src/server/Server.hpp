@@ -15,6 +15,8 @@ typedef struct s_reqData {
 	size_t			reqLength;
 	// RequestParser 	*request;
 	Response		*response;
+	char			*responseStr;
+	size_t			responseSize;
 	bool			isTransfer;
 	bool			foundHeaders;
 	std::string		method;
