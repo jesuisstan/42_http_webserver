@@ -1,28 +1,26 @@
 #include "Logger.hpp"
 
 
-void        Logger::printCriticalMessage() {
-    if (DEBUG == 0) {
+void        Logger::printCriticalMessage(std::stringstream *message_) {
         pthread_mutex_lock(&g_write);
-        std::cout << message_.str() << RESET << std::endl;
+        std::cerr << message_->str() << RESET << std::endl;
         pthread_mutex_unlock(&g_write);
-        message_.clear();
-    }
+        message_->str("");
 }
-void        Logger::printInfoMessage() {
-    if (DEBUG == 1) {
+void        Logger::printInfoMessage(std::stringstream *message_) {
+    if (DEBUG > 0) {
         pthread_mutex_lock(&g_write);
-        std::cout << message_.str() << RESET << std::endl;
+        std::cerr << message_->str() << RESET << std::endl;
         pthread_mutex_unlock(&g_write);
-        message_.clear();
+        message_->str("");
     }
 }
 
-void        Logger::printDebugMessage() {
+void        Logger::printDebugMessage(std::stringstream *message_) {
     if (DEBUG > 1) {
         pthread_mutex_lock(&g_write);
-        std::cout << message_.str() << RESET << std::endl;
+        std::cerr << message_->str() << RESET << std::endl;
         pthread_mutex_unlock(&g_write);
-        message_.clear();
+        message_->str("");
     }
 }

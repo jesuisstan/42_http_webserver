@@ -11,14 +11,13 @@ extern pthread_mutex_t g_write;
 class Logger {
 
     public:
-            static std::stringstream message_;
 
             Logger() {}
             ~Logger() {}
 
-            static void printCriticalMessage();
-            static void printInfoMessage();
-            static void printDebugMessage();
+            static void printCriticalMessage(std::stringstream *message_);
+            static void printInfoMessage(std::stringstream *message_);
+            static void printDebugMessage(std::stringstream *message_);
 };
 
 

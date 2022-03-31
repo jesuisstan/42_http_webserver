@@ -43,7 +43,7 @@
 # define PORT 8888
 # define BACKLOG 1000 // the maximum number of connections that will be queued
 # define BUFFER_SIZE 500100
-# define DEBUG 1
+# define DEBUG 2
 
 # define DEFAULT_PORT		8080
 # define DEFAULT_ERROR_PAGE	"www/errors/404.html"
@@ -52,8 +52,8 @@
 
 # define ENDH				"\r\n\r\n"
 # define CRLF				"\r\n"
-# define NEED_CHUNKS		500000
-# define CHUNK_SIZE			100000
+# define NEED_CHUNKS		1024000
+# define CHUNK_SIZE			256000
 
 
 template <typename T>

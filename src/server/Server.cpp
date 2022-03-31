@@ -2,42 +2,19 @@
 
 Server::Server() {
 	memset(&_servAddr, 0, sizeof(_servAddr));
-	memset(_fds, 0, sizeof(_fds));
+	// memset(_fds, 0, sizeof(_fds));
 }
 
-Server::~Server() {
-	for (int i = 0; i < _numberFds; i++) {
+Server::~Server() { //todo rework cleaning
+	for (size_t i = 0; i < _fds.size(); i++) {
 		if (_fds[i].fd >= 0)
 		{
 			close(_fds[i].fd);
-			pthread_mutex_lock(&g_write);
-			std::cerr << BgMAGENTA << "Web server [" << this->serverID <<
-					"] successfully closed on socket " << _fds[i].fd << " (D)" << RESET << std::endl;
-			pthread_mutex_unlock(&g_write);
+			_message << BgMAGENTA << "Web server [" << this->serverID <<
+					"] successfully closed on socket " << _fds[i].fd << " (D)" << RESET;
+			Logger::printCriticalMessage(&_message);
 		}
 	}
-}
-
-Server::Server(const Server &other) {
-	*this = other;
-	return ;
-}
-
-Server	&Server::operator = (const Server &other) {
-	if (this == &other)
-		return (*this);
-	this->_listenSocket = other._listenSocket;
-	this->_numberFds = other._numberFds;
-	this->_servAddr = other._servAddr;
-	this->_timeout = other._timeout;
-	for (int i = 0; i < _numberFds; i++) {
-		this->_fds[i].fd = other._fds[i].fd;
-	}
-	this->_clients = other._clients;
-	this->webConfig = other.webConfig;
-	this->serverID = other.serverID;
-	this->tid = other.tid;
-	return (*this);
 }
 
 void	Server::setTimeout(int timeout) {
@@ -52,32 +29,29 @@ int		Server::getTimeout(void) const {
 	return (this->_timeout);
 }
 
-int		Server::getNumberFds(void) const {
-	return (this->_numberFds);
-}
+// int		Server::getNumberFds(void) const {
+// 	return (this->_numberFds);
+// }
 
 void	Server::initiate(const char *ipAddr, int port) {
 	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (_listenSocket < 0) {
-		pthread_mutex_lock(&g_write);
-		std::cerr << "socket() failed" << " on server " << this->serverID << std::endl;
-		pthread_mutex_unlock(&g_write);
+		_message << "socket() failed" << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
 		exit(-1);
 	}
 	int optval = 1;
 	int ret = setsockopt(this->_listenSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval));
 	if (ret < 0) {
-		pthread_mutex_lock(&g_write);
-		std::cerr << "setsockopt() failed" << " on server " << this->serverID << std::endl;
-		pthread_mutex_unlock(&g_write);
+		_message << "setsockopt() failed" << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
 		close(this->_listenSocket);
 		exit(-1);
 	}
 	ret = fcntl(this->_listenSocket, F_SETFL, fcntl(_listenSocket, F_GETFL, 0) | O_NONBLOCK);
 	if (ret < 0) {
-		pthread_mutex_lock(&g_write);
-		std::cerr << "fcntl() failed" << " on server " << this->serverID << std::endl;
-		pthread_mutex_unlock(&g_write);
+		_message << "fcntl() failed" << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
 		close(this->_listenSocket);
 		exit(-1);
 	}
@@ -86,17 +60,15 @@ void	Server::initiate(const char *ipAddr, int port) {
 	this->_servAddr.sin_port = htons(port);
 	ret = bind(this->_listenSocket, (struct sockaddr *)&this->_servAddr, sizeof(this->_servAddr));
 	if (ret < 0) {
-		pthread_mutex_lock(&g_write);
-		std::cerr << "bind() failed" << " on server " << this->serverID << std::endl;
-		pthread_mutex_unlock(&g_write);
+		_message << "bind() failed" << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
 		close(this->_listenSocket);
 		exit(-1);
 	}
 	ret = listen(this->_listenSocket, BACKLOG);
 	if (ret < 0) {
-		pthread_mutex_lock(&g_write);
-		std::cerr << "listen() failed" << " on server " << this->serverID << std::endl;
-		pthread_mutex_unlock(&g_write);
+		_message << "listen() failed" << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
 		close(this->_listenSocket);
 		exit(-1);
 	}
@@ -104,207 +76,232 @@ void	Server::initiate(const char *ipAddr, int port) {
 }
 
 void	Server::initReqDataStruct(int clientFD) {
-	_clients[_fds[clientFD].fd].reqLength = 0;
-	_clients[_fds[clientFD].fd].reqString = "";
-	_clients[_fds[clientFD].fd].request = RequestParser();
-	_clients[_fds[clientFD].fd].response = Response();
-	_clients[_fds[clientFD].fd].isTransfer = false;
-	_clients[_fds[clientFD].fd].foundHeaders = false;
-	_clients[_fds[clientFD].fd].method = "";
-	return ;
-}
+	t_reqData req;
 
-void	Server::acceptConnection(void) {
-	int newSD = accept(_listenSocket, NULL, NULL);
-	if (newSD < 0)
-		return ;
-	int ret = fcntl(newSD, F_SETFL, fcntl(newSD, F_GETFL, 0) | O_NONBLOCK);
-	if (ret < 0) {
-		pthread_mutex_lock(&g_write);
-		std::cerr << "fcntl() failed" << " on server " << this->serverID << std::endl;
-		pthread_mutex_unlock(&g_write);
-		close(_listenSocket);
-		exit(-1);
-	}
-	pthread_mutex_lock(&g_write);
-	std::cerr << "New incoming connection:\t" << newSD << " on server " << this->serverID << std::endl;
-	pthread_mutex_unlock(&g_write);
-	_fds[_numberFds].fd = newSD;
-	_fds[_numberFds].events = POLLIN;
-	_numberFds++;
-	initReqDataStruct(_fds[_numberFds].fd);
-	return ;
-}
-
-void	Server::closeConnection(int socket) {
-	close(_fds[socket].fd);
-	pthread_mutex_lock(&g_write);
-	std::cerr << "Connection has been closed:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
-	pthread_mutex_unlock(&g_write);
-	_fds[socket].fd = -1;
-	bool compressArray = true;
-	if (compressArray) {
-		compressArray = false;
-		for (int i = 0; i < _numberFds; i++) {
-			if (_fds[i].fd == -1)
-			{
-				for (int j = i; j < _numberFds; j++)
-				{
-					_fds[j].fd = _fds[j + 1].fd;
-				}
-				i--;
-				_numberFds--;
-				if (DEBUG > 1) { 
-					pthread_mutex_lock(&g_write);
-					std::cerr << "Array of client's descriptors compressed" << " on server " << this->serverID << std::endl;
-					pthread_mutex_unlock(&g_write);
-				}
-			}
-		}
-	}
-	return ;
-}
-
-void	Server::receiveRequest(int socket) {
-//	if (DEBUG > 1) {
-//        std::stringstream message;
-//        message = "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID;
-    Logger::message_ << BLUE << "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID;
-    Logger::printDebugMessage();
-//		pthread_mutex_lock(&g_write);
-//		std::cerr << "Event detected on descriptor:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
-//		pthread_mutex_unlock(&g_write);
-//	}
-	bool closeConnectionFlag = false;
-	int ret = 0;
-	char buffer[BUFFER_SIZE] = {0};
-	ret = recv(_fds[socket].fd, buffer, BUFFER_SIZE - 1, 0);
-	if (ret > 0)
-	{
-		std::string tail = std::string(buffer, ret);
-		_clients[socket].reqLength += ret;
-		_clients[socket].reqString += tail;
-		if (DEBUG > 1) {
-			pthread_mutex_lock(&g_write);
-			std::cerr << _clients[socket].reqLength << " bytes received from sd:\t" << _fds[socket].fd << " on server " << this->serverID <<  std::endl;
-			pthread_mutex_unlock(&g_write);
-		}
-		// memset(buffer, 0, BUFFER_SIZE);
-		if (findReqEnd(_clients[socket]))
-			_fds[socket].events = POLLOUT;
-	}
-	if (ret == 0 || ret == -1) {
-		closeConnectionFlag = true;
-		if (DEBUG > 1) {
-			if (!ret) {
-				pthread_mutex_lock(&g_write);
-				std::cerr << "Request to close connection:\t" << _fds[socket].fd << " on server " << this->serverID << std::endl;
-				pthread_mutex_unlock(&g_write);
-			}
-			else {
-				pthread_mutex_lock(&g_write);
-				std::cerr << "recv() failed" << " on server " << this->serverID << std::endl;
-				pthread_mutex_unlock(&g_write);
-			}
-		}
-	}
-	if (closeConnectionFlag)
-		closeConnection(socket);
-	return ;
-}
-
-char	*getCstring(const std::string &cppString) {
-	size_t length = cppString.size();
-	char *res = (char *)malloc(cppString.size());
-	if (!res) {
-		std::cerr << "malloc() failed" << std::endl;
-		exit(-1);
-	}
-	for (size_t i = 0; i < length; i++) {
-		res[i] = cppString[i];
-	}
-	return (res);
-}
-
-void	Server::sendResponse(int socket) {
-	try {
-		_clients[socket].request = RequestParser(_clients[socket].reqString, _clients[socket].reqLength);
-		if (_clients[socket].request.getBody().length() > 10000)
-			_clients[socket].request.showHeaders();
-		else
-			std::cerr << "|" << YELLOW  << _clients[socket].request.getRequest() << RESET"|" << std::endl;
-		_clients[socket].reqString = "";
-		_clients[socket].reqLength = 0;
-		_clients[socket].foundHeaders = 0;
-		_clients[socket].response = Response(_clients[socket].request, webConfig); 
-		char *responseStr = getCstring(_clients[socket].response.getResponse());
-		size_t responseSize = _clients[socket].response.getResponse().size();
-		if (DEBUG > 0) {
-			pthread_mutex_lock(&g_write);
-			std::cerr << CYAN << _clients[socket].response.getResponseCode() << RESET" with size="  << _clients[socket].response.getResponse().size() << std::endl;
-			pthread_mutex_unlock(&g_write);
-		}
-		int ret = send(_fds[socket].fd, responseStr, responseSize, 0);
-		free (responseStr);
-		if (ret < 0) {
-			pthread_mutex_lock(&g_write);
-			std::cerr << "send() failed" << " on server " << this->serverID << std::endl;
-			pthread_mutex_unlock(&g_write);
-			closeConnection(socket);
-			return ;
-		}
-	}
-	catch (RequestParser::UnsupportedMethodException &e) {
-		pthread_mutex_lock(&g_write);
-		std::cerr << e.what() << std::endl;
-		pthread_mutex_unlock(&g_write);
-	}
-	_fds[socket].events = POLLIN;
+	req.reqLength = 0;
+	req.reqString = "";
+	// req.request = NULL;
+	req.response = NULL;
+	req.responseStr = NULL;
+	req.responseSize = 0;
+	req.isTransfer = false;
+	req.foundHeaders = false;
+	req.method = "";	
+	req.chunkInd = 0;
+	_clients[clientFD] = req;
 	return ;
 }
 
 void	Server::runServer(int timeout) {
-	_fds[0].fd = _listenSocket;
-	_fds[0].events = POLLIN;
+	struct pollfd	*fdsBeginPointer;
+	pollfd			new_Pollfd = {_listenSocket, POLLIN, 0};
+
+	_fds.push_back(new_Pollfd);
 	this->setTimeout(timeout);
-	this->_numberFds = 1;
-	int currentSize = 0;
-		std::string requestBuffer = "";
 	while (true) {
-//        std::stringstream message;
-        Logger::message_ << BLUE"Waiting on poll() [server " << this->serverID << "]...\n";
-        Logger::printInfoMessage();
-		int ret = poll(_fds, _numberFds, _timeout);
+		_message <<"Waiting on poll() [server " << this->serverID << "]...\n";
+		Logger::printDebugMessage(&_message);
+		fdsBeginPointer = &_fds[0];
+		int ret = poll(fdsBeginPointer, _fds.size(), _timeout);
 		if (ret < 0) {
-			pthread_mutex_lock(&g_write);
-			std::cerr << "poll() failed" << " on server " << this->serverID << std::endl;
-			pthread_mutex_unlock(&g_write);
+			_message << "poll() failed" << " on server " << this->serverID;
+			Logger::printCriticalMessage(&_message);
 			break;
 		}
 		if (ret == 0) {
-			pthread_mutex_lock(&g_write);
-			std::cerr << "poll() timed out. End program." << " on server " << this->serverID << std::endl; ;
-			pthread_mutex_unlock(&g_write);
+			_message << "poll() timed out. End program." << " on server " << this->serverID; ;
+			Logger::printCriticalMessage(&_message);
 			break;
 		}
-		currentSize = _numberFds;
-		for (int i = 0; i < currentSize; i++) {
+		for (size_t i = 0; i < _fds.size(); i++) {
 			if (_fds[i].revents == 0)
 				continue;
 			if (_fds[i].revents) {
-				if ( _fds[i].fd == _listenSocket  && _fds[i].events == POLLIN)
+				if (_fds[i].revents & POLLIN && _fds[i].fd == _listenSocket)
 					acceptConnection();
-				if ( _fds[i].fd != _listenSocket  && _fds[i].events == POLLIN)
-					receiveRequest(i);
-				if (_fds[i].fd != _listenSocket && _fds[i].events == POLLOUT)
-					sendResponse(i);
+				// if ()
+				else if (_fds[i].revents & POLLIN && _fds[i].fd != _listenSocket)
+					receiveRequest(_fds[i]);
+				else if (_fds[i].revents & POLLOUT && _fds[i].fd != _listenSocket)
+					sendResponse(_fds[i]);
+				else
+					pollError(_fds[i]);
 			}
+		}
+		clearConnections();
+		// usleep(10000); // todo включить если тестируете через curl большие файлы
+	}
+	return ;
+}
+
+
+void	Server::acceptConnection(void) {
+	int newFd = accept(_listenSocket, NULL, NULL);
+	if (newFd < 0)
+		return ;
+	int ret = fcntl(newFd, F_SETFL, fcntl(newFd, F_GETFL, 0) | O_NONBLOCK);
+	if (ret < 0) {
+		_message << "fcntl() failed" << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
+		close(_listenSocket);
+		exit(-1);
+	}
+	_message << "New incoming connection:\t" << newFd << " on server " << this->serverID;
+	Logger::printCriticalMessage(&_message);
+
+	pollfd	newConnect = {newFd, POLLIN, 0};
+	_fds.push_back(newConnect);
+	initReqDataStruct(newFd);
+	return ;
+}
+
+void	Server::clearConnections() {
+	int fd;
+	std::vector<struct pollfd>::iterator it;
+
+	it = _fds.begin();
+
+	for (size_t i = 0; i < _fds.size(); i++)
+		if (_fdToDel.count(_fds[i].fd))
+		{
+			fd = _fds[i].fd;
+			close(fd);
+			_message << "Connection has been closed:\t" << fd << " on server " << this->serverID;
+			Logger::printCriticalMessage(&_message);
+			if (_clients[fd].response)
+				delete _clients[fd].response;
+			_fdToDel.erase(fd);
+			_clients.erase(fd);
+			_fds.erase(it + i);
+			--i;
+		}
+}
+
+
+void	Server::receiveRequest(pollfd &pfd) {
+	_message << "Event detected on descriptor:\t" << pfd.fd << " on server " << this->serverID;
+	Logger::printDebugMessage(&_message);
+	int ret = 0;
+	char buffer[BUFFER_SIZE];
+	ret = recv(pfd.fd, buffer, BUFFER_SIZE, 0);
+	if (ret > 0)
+	{
+		std::string tail = std::string(buffer, ret);
+		_clients[pfd.fd].reqLength += ret;
+		_clients[pfd.fd].reqString += tail;
+		_message << _clients[pfd.fd].reqLength << " bytes received from sd:\t" << pfd.fd << " on server " << this->serverID <<  std::endl;
+		Logger::printDebugMessage(&_message);
+		// memset(buffer, 0, BUFFER_SIZE);
+		if (findReqEnd(_clients[pfd.fd]))
+			pfd.events = POLLOUT;
+	}
+	if (ret == 0 || ret == -1) {
+		
+		_fdToDel.insert(pfd.fd);
+		if (!ret) {
+			_message << "Request to close connection:\t" << pfd.fd << " on server " << this->serverID;
+			Logger::printDebugMessage(&_message);;
+		}
+		else {
+			_message << "recv() failed" << " on server " << this->serverID;
+			Logger::printDebugMessage(&_message);
 		}
 	}
 	return ;
 }
 
-bool isChunked(std::string headers) {
+void	Server::sendResponse(pollfd &pfd) {
+	// if (_fds[socket].revents & POLLNVAL or _fds[socket].revents & POLLHUP or _fds[socket].revents & POLLERR) 
+	// 	return;
+	if (!_clients[pfd.fd].response) {
+		try {
+			RequestParser request = RequestParser(_clients[pfd.fd].reqString, _clients[pfd.fd].reqLength);
+			if (request.getBody().length() > 10000)
+				request.showHeaders();
+			else {
+				_message << "|" << YELLOW  << request.getRequest() << RESET"|";
+				Logger::printInfoMessage(&_message);
+			}
+			_clients[pfd.fd].reqString = "";
+			_clients[pfd.fd].reqLength = 0;
+			_clients[pfd.fd].foundHeaders = 0;
+			_clients[pfd.fd].chunkInd = 0;
+			_clients[pfd.fd].response =  new Response(request, webConfig);
+		}
+		catch (RequestParser::UnsupportedMethodException &e) {
+			_message << e.what();
+			Logger::printCriticalMessage(&_message);
+			return ;
+		}
+	}
+	Response *response = _clients[pfd.fd].response;
+	const char *responseStr;
+	size_t responseSize;
+	size_t chunkInd;
+	if (_clients[pfd.fd].responseSize) {
+		// не получилось отправить в прошлый раз всю строку
+		responseStr = _clients[pfd.fd].responseStr;
+		responseSize = _clients[pfd.fd].responseSize;
+	}
+	else if (_clients[pfd.fd].response->getChunked()) {
+		// отправляем следующий чанк
+		chunkInd = _clients[pfd.fd].chunkInd;
+		
+		responseStr = &(response->getChunks()[chunkInd][0]);
+		responseSize = response->getChunks()[chunkInd].size();
+		_message << "send chunk " << chunkInd << " data:\n" << response->getChunks()[chunkInd].substr(0, 130);
+		Logger::printInfoMessage(&_message);
+		// usleep(50000);
+		_clients[pfd.fd].chunkInd = ++chunkInd;
+	}
+	else {
+		// отправляем весь ответ целиком
+		responseStr = &response->getResponse()[0];
+		responseSize = response->getResponse().size();
+	}
+	_message << CYAN << _clients[pfd.fd].response->getResponseCode() << RESET" with size="  << responseSize;
+	Logger::printInfoMessage(&_message);
+	int ret = send(pfd.fd, responseStr, responseSize, 0);
+		// throw("AAAAAA");
+	_clients[pfd.fd].responseStr = (char *)responseStr + ret;
+	_clients[pfd.fd].responseSize = responseSize - ret;
+	if (ret > 0 and ret < (int)responseSize) {
+		if (DEBUG > 2)
+			_message << RED"ret = " << ret << " but must be " << "responceSize"RESET;
+		return;
+	}
+	// free (responseStr);
+	if (ret < 0) {
+		_message << "send() failed " << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
+		_fdToDel.insert(pfd.fd);
+		return ;
+	}
+	if (!response->getChunked() or chunkInd == response->getChunks().size()) {
+		delete _clients[pfd.fd].response;
+		_clients[pfd.fd].response = NULL;
+		pfd.events = POLLIN;
+	}
+	return ;
+}
+
+
+void Server::pollError(pollfd &pfd)
+{
+	_message << "Error in fd = " << pfd.fd << RED ;
+
+	if (pfd.revents & POLLNVAL)
+		_message << " POLLNVAL";
+	else if (pfd.revents & POLLHUP)
+		_message << " POLLHUP";
+	else if (pfd.revents & POLLERR)
+		_message << " POLLERR"	<< std::endl;
+	_message << RESET;
+	Logger::printInfoMessage(&_message);
+	_fdToDel.insert(pfd.fd);
+}
+
+bool Server::isChunked(std::string headers) {
 	size_t startPos = headers.find("Transfer-Encoding:");
 	if (startPos != std::string::npos) {
 		size_t endLine = headers.find("\n", startPos);

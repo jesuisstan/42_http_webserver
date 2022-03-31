@@ -78,11 +78,13 @@ class Response {
     public:
             Response(): responseCode_(0), contentLength_(0) {};
 
-            const std::string  &getResponse()          const;
-            const std::string  &getResponseBody()      const;
-            const std::string  &getResponseHeaders()   const;
-            const size_t       &getContentLength()     const;
-            const int          &getResponseCode()      const;
+            const std::string						&getResponse()          const;
+            const std::string						&getResponseBody()      const;
+            const std::string						&getResponseHeaders()   const;
+            const size_t							&getContentLength()     const;
+            const int								&getResponseCode()      const;
+			const std::vector<std::string>			&getChunks()			const;
+			const bool								&getChunked()			const;
 
             Response(RequestParser &request, ServerConfig &config);
             Response(const Response &other);

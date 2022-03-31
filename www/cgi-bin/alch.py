@@ -2,6 +2,8 @@
 import os
 
 CONTENT_TEXT = "Content-type:text/html\r\n\r\n"
+CONTENT_STATUS = "Status: 200 OK\
+Content-Type: text/html; charset=utf-8\r\n\r\n"
 CONTENT_HTML = "Content-type:text/html\r\n\r\n"
 MAIN_PAGE = """
     <html>
@@ -14,7 +16,7 @@ MAIN_PAGE = """
     </html>
 """
 line = input()
-print(CONTENT_HTML)
+print(CONTENT_STATUS)
 
 # todo print all enviroment
 for key in sorted(os.environ):
