@@ -8,9 +8,9 @@
 src/client
 webserv
 client
-post_body/*
-put_test/*
-src/main_stan.cpp
+www/post_body/*
+www/put_test/*
+7m.txt
 
 #local testings
 test_strings.cpp

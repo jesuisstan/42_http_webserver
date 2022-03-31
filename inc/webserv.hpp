@@ -52,8 +52,8 @@
 
 # define ENDH				"\r\n\r\n"
 # define CRLF				"\r\n"
-# define NEED_CHUNKS		500000
-# define CHUNK_SIZE			100000
+# define NEED_CHUNKS		1024000
+# define CHUNK_SIZE			256000
 
 
 
