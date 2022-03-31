@@ -266,9 +266,8 @@ void	Server::sendResponse(pollfd &pfd) {
 	_clients[pfd.fd].responseStr = (char *)responseStr + ret;
 	_clients[pfd.fd].responseSize = responseSize - ret;
 	if (ret > 0 and ret < (int)responseSize) {
-		if (DEBUG > 2)
-			_message << RED"ret = " << ret << " but must be " << "responceSize"RESET;
-		return;
+		_message << RED << "ret = " << ret << " but must be " << "responceSize" << RESET;
+		Logger::printDebugMessage(&_message);
 	}
 	// free (responseStr);
 	if (ret < 0) {
