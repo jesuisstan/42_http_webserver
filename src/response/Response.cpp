@@ -391,20 +391,20 @@ void Response::fillCgiAnswer_() {
 	// ans += "Content-Length: " + numberToString(response_.size()) + "\n";
 	// ans += "\n\r";
 	// response_ = response_ += "\n\r";
-	if (DEBUG > 0) {
-		ans = response_.substr(0, 500);
+	if (DEBUG > 1) {
+		ans = response_.substr(0, std::min((size_t)500, response_.size()));
 		std::cerr << BLUE << "Cgi response. First 500 from " 
-					<< ans.size() << " chars\n" << RESET << ans << std::endl;
+					<< response_.size() << " chars\n" << RESET << ans << std::endl;
 	}
 	setCgiCode_();
 	setCgiBodyLength_();
-	if (DEBUG > 0) {
+	if (DEBUG > 1) {
 		if (chunked_)
-			ans = chunks_[0].substr(0, 500);
+			ans = chunks_[0].substr(0, std::min((size_t)500, chunks_[0].size()));
 		else
-			ans = response_.substr(0, 500);
+			ans = response_.substr(0, std::min((size_t)500, response_.size()));
 		std::cerr << BLUE << "Cgi after procceccing. First 500 from " 
-					<< ans.size() << " chars\n" << RESET << ans << std::endl;
+					<< response_.size() << " chars\n" << RESET << ans << std::endl;
 	}
 }
 
