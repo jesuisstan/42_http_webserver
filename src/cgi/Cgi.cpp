@@ -40,8 +40,8 @@ char ** Cgi::getNewEnviroment() const {
 	for (it = env_.begin(); it != env_.end(); it++)
 		setenv(it->first.c_str(), it->second.c_str(), 1);
 	for (it = request_.getHeaders().begin(); it != request_.getHeaders().end(); it++)
-		if (!it->first.compare(0, 5, "HTTP_"))
-			setenv(it->first.c_str(), it->second.c_str(), 1);
+		// if (!it->first.compare(0, 5, "HTTP_"))
+			setenv(("HTTP_" + it->first).c_str(), it->second.c_str(), 1);
 	return environ;
 }
 
