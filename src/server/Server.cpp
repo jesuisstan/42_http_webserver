@@ -11,8 +11,8 @@ Server::~Server() {
 		{
 			close(_fds[i].fd);
 			pthread_mutex_lock(&g_write);
-			std::cerr << BgMAGENTA << "Web server [" << this->serverID <<
-					"] successfully closed on socket " << _fds[i].fd << " (D)" << RESET << std::endl;
+			std::cerr << BgMAGENTA << "Web server [" << this->serverID << "]: connection closed on socket "
+						 << _fds[i].fd << " (D)" << RESET << std::endl;
 			pthread_mutex_unlock(&g_write);
 		}
 	}
