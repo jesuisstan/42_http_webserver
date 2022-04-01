@@ -159,11 +159,10 @@ void RequestParser::setMethod() {
 void RequestParser::setRoute() {
     std::string fistReqStr = request_;
     fistReqStr = fistReqStr.substr(0, request_.find_first_of('\n') - 1);
-    size_t routeStart = fistReqStr.find_first_of(' ') + 1;
-    size_t routeEnd = fistReqStr.find_last_of(' ') - 1;
+    size_t routeStart = fistReqStr.find(' ');
+    size_t routeEnd = fistReqStr.rfind(' ') - 1;
     if (routeStart != routeEnd) {
-        route_ = EraseSpaces(fistReqStr.substr(routeStart, routeEnd));
-
+        route_ = fistReqStr.substr(routeStart + 1, routeEnd - routeStart);
         size_t queryStart = route_.find('?');
         if (queryStart != std::string::npos) {
             query_ = route_.substr(queryStart);
