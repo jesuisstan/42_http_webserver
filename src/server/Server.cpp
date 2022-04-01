@@ -362,14 +362,25 @@ void Server::pollError(int i) {
 	_fdToDel.insert(fd);
 }
 
-bool Server::isChunked(std::string headers) {
+void Server::isChunked(std::string headers, s_reqData *req) {
 	size_t startPos = headers.find("Transfer-Encoding:");
 	if (startPos != std::string::npos) {
 		size_t endLine = headers.find("\n", startPos);
 		std::string transferEncodingLine = headers.substr(startPos, endLine - startPos);
-		return (transferEncodingLine.find("chunked") != std::string::npos);
+		req->isTransfer =  (transferEncodingLine.find("chunked") != std::string::npos);
 	}
-	return false;
+	startPos = headers.find("Content-Type:");
+	if (startPos != std::string::npos) {
+		size_t endLine = headers.find("\n", startPos);
+		std::string typeLine = headers.substr(startPos, endLine - startPos);
+		if (typeLine.find("multipart/form-data;") != std::string::npos) {
+			req->isMultipart = true;
+			size_t boundaryStart = typeLine.find("boundary=") + 9;
+			size_t boundaryEnd = typeLine.length();
+			req->bound = typeLine.substr(boundaryStart, boundaryEnd - boundaryStart);
+		}
+		// std::cout << BgBLUE << req->bound << RESET << std::endl;
+	}
 }
 
 void Server::endByTimeout(void) {
@@ -396,7 +407,7 @@ bool Server::findReqEnd(t_reqData &req) {
 			return false;
 		req.foundHeaders = true;
 		req.method = req.reqString.substr(0, req.reqString.find_first_of(' '));
-		req.isTransfer = isChunked(req.reqString.substr(0, headersEnd));
+		isChunked(req.reqString.substr(0, headersEnd), &req);
 	}
 	if (!req.isTransfer)
 		return true;
@@ -404,6 +415,8 @@ bool Server::findReqEnd(t_reqData &req) {
 	if (req.isTransfer and req.reqString.find("0\r\n\r\n", pos) != std::string::npos)
 		return true;
 	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find(ENDH, pos) != std::string::npos)
+		return true;
+	if (req.isMultipart and req.reqString.find(req.bound + "--"))
 		return true;
 	return false;
 }
