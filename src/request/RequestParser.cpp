@@ -270,11 +270,12 @@ void RequestParser::setHeaders() {
 	std::stringstream ss(headers);
 	std::string line;
 	while (std::getline(ss, line)) {
-		line = line.substr(0, line.find("\r"));
+		// line = line.substr(0, line.find("\r"));
 		size_t colonPos = line.find(":");
 		if (colonPos != std::string::npos) {
 			std::string headerName = line.substr(0, colonPos);
-			std::string headerContent = line.substr(colonPos + 2);
+			std::string headerContent = line.substr(colonPos + 1);
+			headerContent = cutStringSpacesAndCr(headerContent);
             if (headerName == "Transfer-Encoding" && headerContent == "chunked")
                 isChunked_ = true;
 			headers_.insert(std::pair<std::string, std::string> (headerName, headerContent));
