@@ -22,6 +22,7 @@ typedef struct s_reqData {
 	bool			foundHeaders;
 	std::string		method;
 	std::string     bound;
+	std::string     finalBound;
 	size_t			chunkInd;
 	size_t			lastTime;
 	Response		*response;
