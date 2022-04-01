@@ -285,7 +285,7 @@ void RequestParser::setHeaders() {
                 // std::cout << BLUE << boundary_ << RESET << std::endl;
 
             }
-                
+
 			headers_.insert(std::pair<std::string, std::string> (headerName, headerContent));
 		}
 	}
