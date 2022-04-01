@@ -21,12 +21,35 @@
 
 <div class="mainContainer">
 	<div class="container">
-		<img src="sign_in/doge2.png" class="doge"/>
-		<img src="sign_in/doge3.png" class="doge"/>
-		<img src="sign_in/doge4.png" class="doge"/>
-		<img src="sign_in/doge.png" class="doge"/>
-
+		<img src="images/doge2.png" class="doge"/>
+		<img src="images/doge3.png" class="doge"/>
+		<img src="images/doge4.png" class="doge"/>
+		<img src="images/doge.png" class="doge"/>
 	</div>
+	<input type="file" id="fileUpload" />
+<script type="text/javascript">
+const handleImageUpload = event => {
+  const files = event.target.files
+  const formData = new FormData()
+  formData.append('myFile', files[0])
+
+  fetch('/put_image/', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log(data.path)
+  })
+  .catch(error => {
+    console.error(error)
+  })
+}
+
+document.querySelector('#fileUpload').addEventListener('change', event => {
+  handleImageUpload(event)
+})
+</script>
 </div>
 </body>
 <style>
@@ -68,11 +91,11 @@
 	.header {
 		width: 100vw;
 		height: 80px;
-		background: linear-gradient(90deg, rgba(60, 145, 159, 0.56) 0%, rgb(2, 102, 151) 54%, rgb(0, 0, 60) 100%);
+		background: linear-gradient(90deg, rgba(159, 80, 60, 0.56) 0%, rgb(151, 2, 64) 54%, rgb(60, 0, 0) 100%);
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		box-shadow: 15px 15px 50px 0 rgba(87, 144, 153, 0.8);
+		box-shadow: 15px 15px 50px 0 rgba(153, 87, 87, 0.8);
 	}
 
 	.title {
@@ -96,7 +119,7 @@
 	.container {
 		border: 2px solid white;
 		border-radius: 100px;
-		background-image: url("sign_in/background.jpg");
+		background-image: url("images/background.jpg");
 		padding: 60px;
 		width: 650px;
 		height: 400px;

@@ -153,16 +153,16 @@ const std::string &RequestParser::getPathTranslated() const {
 
 void RequestParser::setMethod() {
     method_ = parseByChar(request_, ' ');
-//    std::cerr << "__METHOD_____________|" << method_ << "|" << std::endl;
+//    std::cerr << "__METHOD_____________|" << method_ << "|"<<  request_.substr(0, 500) << "|" << std::endl;
 }
 
 void RequestParser::setRoute() {
-    std::string fistReqStr = request_;
-    fistReqStr = fistReqStr.substr(0, request_.find_first_of('\n') - 1);
-    size_t routeStart = fistReqStr.find(' ');
+    // std::string fistReqStr = request_;
+    std::string fistReqStr = request_.substr(0, request_.find('\n') - 1);
+    size_t routeStart = fistReqStr.find(' ') + 1;
     size_t routeEnd = fistReqStr.rfind(' ') - 1;
     if (routeStart != routeEnd) {
-        route_ = fistReqStr.substr(routeStart + 1, routeEnd - routeStart);
+        route_ = fistReqStr.substr(routeStart, routeEnd - routeStart + 1);
         size_t queryStart = route_.find('?');
         if (queryStart != std::string::npos) {
             query_ = route_.substr(queryStart);
@@ -277,6 +277,15 @@ void RequestParser::setHeaders() {
 			std::string headerContent = line.substr(colonPos + 2);
             if (headerName == "Transfer-Encoding" && headerContent == "chunked")
                 isChunked_ = true;
+            if (headerName == "Content-Type" && headerContent.find("multipart/form-data;") != std::string::npos) {
+                isMiltipart_ = true;
+                size_t boundaryStart = headerContent.find("boundary=") + 9;
+                size_t boundaryEnd = headerContent.length();
+                boundary_ =  headerContent.substr(boundaryStart, boundaryEnd - boundaryStart);
+                // std::cout << BLUE << boundary_ << RESET << std::endl;
+
+            }
+                
 			headers_.insert(std::pair<std::string, std::string> (headerName, headerContent));
 		}
 	}
@@ -343,9 +352,10 @@ void RequestParser::parse() {
         if (method_ == "POST" || method_ == "PUT")
             setBody();
         setContentLength();
-    } else {
-        throw UnsupportedMethodException(method_);
     }
+    //  else {
+    //     throw UnsupportedMethodException(method_);
+    // }
 }
 
 std::string RequestParser::handleChunkedBody() {
@@ -387,13 +397,13 @@ void RequestParser::showHeaders() {
 }
 
 std::string RequestParser::parseByChar(const std::string &string, char symbol) {
-    std::string erasedRequest = request_;
-    iterator_ = string.find_first_of(symbol);
+    // std::string erasedRequest = request_;
+    iterator_ = string.find(symbol);
     if (iterator_ == std::string::npos)
         return "";
     if (request_[iterator_ - 1] == ' ')
-        return erasedRequest.substr(0, iterator_ - 1);
-    return erasedRequest.substr(0, iterator_);
+        return request_.substr(0, iterator_ - 1);
+    return request_.substr(0, iterator_);
 }
 
 std::string RequestParser::parseByHeaderName(const std::string &name) {

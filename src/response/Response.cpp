@@ -201,7 +201,6 @@ void Response::createResponse() {
     std::string body;
     readLocationData();
     setContentType();
-
     if (!locationRedirection_.empty())
         setResponseCode(301);
     else if (checkPathForLocation() == -1)

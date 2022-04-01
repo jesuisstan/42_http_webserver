@@ -20,8 +20,10 @@ typedef struct s_reqData {
 	char			*responseStr;
 	size_t			responseSize;
 	bool			isTransfer;
+	bool			isMultipart;
 	bool			foundHeaders;
 	std::string		method;
+	std::string     bound;
 	size_t			chunkInd;
 }	t_reqData;
 
@@ -36,7 +38,7 @@ private:
 	std::set<int>				_fdToDel;
 	std::stringstream 			_message;
 
-	bool	isChunked(std::string headers);
+	void	isChunked(std::string headers, s_reqData *req);
 	bool	findReqEnd(t_reqData &req);
 	void	pollError(pollfd &pfd);
 	void	clearConnections();

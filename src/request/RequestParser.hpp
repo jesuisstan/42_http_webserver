@@ -28,6 +28,8 @@ class RequestParser {
             std::string                                 acceptEncoding_;
             std::string                                 pathTranslated_;
             bool                                        isChunked_;
+            bool                                        isMiltipart_;
+            std::string                                 boundary_;                                        
 
             std::vector<std::string>                    path_;
             size_t                                      iterator_;
