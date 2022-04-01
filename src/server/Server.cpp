@@ -194,6 +194,12 @@ void	Server::receiveRequest(pollfd &pfd) {
 		// memset(buffer, 0, BUFFER_SIZE);
 		if (findReqEnd(_clients[pfd.fd]))
 			pfd.events = POLLOUT;
+        else if (_clients[pfd.fd].isMultipart && _clients[pfd.fd].reqString.find(_clients[pfd.fd].finalBound) == std::string::npos) {
+            int asd = send(pfd.fd, "200 OK HTTP/1.1", 15, 0);
+            std::cout << "send res " << asd << std::endl;
+        }
+//        std::cout << BgCYAN << "awsdadeafsrfa "<< _clients[pfd.fd].isMultipart << "|" << ((_clients[pfd.fd].reqString.find(_clients[pfd.fd].finalBound) == std::string::npos)) << RESET << std::endl;
+
 	}
 	if (ret == 0 || ret == -1) {
 		
@@ -317,6 +323,7 @@ void Server::isChunked(std::string headers, s_reqData *req) {
 			size_t boundaryStart = typeLine.find("boundary=") + 9;
 			size_t boundaryEnd = typeLine.length();
 			req->bound = typeLine.substr(boundaryStart, boundaryEnd - boundaryStart);
+			req->finalBound = req->bound + "--";
 		}
 		// std::cout << BgBLUE << req->bound << RESET << std::endl;
 	}
@@ -345,7 +352,7 @@ bool Server::findReqEnd(t_reqData &req) {
 		return true;
 	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find("\r\n\r\n") != std::string::npos)
 		return true;
-	if (req.isMultipart and req.reqString.find(req.bound + "--"))
+	if (req.isMultipart && req.reqString.find(req.finalBound) != std::string::npos)
 		return true;
 	return false;
 }

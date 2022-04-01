@@ -371,7 +371,6 @@ std::string RequestParser::handleChunkedBody() {
             int decChunkSize = hexToDec(chunkSize);
             newBody += body_.substr(lineEnd + 1, decChunkSize);
             lineStart = lineEnd + decChunkSize + 3;
-//            restBody = restBody.substr(decChunkSize + lineEnd + 1);
         } else
             break;
     }
