@@ -78,13 +78,55 @@ void	Server::initiate(const char *ipAddr, int port) {
 	return ;
 }
 
+void	Server::initiate() {
+	const char *ipAddr = webConfig.getHost().c_str();
+	int	port = webConfig.getPort();
+	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if (_listenSocket < 0) {
+		_message << "socket() failed" << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
+		exit(-1);
+	}
+	int optval = 1;
+	int ret = setsockopt(this->_listenSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval));
+	if (ret < 0) {
+		_message << "setsockopt() failed" << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
+		close(this->_listenSocket);
+		exit(-1);
+	}
+	ret = fcntl(this->_listenSocket, F_SETFL, O_NONBLOCK);
+	if (ret < 0) {
+		_message << "fcntl() failed" << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
+		close(this->_listenSocket);
+		exit(-1);
+	}
+	this->_servAddr.sin_family = AF_INET;
+	this->_servAddr.sin_addr.s_addr = inet_addr(ipAddr);
+	this->_servAddr.sin_port = htons(port);
+	ret = bind(this->_listenSocket, (struct sockaddr *)&this->_servAddr, sizeof(this->_servAddr));
+	if (ret < 0) {
+		_message << "bind() failed" << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
+		close(this->_listenSocket);
+		exit(-1);
+	}
+	ret = listen(this->_listenSocket, BACKLOG);
+	if (ret < 0) {
+		_message << "listen() failed" << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
+		close(this->_listenSocket);
+		exit(-1);
+	}
+	return ;
+}
+
 void	Server::initReqDataStruct(int clientFD) {
 	t_reqData req;
 
-	req.reqLength = 0;
 	req.reqString = "";
-	// req.request = NULL;
-	req.response = NULL;
+	req.reqLength = 0;
 	req.responseStr = NULL;
 	req.responseSize = 0;
 	req.isTransfer = false;
@@ -92,8 +134,8 @@ void	Server::initReqDataStruct(int clientFD) {
 	req.method = "";	
 	req.chunkInd = 0;
 	req.lastTime = clock();
+	req.response = NULL;
 	_clients[clientFD] = req;
-	return ;
 }
 
 void	Server::runServer(int timeout) {
@@ -126,16 +168,16 @@ void	Server::runServer(int timeout) {
 				if (_fds[i].revents & POLLIN && _fds[i].fd == _listenSocket)
 					acceptConnection();
 				else if (_fds[i].revents & POLLIN && _fds[i].fd != _listenSocket)
-					receiveRequest(_fds[i]);
+					receiveRequest(i);
 				else if (_fds[i].revents & POLLOUT && _fds[i].fd != _listenSocket)
-					sendResponse(_fds[i]);
+					sendResponse(i);
 				else
-					pollError(_fds[i]);
+					pollError(i);
 			}
 		}
 		endByTimeout();
 		clearConnections();
-		usleep(1000); // todo включить если тестируете через curl большие файлы
+		// usleep(1000); // todo включить если тестируете через curl большие файлы
 	}
 	return ;
 }
@@ -152,7 +194,7 @@ void	Server::acceptConnection(void) {
 		close(_listenSocket);
 		exit(-1);
 	}
-	if (DEBUG >= 0) {
+	if (DEBUG > 0) {
 		_message << "New incoming connection:\t" << newFd << " on server " << this->serverID;
 		Logger::printCriticalMessage(&_message);
 	}
@@ -186,34 +228,35 @@ void	Server::clearConnections() {
 }
 
 
-void	Server::receiveRequest(pollfd &pfd) {
+void	Server::receiveRequest(int i) {
+	int	fd = _fds[i].fd;
 	if (DEBUG > 1) {
-		_message << "Event detected on descriptor:\t" << pfd.fd << " on server " << this->serverID;
+		_message << "Event detected on descriptor:\t" << fd << " on server " << this->serverID;
 		Logger::printDebugMessage(&_message);
 	}
 	int ret = 0;
 	char buffer[BUFFER_SIZE];
-	ret = recv(pfd.fd, buffer, BUFFER_SIZE, 0);
-	_clients[pfd.fd].lastTime = clock();
+	ret = recv(fd, buffer, BUFFER_SIZE, 0);
+	_clients[fd].lastTime = clock();
 	
 	if (ret > 0)
 	{
 		std::string tail = std::string(buffer, ret);
-		_clients[pfd.fd].reqLength += ret;
-		_clients[pfd.fd].reqString += tail;
+		_clients[fd].reqLength += ret;
+		_clients[fd].reqString += tail;
 		if (DEBUG >= 0) {
-			_message << _clients[pfd.fd].reqLength << " bytes received from sd:\t" << pfd.fd << " on server " << this->serverID;
+			_message << _clients[fd].reqLength << " bytes received from sd:\t" << fd << " on server " << this->serverID;
 			Logger::printCriticalMessage(&_message);
 		}
 		// memset(buffer, 0, BUFFER_SIZE);
-		if (findReqEnd(_clients[pfd.fd]))
-			pfd.events = POLLOUT;
+		if (findReqEnd(_clients[fd]))
+			_fds[i].events = POLLOUT;
 	}
 	if (ret == 0 || ret == -1) {
 		
-		_fdToDel.insert(pfd.fd);
+		_fdToDel.insert(fd);
 		if (!ret and DEBUG > 1) {
-			_message << "Request to close connection:\t" << pfd.fd << " on server " << this->serverID;
+			_message << "Request to close connection:\t" << fd << " on server " << this->serverID;
 			Logger::printDebugMessage(&_message);;
 		}
 		else if (DEBUG > 1) {
@@ -224,10 +267,12 @@ void	Server::receiveRequest(pollfd &pfd) {
 	return ;
 }
 
-void	Server::sendResponse(pollfd &pfd) {
-	if (!_clients[pfd.fd].response) {
+void	Server::sendResponse(int i) {
+	int	fd = _fds[i].fd;
+
+	if (!_clients[fd].response) {
 		try {
-			RequestParser request = RequestParser(_clients[pfd.fd].reqString, _clients[pfd.fd].reqLength);
+			RequestParser request = RequestParser(_clients[fd].reqString, _clients[fd].reqLength);
 			if (DEBUG > 0) {
 				if (request.getBody().length() > 10000)
 					request.showHeaders();
@@ -236,12 +281,12 @@ void	Server::sendResponse(pollfd &pfd) {
 					Logger::printInfoMessage(&_message);
 				}
 			}
-			_clients[pfd.fd].reqString = "";
-			_clients[pfd.fd].reqLength = 0;
-			_clients[pfd.fd].foundHeaders = 0;
-			_clients[pfd.fd].chunkInd = 0;
-			_clients[pfd.fd].response =  new Response(request, webConfig);
-			// _clients[pfd.fd].cgi = 
+			_clients[fd].reqString = "";
+			_clients[fd].reqLength = 0;
+			_clients[fd].foundHeaders = 0;
+			_clients[fd].chunkInd = 0;
+			_clients[fd].response =  new Response(request, webConfig);
+			// _clients[fd].cgi = 
 		}
 		catch (RequestParser::UnsupportedMethodException &e) {
 			_message << e.what();
@@ -249,18 +294,18 @@ void	Server::sendResponse(pollfd &pfd) {
 			return ;
 		}
 	}
-	Response *response = _clients[pfd.fd].response;
+	Response *response = _clients[fd].response;
 	const char *responseStr;
 	size_t responseSize;
 	size_t chunkInd;
-	if (_clients[pfd.fd].responseSize) {
+	if (_clients[fd].responseSize) {
 		// не получилось отправить в прошлый раз всю строку
-		responseStr = _clients[pfd.fd].responseStr;
-		responseSize = _clients[pfd.fd].responseSize;
+		responseStr = _clients[fd].responseStr;
+		responseSize = _clients[fd].responseSize;
 	}
-	else if (_clients[pfd.fd].response->getChunked()) {
+	else if (_clients[fd].response->getChunked()) {
 		// отправляем следующий чанк
-		chunkInd = _clients[pfd.fd].chunkInd;
+		chunkInd = _clients[fd].chunkInd;
 		
 		responseStr = &(response->getChunks()[chunkInd][0]);
 		responseSize = response->getChunks()[chunkInd].size();
@@ -269,7 +314,7 @@ void	Server::sendResponse(pollfd &pfd) {
 			Logger::printInfoMessage(&_message);
 		}
 			// usleep(50000);
-		_clients[pfd.fd].chunkInd = ++chunkInd;
+		_clients[fd].chunkInd = ++chunkInd;
 	}
 	else {
 		// отправляем весь ответ целиком
@@ -277,42 +322,42 @@ void	Server::sendResponse(pollfd &pfd) {
 		responseSize = response->getResponse().size();
 	}
 	if (DEBUG > 1) {
-		_message << CYAN << _clients[pfd.fd].response->getResponseCode() << RESET" with size="  << responseSize;
+		_message << CYAN << _clients[fd].response->getResponseCode() << RESET" with size="  << responseSize;
 		Logger::printInfoMessage(&_message);
 	}
-	int ret = send(pfd.fd, responseStr, responseSize, 0);
-	_clients[pfd.fd].lastTime = clock();
-	_clients[pfd.fd].responseStr = (char *)responseStr + ret;
-	_clients[pfd.fd].responseSize = responseSize - ret;
+	int ret = send(fd, responseStr, responseSize, 0);
+	_clients[fd].lastTime = clock();
+	_clients[fd].responseStr = (char *)responseStr + ret;
+	_clients[fd].responseSize = responseSize - ret;
 	// free (responseStr);
 	if (ret < 0) {
 		_message << "send() failed " << " on server " << this->serverID;
 		Logger::printCriticalMessage(&_message);
-		_fdToDel.insert(pfd.fd);
+		_fdToDel.insert(fd);
 		return ;
 	}
 	if (!response->getChunked() or chunkInd == response->getChunks().size()) {
-		delete _clients[pfd.fd].response;
-		_clients[pfd.fd].response = NULL;
-		pfd.events = POLLIN;
+		delete _clients[fd].response;
+		_clients[fd].response = NULL;
+		_fds[i].events = POLLIN;
 	}
 	return ;
 }
 
 
-void Server::pollError(pollfd &pfd)
-{
+void Server::pollError(int i) {
+	int	fd = _fds[i].fd;
 	if (DEBUG > 0) {
-		_message << "Error in fd = " << pfd.fd << RED ;
-		if (pfd.revents & POLLNVAL)
+		_message << "Error in fd = " << fd << RED ;
+		if (_fds[i].revents & POLLNVAL)
 			_message << " POLLNVAL";
-		else if (pfd.revents & POLLHUP)
+		else if (_fds[i].revents & POLLHUP)
 			_message << " POLLHUP";
-		else if (pfd.revents & POLLERR)
+		else if (_fds[i].revents & POLLERR)
 			_message << " POLLERR";
 		Logger::printInfoMessage(&_message);
 	}
-	_fdToDel.insert(pfd.fd);
+	_fdToDel.insert(fd);
 }
 
 bool Server::isChunked(std::string headers) {

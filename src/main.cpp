@@ -15,10 +15,10 @@ static void	interruptHandler(int sig_int) {
 }
 
 static void	*routine(void *webserv) {
-	std::stringstream message;
-	message << "Run server[" << reinterpret_cast<Server *>(webserv)->serverID << "]\n" << reinterpret_cast<Server *>(webserv)->webConfig;
-	Logger::printDebugMessage(&message);
-	reinterpret_cast<Server *>(webserv)->initiate(reinterpret_cast<Server *>(webserv)->webConfig.getHost().c_str(), reinterpret_cast<Server *>(webserv)->webConfig.getPort()); // когда будет Config, метод сменится на .initiate(void)
+	// std::stringstream message;
+	// message << "Run server[" << reinterpret_cast<Server *>(webserv)->serverID << "]\n" << reinterpret_cast<Server *>(webserv)->webConfig;
+	// Logger::printDebugMessage(&message);
+	reinterpret_cast<Server *>(webserv)->initiate(); // когда будет Config, метод сменится на .initiate(void)
 	reinterpret_cast<Server *>(webserv)->runServer(-1);
 	return (NULL);
 }

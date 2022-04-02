@@ -40,17 +40,17 @@
 # define BgCYAN "\x1b[46m"
 # define BgWHITE "\x1b[47m"
 
-# define PORT 8888
-# define BACKLOG 1000 // the maximum number of connections that will be queued
-# define BUFFER_SIZE 2000100
-# define DEBUG 0
+# define PORT			8888
+# define BACKLOG		1000 // the maximum number of connections that will be queued
+# define BUFFER_SIZE	1050100
+# define DEBUG			0
 
 # define DEFAULT_PORT		8080
 # define DEFAULT_ERROR_PAGE	"www/errors/404.html"
 # define DEFAULT_INDEX		"index.html"
 # define DEFAULT_MAX_BODY	1024 * 1024
 
-# define KEEP_ALIVE     5
+# define KEEP_ALIVE			5
 # define ENDH				"\r\n\r\n"
 # define CRLF				"\r\n"
 # define NEED_CHUNKS		1024000
