@@ -15,8 +15,6 @@ class Logger;
 typedef struct s_reqData {
 	std::string		reqString;
 	size_t			reqLength;
-	// RequestParser 	*request;
-	Response		*response;
 	char			*responseStr;
 	size_t			responseSize;
 	bool			isTransfer;
@@ -26,6 +24,8 @@ typedef struct s_reqData {
 	std::string     bound;
 	std::string     finalBound;
 	size_t			chunkInd;
+	size_t			lastTime;
+	Response		*response;
 }	t_reqData;
 
 class Server {
@@ -34,14 +34,13 @@ private:
 	sockaddr_in					_servAddr;
 	std::vector<struct pollfd>	_fds;
 	int							_timeout;
-	// int							_numberFds;
 	std::map<long, t_reqData>	_clients;
 	std::set<int>				_fdToDel;
 	std::stringstream 			_message;
 
 	void	isChunked(std::string headers, s_reqData *req);
 	bool	findReqEnd(t_reqData &req);
-	void	pollError(pollfd &pfd);
+	void	pollError(int i);
 	void	clearConnections();
 
 	Server(const Server &other);
@@ -58,16 +57,19 @@ public:
 	int		getTimeout(void) const;
 	// int		getNumberFds(void) const;
 	void	initiate(const char *ipAddr, int port);
+	void	initiate();
 	void	acceptConnection(void);
 	void	closeConnection(int socket);
-	void	receiveRequest(pollfd &pfd);
-	void	sendResponse(pollfd &pfd);
+	void	receiveRequest(int i);
+	void	sendResponse(int i);
 	void	runServer(int timeout);
 	void	initReqDataStruct(int clientFD);
+	void	endByTimeout(void);
 
 	// static bool findReqEnd(std::string request_buffer, size_t request_len);
 	
 	bool	endByTimeout(t_reqData &req);
 };
+
 
 char	*getCstring(const std::string &cppString);

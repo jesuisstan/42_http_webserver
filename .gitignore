@@ -10,6 +10,7 @@ webserv
 client
 www/post_body/*
 www/put_test/*
+www/put_image/*
 7m.txt
 
 #local testings

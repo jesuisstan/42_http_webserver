@@ -12,25 +12,27 @@
 class Cgi
 {
 private:
-	RequestParser	request_;
-	std::string		body_;
-	std::map<std::string, std::string>	env_;
-	// char *script_argv_[4];
-	size_t		startTime;
-	bool		emptyBody;
-	int			cgiOut;  // fd for cgi result
+	// RequestParser					request_;
+	std::string							_body;
+	std::map<std::string, std::string>	_headers;
+	std::map<std::string, std::string>	_env;
+	size_t								_startTime;
+	// bool								emptyBody;
+	// int								cgiOut;  // fd for cgi result
+	std::stringstream					_message;
 
-	char	**getNewEnviroment() const;
-	std::pair <int, std::string>	error500_(int fdInput, int fdOutput, FILE *f1, FILE *f2);
+	char								**getNewEnviroment() const;
+	std::pair <int, std::string>		_error500(int fdInput, int fdOutput, FILE *f1, FILE *f2);
 
 	
 
 public:
-	Cgi(ServerConfig &serv,  RequestParser &req);
+	Cgi();
+	Cgi(ServerConfig &serv, RequestParser &req);
 	std::pair<int, std::string>	execute();
-	int exec();
+	// int exec();
 
-	int	getCgiOut() const;
+	// int	getCgiOut() const;
 
 
 };

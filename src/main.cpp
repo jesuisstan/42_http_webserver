@@ -4,12 +4,13 @@
 
 bool g_status = false;
 pthread_mutex_t g_write;
-std::stringstream message;
+// std::stringstream g_message;
 
 static void	interruptHandler(int sig_int) {
 	(void)sig_int;
 	g_status = true;
-	message << BgMAGENTA << "\nAttention! Interruption signal caught.\n";
+	std::stringstream message;
+	message << BgMAGENTA << "\nAttention! Interruption signal caught.";
 	Logger::printCriticalMessage(&message);
 }
 
@@ -22,7 +23,8 @@ static void	*routine(void *webserv) {
 }
 
 int main(int argc, char *argv[]) {
-	message << "C++ version is " << __cplusplus << std::endl << std::endl;
+	std::stringstream message;
+	message << "C++ version is " << __cplusplus;
 	Logger::printCriticalMessage(&message);
 	signal(SIGINT, interruptHandler);
 	Config config(argc, argv);

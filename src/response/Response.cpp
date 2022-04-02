@@ -108,27 +108,30 @@ void Response::setResponseCode(int code) {
 }
 
 void Response::setContentType() {
+    if (!requestPath_.size()) {
+        responseContentType_ = "text/html\n";
+        return ;
+    }
     size_t routeEnd = requestPath_.size() - 1;
     size_t dotPos = requestPath_[routeEnd].find('.');
-
     if (dotPos != std::string::npos) {
         std::string extension = requestPath_[routeEnd].substr(dotPos);
         if (extension == ".css") {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "text/css\n";
-            trimRequestPath();
+            // trimRequestPath();
         } else if (extension == ".js") {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "application/javascript\n";
-            trimRequestPath();
+            // trimRequestPath();
         }  else if (extension == ".html") {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "text/html\n";
-            trimRequestPath();
+            // trimRequestPath();
         } else if (imgExtensions_.count(extension)) {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "image\n";
-            trimRequestPath();
+            // trimRequestPath();
         } else if (extension == ServerConfig_.getCgiExt())
             requestedFile_ = requestPath_[routeEnd];
          else
@@ -361,17 +364,16 @@ int Response::checkPathForLocation() {
             char cwd[1024];
             getcwd(cwd, sizeof(cwd));
             std::string path = (std::string) cwd;
-            std::stringstream str;
             RequestParser_.setPathTranslated(cwd + stringFilename.substr(1));
-			str << BgRED << "CGI START" << RESET << std::endl;
-	        Logger::printDebugMessage(&str);
-            Cgi cgi = Cgi(ServerConfig_, RequestParser_);
+            if (DEBUG > 1) {
+                std::stringstream str;
+                str << BgRED << "CGI START";
+                Logger::printDebugMessage(&str);
+            }
+            Cgi cgi(ServerConfig_, RequestParser_);
             cgiFlags_ &= CGI; 
-			// int fd_to_write = cgi->exec();
-            // setResponseCode(55);
-
             std::pair<int, std::string> cgiResult = cgi.execute();
-            setResponseCode(cgiResult.first);
+            responseCode_ = cgiResult.first;
             response_ = cgiResult.second;
 			fillCgiAnswer_();
 			return 1;
@@ -410,24 +412,25 @@ int Response::checkPathForLocation() {
 
 void Response::fillCgiAnswer_() {
 	std::string ans;
-	// ans = "HTTP/1.1 " + responseCodes_.find(responseCode_)->second;
-	// ans += "Content-Length: " + numberToString(response_.size()) + "\n";
-	// ans += "\n\r";
-	// response_ = response_ += "\n\r";
     std::stringstream str;
-    ans = response_.substr(0, std::min(500, (int)response_.size()));
-    str << BLUE << "Cgi response. First 500 from " 
-                << ans.size() << " chars\n" << RESET << ans;
-    Logger::printInfoMessage(&str);
+
+    if (DEBUG > 0) {
+        ans = response_.substr(0, std::min(200, (int)response_.size()));
+        str << BLUE << "Cgi response. First 200 from " 
+                    << ans.size() << " chars\n" << RESET << ans;
+        Logger::printInfoMessage(&str);
+    }
 	setCgiCode_();
 	setCgiBodyLength_();
-    if (chunked_)
-        ans = chunks_[0].substr(0, 500);
-    else
-        ans = response_.substr(0, 500);
-    str << BLUE << "Cgi after procceccing. First 500 from " 
-                << ans.size() << " chars\n" << RESET << ans << std::endl;
-    Logger::printInfoMessage(&str);
+    if (DEBUG > 0) {
+        if (chunked_)
+            ans = chunks_[0].substr(0, 200);
+        else
+            ans = response_.substr(0, 200);
+        str << BLUE << "Cgi after procceccing. First 200 from " 
+                    << ans.size() << " chars\n" << RESET << ans;;
+        Logger::printInfoMessage(&str);
+    }
 }
 
 void Response::setCgiCode_() {
@@ -477,16 +480,20 @@ void Response::splitToChunks_() {
 	hexString = getHex(leftSizeChunk) + CRLF;
 	first_chunk = response_.substr(0, headersEndPos) + hexString + response_.substr(headersEndPos, leftSizeChunk) + CRLF;
 	chunks_.push_back(first_chunk);
-	str << "chunks size: " << first_chunk.size() << ", first 50:\n" << first_chunk.substr(0, 50) << std::endl;
-	Logger::printDebugMessage(&str);
+    if (DEBUG > 1) {
+        str << "chunks size: " << first_chunk.size() << ", first 50:\n" << first_chunk.substr(0, 50);
+        Logger::printDebugMessage(&str);
+    }
     pos = CHUNK_SIZE;
 	while (1) {
 		std::string chunk;
 		leftSizeChunk = std::min(response_.size() - pos, (size_t)CHUNK_SIZE);
 		hexString = getHex(leftSizeChunk) + CRLF;
 		chunk = hexString + response_.substr(pos, leftSizeChunk) + CRLF;
-		str << "chunks size: " << chunk.size() << ", first 50:\n" << chunk.substr(0, 50) << std::endl;
-        Logger::printDebugMessage(&str);
+        if (DEBUG > 1) {
+            str << "chunks size: " << chunk.size() << ", first 50:\n" << chunk.substr(0, 50);
+            Logger::printDebugMessage(&str);
+        }
         chunks_.push_back(chunk);
 		pos += leftSizeChunk;
 		if (!leftSizeChunk)
@@ -577,14 +584,14 @@ std::string Response::getScreen() {
     return filename;
 }
 
-void Response::trimRequestPath() {
-    std::vector<std::string> newRequestPath;
-    size_t routeEnd = requestPath_.size() - 1;
-    if (routeEnd == 0) {
-        newRequestPath.push_back("");
-    }
-    for (size_t i = 0; i < routeEnd; i++) {
-        newRequestPath.push_back(requestPath_[i]);
-    }
-    requestPath_ = newRequestPath;
-}
+// void Response::trimRequestPath() {
+//     std::vector<std::string> newRequestPath;
+//     size_t routeEnd = requestPath_.size() - 1;
+//     if (routeEnd == 0) {
+//         newRequestPath.push_back("");
+//     }
+//     for (size_t i = 0; i < routeEnd; i++) {
+//         newRequestPath.push_back(requestPath_[i]);
+//     }
+//     requestPath_ = newRequestPath;
+// }

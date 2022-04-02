@@ -207,62 +207,50 @@ void RequestParser::setProtocol() {
     size_t protocolStart = fistReqStr.find_last_of(' ') + 1;
     size_t protocolEnd = fistReqStr.find_last_of('/') - 1;
     protocol_ = fistReqStr.substr(protocolStart, protocolEnd);
-//    std::cerr << "__PROTOCOL___________|" <<  protocol_ << "|" << std::endl;
 }
 
 void RequestParser::setHost() {
     host_ = parseByHeaderName("Host:");
-//    std::cerr << "__HOST_______________|" << host_ << "|" << std::endl;
 }
 
 void RequestParser::setUserAgent() {
     userAgent_ = parseByHeaderName("User-Agent:");
-//    std::cerr << "__USER_AGENT_________|" << userAgent_ << "|" << std::endl;
 }
 
 void RequestParser::setAccept() {
     accept_ = parseByHeaderName("Accept:");
-//    std::cerr << "__ACCEPT_____________|" << accept_ << "|" << std::endl;
 }
 
 void RequestParser::setAcceptLanguage() {
     acceptLanguage_ = parseByHeaderName("Accept-Language:");
-//    std::cerr << "__ACCEPT_LANGUAGE____|" << acceptLanguage_ << "|" << std::endl;
 }
 
 void RequestParser::setAcceptEncoding() {
     acceptEncoding_ = parseByHeaderName("Accept-Encoding:");
-//    std::cerr << "__ACCEPT_ENCODING____|" << acceptEncoding_ << "|" << std::endl;
 }
 
 void RequestParser::setConnection() {
     connection_ = parseByHeaderName("Connection:");
-//    std::cerr << "__CONNECTION_________|" << connection_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchDest() {
     secFetchDest_ = parseByHeaderName("Sec-Fetch-Dest:");
-//    std::cerr << "__SEC_FETCH_DEST_____|" << secFetchDest_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchMode() {
     secFetchMode_ = parseByHeaderName("Sec-Fetch-Mode:");
-//    std::cerr << "__SEC_FETCH_MODE_____|" << secFetchMode_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchSite() {
     secFetchSite_ = parseByHeaderName("Sec-Fetch-Site:");
-//    std::cerr << "__SEC_FETCH_SITE_____|" << secFetchSite_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchUser() {
     secFetchUser_ = parseByHeaderName("Sec-Fetch-User:");
-//    std::cerr << "__SEC_FETCH_USER_____|" << secFetchUser_ << "|" << std::endl;
 }
 
 void RequestParser::setCacheControl() {
     cacheControl_ = parseByHeaderName("Cache-Control:");
-//    std::cerr << "__CACHE_CONTROL______|" << cacheControl_ << "|" << std::endl;
 }
 
 void RequestParser::setBody() {
@@ -272,7 +260,6 @@ void RequestParser::setBody() {
         body_ = erasedRequest.substr(bodyStart + 4);
         if (isChunked_)
             body_ = handleChunkedBody();
-// std::cerr << "__BODY_______________|"<< body_.length() << "|" << std::endl;
 }}
 
 void RequestParser::setHeaders() {
@@ -280,7 +267,6 @@ void RequestParser::setHeaders() {
 	std::stringstream ss(headers);
 	std::string line;
 	while (std::getline(ss, line)) {
-		// line = line.substr(0, line.find("\r"));
 		size_t colonPos = line.find(":");
 		if (colonPos != std::string::npos) {
 			std::string headerName = line.substr(0, colonPos);
@@ -294,7 +280,6 @@ void RequestParser::setHeaders() {
                 size_t boundaryEnd = headerContent.length();
                 boundary_ =  headerContent.substr(boundaryStart, boundaryEnd - boundaryStart);
             }
-
 			headers_.insert(std::pair<std::string, std::string> (headerName, headerContent));
 		}
 	}
@@ -307,14 +292,12 @@ void RequestParser::setContentLength() {
     } else {
         contentLength_ = body_.length();
     }
-//    std::cerr << "__CONTENT_LENGTH_____|" << contentLength_ << "|" << std::endl;
 }
 
 void RequestParser::setContentType() {
 	if (!headers_.count("Content-Type"))
 		headers_["Content-Type"] = "text/html";
 	contentType_ = headers_["Content-Type"];
-//    std::cerr << "__CONTENT_TYPE_______|" << contentType_ << "|" << std::endl;
 }
 
 void RequestParser::setPathInfo(std::string pathInfo) {
@@ -399,7 +382,7 @@ void RequestParser::showHeaders() {
     std::map<std::string, std::string>::iterator it;
     std::stringstream str;
     for (it=headers_.begin(); it!=headers_.end(); it++) {
-        str << GREEN << it->first << RESET <<": " << BLUE << it->second << RESET << std::endl;
+        str << GREEN << it->first << RESET <<": " << BLUE << it->second;
         Logger::printDebugMessage(&str);
     }
 }

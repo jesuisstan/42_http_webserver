@@ -50,10 +50,8 @@ void	Location::setMethods(std::istream &ifs) {
 	if (_cmnd == "")
 		baseError("Error read methods");
 	line << _cmnd;
-	// std::cerr << "methods line " << line.str() << std::endl;
 	while ((line >> _cmnd) and not found_semicolon)
 	{
-		// std::cerr << _cmnd << std::endl;
 		if (_cmnd.size() and _cmnd[_cmnd.size() - 1] == ';')
 		{
 			_cmnd = cutSemicolon(_cmnd);
@@ -81,10 +79,8 @@ void	Location::setIndex(std::istream &ifs) {
 	if (_cmnd == "")
 		baseError("Error read index");
 	line << _cmnd;
-	// std::cerr << "index line " << line.str() << std::endl;
 	while ((line >> _cmnd) and not found_semicolon)
 	{
-		// std::cerr << _cmnd << std::endl;
 		if (_cmnd.size() and _cmnd[_cmnd.size() - 1] == ';')
 		{
 			_cmnd = cutSemicolon(_cmnd);
@@ -104,14 +100,12 @@ void	Location::setRedirection(std::istream &ifs) {
 	if (!(ifs >> redirection))
 		baseError("Failed parsing redirection");
 	redirection = cutSemicolon(redirection);
-	// std::cerr << "parced redirection " << redirection << std::endl;
 }
 
 void	Location::setAlias(std::istream &ifs) {
 	if (!(ifs >> alias))
 		baseError("Failed parsing alias");
 	alias = cutSemicolon(alias);
-	// std::cerr << "parced root " << root << std::endl;
 }
 
 
@@ -134,7 +128,6 @@ void	Location::setClientMaxBodySize(std::istream &ifs)
 	if (!isPositiveDigit(_cmnd))
 		baseError("Invalid bax body size: " + _cmnd);
 	clientMaxBodySize = stringToNumber(_cmnd);
-	// std::cerr << "parced port " << port << std::endl;
 }
 
 
