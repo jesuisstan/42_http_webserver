@@ -130,6 +130,7 @@ void	Server::initReqDataStruct(int clientFD) {
 	req.responseStr = NULL;
 	req.responseSize = 0;
 	req.isTransfer = false;
+	req.isMultipart = false;
 	req.foundHeaders = false;
 	req.method = "";	
 	req.chunkInd = 0;

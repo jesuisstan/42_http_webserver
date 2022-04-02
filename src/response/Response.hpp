@@ -48,31 +48,6 @@ class Response {
 			unsigned char                   cgiFlags_;
 
 
-<<<<<<< HEAD
-			void                           	setResponse();
-			void                           	setResponseCodes();
-			void                           	setImgExtensions();
-			void                           	setResponseHeaders();
-			void                           	setContentType();
-			void                           	setLocationMethods(const std::set<std::string>& locationMethods);
-			void                           	setLocationIndex(const std::set<std::string>& locationIndex);
-			void                           	setLocationRoot(const std::string& locationRoot);
-			void                           	setLocationRedirection(const std::string& locationRedirection);
-			void                           	setResponseCode(int code);
-			void                           	setContentLength(size_t len);
-			void                           	setResponseBody(const std::string& body);
-			void                           	createResponse();
-			void                           	checkFileRequested();
-			void                           	createAutoIndexPage(const char *dir);
-			void                           	readLocationData();
-			void                           	trimRequestPath();
-			int                            	checkPathForLocation();
-			std::string                    	findMaxPossibleLocation(const std::string& location);
-			std::string                    	getScreen();
-			std::string                    	handleChunkedBody();
-			void                           	savePostBody();
-			bool                            checkContentLength();
-=======
             void                           	setResponse();
             void                           	setResponseCodes();
             void                           	setImgExtensions();
@@ -96,7 +71,6 @@ class Response {
             std::string                    	handleMultipartBody();
             void                           	savePostBody();
             bool                            checkContentLength();
->>>>>>> files upload works
 
 			// cgi block
 			void							fillCgiAnswer_();
