@@ -46,11 +46,8 @@ char ** Cgi::getNewEnviroment() const {
 }
 
 std::pair<int, std::string> Cgi::execute() {
-	
 	std::pair <int, std::string> simple_sgi;
 	simple_sgi.first = 500;
-	// simple_sgi.second = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 18\n\r\n\rOur sgi is working";
-	// return simple_sgi;
 	int		pid;
 	FILE	*fsInput = tmpfile();
     FILE	*fsOutput = tmpfile();

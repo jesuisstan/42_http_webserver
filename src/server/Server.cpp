@@ -6,15 +6,18 @@ Server::Server() {
 }
 
 Server::~Server() { //todo rework cleaning
+	pthread_mutex_lock(&g_write);
 	for (size_t i = 0; i < _fds.size(); i++) {
 		if (_fds[i].fd >= 0)
 		{
 			close(_fds[i].fd);
-			_message << BgMAGENTA << "Web server [" << this->serverID << "]: connection closed on socket "
-						<< _fds[i].fd << " (D)" << RESET;
+			std::cerr << BgMAGENTA << "Web server [" << this->serverID << "]: connection closed on socket "
+						<< _fds[i].fd << " (D)"  << std::endl;
 			Logger::printCriticalMessage(&_message);
 		}
 	}
+	std::cerr << "Server " << this->serverID << " is down" << RESET << std::endl;
+	pthread_mutex_unlock(&g_write);
 }
 
 void	Server::setTimeout(int timeout) {
@@ -100,8 +103,10 @@ void	Server::runServer(int timeout) {
 	_fds.push_back(new_Pollfd);
 	this->setTimeout(timeout);
 	while (true) {
-		_message <<"Waiting on poll() [server " << this->serverID << "]...\n";
-		Logger::printDebugMessage(&_message);
+		if (DEBUG > 1) {
+			_message <<"Waiting on poll() [server " << this->serverID << "]...\n";
+			Logger::printDebugMessage(&_message);
+		}
 		fdsBeginPointer = &_fds[0];
 		int ret = poll(fdsBeginPointer, _fds.size(), _timeout);
 		if (ret < 0) {
@@ -120,7 +125,6 @@ void	Server::runServer(int timeout) {
 			if (_fds[i].revents) {
 				if (_fds[i].revents & POLLIN && _fds[i].fd == _listenSocket)
 					acceptConnection();
-				// if ()
 				else if (_fds[i].revents & POLLIN && _fds[i].fd != _listenSocket)
 					receiveRequest(_fds[i]);
 				else if (_fds[i].revents & POLLOUT && _fds[i].fd != _listenSocket)
@@ -131,7 +135,7 @@ void	Server::runServer(int timeout) {
 		}
 		endByTimeout();
 		clearConnections();
-		// usleep(10000); // todo включить если тестируете через curl большие файлы
+		usleep(1000); // todo включить если тестируете через curl большие файлы
 	}
 	return ;
 }
@@ -148,8 +152,10 @@ void	Server::acceptConnection(void) {
 		close(_listenSocket);
 		exit(-1);
 	}
-	_message << "New incoming connection:\t" << newFd << " on server " << this->serverID;
-	Logger::printCriticalMessage(&_message);
+	if (DEBUG >= 0) {
+		_message << "New incoming connection:\t" << newFd << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
+	}
 
 	pollfd	newConnect = {newFd, POLLIN, 0};
 	_fds.push_back(newConnect);
@@ -181,9 +187,9 @@ void	Server::clearConnections() {
 
 
 void	Server::receiveRequest(pollfd &pfd) {
-	if (DEBUG >= 0) {
+	if (DEBUG > 1) {
 		_message << "Event detected on descriptor:\t" << pfd.fd << " on server " << this->serverID;
-		Logger::printCriticalMessage(&_message);
+		Logger::printDebugMessage(&_message);
 	}
 	int ret = 0;
 	char buffer[BUFFER_SIZE];

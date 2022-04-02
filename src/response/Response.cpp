@@ -398,24 +398,25 @@ int Response::checkPathForLocation() {
 
 void Response::fillCgiAnswer_() {
 	std::string ans;
-	// ans = "HTTP/1.1 " + responseCodes_.find(responseCode_)->second;
-	// ans += "Content-Length: " + numberToString(response_.size()) + "\n";
-	// ans += "\n\r";
-	// response_ = response_ += "\n\r";
     std::stringstream str;
-    ans = response_.substr(0, std::min(200, (int)response_.size()));
-    str << BLUE << "Cgi response. First 200 from " 
-                << ans.size() << " chars\n" << RESET << ans;
-    Logger::printInfoMessage(&str);
+
+    if (DEBUG > 0) {
+        ans = response_.substr(0, std::min(200, (int)response_.size()));
+        str << BLUE << "Cgi response. First 200 from " 
+                    << ans.size() << " chars\n" << RESET << ans;
+        Logger::printInfoMessage(&str);
+    }
 	setCgiCode_();
 	setCgiBodyLength_();
-    if (chunked_)
-        ans = chunks_[0].substr(0, 200);
-    else
-        ans = response_.substr(0, 200);
-    str << BLUE << "Cgi after procceccing. First 200 from " 
-                << ans.size() << " chars\n" << RESET << ans;;
-    Logger::printInfoMessage(&str);
+    if (DEBUG > 0) {
+        if (chunked_)
+            ans = chunks_[0].substr(0, 200);
+        else
+            ans = response_.substr(0, 200);
+        str << BLUE << "Cgi after procceccing. First 200 from " 
+                    << ans.size() << " chars\n" << RESET << ans;;
+        Logger::printInfoMessage(&str);
+    }
 }
 
 void Response::setCgiCode_() {
@@ -465,16 +466,20 @@ void Response::splitToChunks_() {
 	hexString = getHex(leftSizeChunk) + CRLF;
 	first_chunk = response_.substr(0, headersEndPos) + hexString + response_.substr(headersEndPos, leftSizeChunk) + CRLF;
 	chunks_.push_back(first_chunk);
-	str << "chunks size: " << first_chunk.size() << ", first 50:\n" << first_chunk.substr(0, 50);
-	Logger::printDebugMessage(&str);
+    if (DEBUG > 1) {
+        str << "chunks size: " << first_chunk.size() << ", first 50:\n" << first_chunk.substr(0, 50);
+        Logger::printDebugMessage(&str);
+    }
     pos = CHUNK_SIZE;
 	while (1) {
 		std::string chunk;
 		leftSizeChunk = std::min(response_.size() - pos, (size_t)CHUNK_SIZE);
 		hexString = getHex(leftSizeChunk) + CRLF;
 		chunk = hexString + response_.substr(pos, leftSizeChunk) + CRLF;
-		str << "chunks size: " << chunk.size() << ", first 50:\n" << chunk.substr(0, 50);
-        Logger::printDebugMessage(&str);
+        if (DEBUG > 1) {
+            str << "chunks size: " << chunk.size() << ", first 50:\n" << chunk.substr(0, 50);
+            Logger::printDebugMessage(&str);
+        }
         chunks_.push_back(chunk);
 		pos += leftSizeChunk;
 		if (!leftSizeChunk)
