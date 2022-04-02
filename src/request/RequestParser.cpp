@@ -244,7 +244,7 @@ void RequestParser::setCacheControl() {
 
 void RequestParser::setBody() {
     std::string erasedRequest = request_;
-    size_t bodyStart = request_.find("\r\n\r\n");
+    size_t bodyStart = request_.find(ENDH);
     if (bodyStart != std::string::npos) {
         body_ = erasedRequest.substr(bodyStart + 4);
         if (isChunked_)

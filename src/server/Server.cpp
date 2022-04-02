@@ -194,7 +194,7 @@ void	Server::acceptConnection(void) {
 		close(_listenSocket);
 		exit(-1);
 	}
-	if (DEBUG > 0) {
+	if (DEBUG >= 0) {
 		_message << "New incoming connection:\t" << newFd << " on server " << this->serverID;
 		Logger::printCriticalMessage(&_message);
 	}
@@ -216,8 +216,10 @@ void	Server::clearConnections() {
 		{
 			fd = _fds[i].fd;
 			close(fd);
-			_message << "Connection has been closed:\t" << fd << " on server " << this->serverID;
-			Logger::printInfoMessage(&_message);
+			if (DEBUG > 0) {
+				_message << "Connection has been closed:\t" << fd << " on server " << this->serverID;
+				Logger::printInfoMessage(&_message);
+			}
 			if (_clients[fd].response)
 				delete _clients[fd].response;
 			_fdToDel.erase(fd);
@@ -244,7 +246,7 @@ void	Server::receiveRequest(int i) {
 		std::string tail = std::string(buffer, ret);
 		_clients[fd].reqLength += ret;
 		_clients[fd].reqString += tail;
-		if (DEBUG >= 0) {
+		if (DEBUG > 0) {
 			_message << _clients[fd].reqLength << " bytes received from sd:\t" << fd << " on server " << this->serverID;
 			Logger::printCriticalMessage(&_message);
 		}
@@ -389,7 +391,7 @@ void Server::endByTimeout(void) {
 bool Server::findReqEnd(t_reqData &req) {
 	size_t	pos;
 	if (!req.foundHeaders) {
-		size_t headersEnd = req.reqString.find("\r\n\r\n");
+		size_t headersEnd = req.reqString.find(ENDH);
 		if (headersEnd == std::string::npos) // todo заголовок еще не пришел до конца
 			return false;
 		req.foundHeaders = true;
@@ -401,7 +403,7 @@ bool Server::findReqEnd(t_reqData &req) {
 	pos = std::max(0, (int)req.reqString.size() - 10);
 	if (req.isTransfer and req.reqString.find("0\r\n\r\n", pos) != std::string::npos)
 		return true;
-	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find("\r\n\r\n", pos) != std::string::npos)
+	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find(ENDH, pos) != std::string::npos)
 		return true;
 	return false;
 }

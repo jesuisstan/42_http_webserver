@@ -100,7 +100,7 @@ const unsigned char	&Response::getCgiFlag()	const {
 /**************************/
 
 void Response::setResponse() {
-    response_ = responseHeaders_ + "\r\n\r\n" + responseBody_;
+    response_ = responseHeaders_ + ENDH + responseBody_;
 }
 
 void Response::setResponseCode(int code) {
