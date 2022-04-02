@@ -15,6 +15,7 @@ Response::Response(RequestParser &request, ServerConfig &config) :
         errorPages_(config.getErrorPages()),
         cgiRequested_(false) {
 	chunked_ = false;
+    cgiFlags_ = 0;
     setResponseCodes();
     setImgExtensions();
     createResponse();
@@ -88,6 +89,11 @@ const std::vector<std::string> &Response::getChunks() const {
 const bool &Response::getChunked() const {
 	return this->chunked_;
 }
+
+const unsigned char	&Response::getCgiFlag()	const {
+    return cgiFlags_;
+}
+
 
 /**************************/
 /******** SETTERS *********/
@@ -206,6 +212,8 @@ void Response::createResponse() {
         setResponseCode(301);
     else if (checkPathForLocation() == -1)
         setResponseCode(404);
+    else if (cgiFlags_ & CGI)
+        return ;
     else if (!locationMethods_.count(requestMethod_) && !cgiRequested_)
         setResponseCode(405);
     else if (requestBody_.length() > ClientMaxBodySize_ && !cgiRequested_)
@@ -343,11 +351,12 @@ int Response::checkPathForLocation() {
             RequestParser_.setPathTranslated(cwd + stringFilename.substr(1));
 			str << BgRED << "CGI START" << RESET << std::endl;
 	        Logger::printDebugMessage(&str);
-            Cgi* cgi = new Cgi(ServerConfig_, RequestParser_);
+            Cgi cgi = Cgi(ServerConfig_, RequestParser_);
+            cgiFlags_ &= CGI; 
 			// int fd_to_write = cgi->exec();
             // setResponseCode(55);
 
-            std::pair<int, std::string> cgiResult = cgi->execute();
+            std::pair<int, std::string> cgiResult = cgi.execute();
             setResponseCode(cgiResult.first);
             response_ = cgiResult.second;
 			fillCgiAnswer_();
@@ -392,7 +401,7 @@ void Response::fillCgiAnswer_() {
 	// ans += "\n\r";
 	// response_ = response_ += "\n\r";
     std::stringstream str;
-    ans = response_.substr(0, 500);
+    ans = response_.substr(0, std::min(500, (int)response_.size()));
     str << BLUE << "Cgi response. First 500 from " 
                 << ans.size() << " chars\n" << RESET << ans;
     Logger::printInfoMessage(&str);
@@ -426,7 +435,7 @@ void Response::setCgiBodyLength_() {
 	setContentLength(bodySize);
 	if (bodySize < NEED_CHUNKS) {
 		std::string contentLen = "\r\nContent-Length: " + numberToString(bodySize);
-		response_.insert(headersEndPos, contentLen);
+		response_.insert(std::min(headersEndPos, response_.size()), contentLen);
 	}
 	else {
 		std::string contentLen = "\r\nTransfer-Encoding: chunked";

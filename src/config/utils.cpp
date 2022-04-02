@@ -79,3 +79,17 @@ std::string &cutSemicolon(std::string &line)
 		baseError("Not found semicolon in the end of the line: " + line);
 	return line;
 }
+
+std::string cutStringSpacesAndCr(std::string &str) {
+	size_t	pos;
+	int		i_pos;
+
+	for (pos = 0; pos < str.size() and str[pos] == ' '; pos++);
+	str = str.substr(pos);
+	for (i_pos = str.size() - 1; i_pos >= 0 and (str[i_pos] == ' ' or str[i_pos] == '\r'); i_pos--);
+	if (i_pos < 0)
+		str.clear();
+	else
+		str = str.substr(0, i_pos + 1);
+	return str;
+}

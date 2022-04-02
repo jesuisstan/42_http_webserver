@@ -159,11 +159,10 @@ void RequestParser::setMethod() {
 void RequestParser::setRoute() {
     std::string fistReqStr = request_;
     fistReqStr = fistReqStr.substr(0, request_.find_first_of('\n') - 1);
-    size_t routeStart = fistReqStr.find_first_of(' ') + 1;
-    size_t routeEnd = fistReqStr.find_last_of(' ') - 1;
-    if (routeStart != routeEnd) {
-        route_ = EraseSpaces(fistReqStr.substr(routeStart, routeEnd));
-
+    size_t routeStart = fistReqStr.find(' ');
+    size_t routeEnd = fistReqStr.rfind(' ');
+    if (routeStart != routeEnd - 2) {
+        route_ = fistReqStr.substr(routeStart + 1, routeEnd - routeStart - 1);
         size_t queryStart = route_.find('?');
         if (queryStart != std::string::npos) {
             query_ = route_.substr(queryStart);
@@ -271,11 +270,12 @@ void RequestParser::setHeaders() {
 	std::stringstream ss(headers);
 	std::string line;
 	while (std::getline(ss, line)) {
-		line = line.substr(0, line.find("\r"));
+		// line = line.substr(0, line.find("\r"));
 		size_t colonPos = line.find(":");
 		if (colonPos != std::string::npos) {
 			std::string headerName = line.substr(0, colonPos);
-			std::string headerContent = line.substr(colonPos + 2);
+			std::string headerContent = line.substr(colonPos + 1);
+			headerContent = cutStringSpacesAndCr(headerContent);
             if (headerName == "Transfer-Encoding" && headerContent == "chunked")
                 isChunked_ = true;
 			headers_.insert(std::pair<std::string, std::string> (headerName, headerContent));
@@ -410,19 +410,19 @@ std::string RequestParser::parseByHeaderName(const std::string &name) {
     return erasedRequest.substr(0, erasedRequest.find_first_of('\n') - 1);
 }
 
-std::string RequestParser::EraseSpaces(const std::string &string) {
-    size_t spacePos = string.find(' ');
-    std::string result = string;
-    while (spacePos != std::string::npos) {
-        result = result.replace(spacePos, 1, "");
-        spacePos = result.find(' ');
-    }
-    return result;
-}
+// std::string RequestParser::EraseSpaces(const std::string &string) {
+//     size_t spacePos = string.find(' ');
+//     std::string result = string;
+//     while (spacePos != std::string::npos) {
+//         result = result.replace(spacePos, 1, "");
+//         spacePos = result.find(' ');
+//     }
+//     return result;
+// }
 
 
 RequestParser::UnsupportedMethodException::UnsupportedMethodException(const std::string &method) {
-    message_ = RED"Method " + method + " is not supported" RESET;
+    message_ = RED"Method " + method + " is not supported" + RESET;
 }
 
 const char *RequestParser::UnsupportedMethodException::what() const throw() {
