@@ -63,7 +63,7 @@ class Response {
             int                            	checkPathForLocation();
             std::string                    	findMaxPossibleLocation(const std::string& location);
             std::string                    	getScreen();
-            std::string                    	handleChunkedBody();
+            std::string                    	handleMultipartBody();
             void                           	savePostBody();
             bool                            checkContentLength();
 

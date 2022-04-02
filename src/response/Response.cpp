@@ -94,7 +94,7 @@ const bool &Response::getChunked() const {
 /**************************/
 
 void Response::setResponse() {
-    response_ = responseHeaders_ + "\r\n\r\n" + responseBody_;
+    response_ = responseHeaders_ + ENDH + responseBody_;
 }
 
 void Response::setResponseCode(int code) {
@@ -261,6 +261,19 @@ void Response::checkFileRequested() {
     }
 }
 
+std::string Response::handleMultipartBody() {
+    size_t fileNameStart = requestBody_.find("filename=") + 10;
+    size_t fileNameEnd = requestBody_.find('\"', fileNameStart) + 1;
+    size_t bodyStart = requestBody_.find(ENDH) + 4;
+    std::string finalBoundary = RequestParser_.getBoundary() + "--";
+    size_t bodyEnd = requestBody_.find(finalBoundary) - 4;
+    if (fileNameStart != std::string::npos && fileNameEnd != std::string::npos)
+        requestedFile_ = requestBody_.substr(fileNameStart, fileNameEnd - fileNameStart);
+    if (bodyStart != std::string::npos && bodyEnd != std::string::npos)
+        requestBody_ = requestBody_.substr(bodyStart, bodyEnd - bodyStart);
+    return requestBody_;
+}
+
 void Response::savePostBody() {
     int filesCount = 0;
     struct dirent *d;
@@ -270,6 +283,8 @@ void Response::savePostBody() {
     while ((d = readdir(dh)) != NULL)
     { filesCount++; }
     std::string filesCountStr = numberToString(filesCount - 1);
+    if (RequestParser_.getMultipart())
+        requestBody_ = handleMultipartBody();
     std::string filename = requestedFile_.empty() ? filesCountStr : requestedFile_.substr(0, requestedFile_.length() - 1);
     std::ofstream postBodyFile((locationRoot_ + "/" + filename).c_str());
     postBodyFile << requestBody_;

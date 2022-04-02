@@ -24,7 +24,7 @@
 		<img src="images/doge2.png" class="doge"/>
 		<img src="images/doge3.png" class="doge"/>
 		<img src="images/doge4.png" class="doge"/>
-		<img src="images/doge.png" class="doge"/>
+		<img src="images/doge.png" class="doge delete"/>
 	</div>
 	<input type="file" id="fileUpload" />
 <script type="text/javascript">
@@ -134,6 +134,10 @@ document.querySelector('#fileUpload').addEventListener('change', event => {
 	@media (max-width: 800px) {
 		.container {
 			width: 500px;
+		}
+
+		.delete {
+			visibility: collapse;
 		}
 
 		h1 {
