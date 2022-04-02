@@ -435,7 +435,7 @@ void Response::setCgiBodyLength_() {
 	setContentLength(bodySize);
 	if (bodySize < NEED_CHUNKS) {
 		std::string contentLen = "\r\nContent-Length: " + numberToString(bodySize);
-		response_.insert(headersEndPos, contentLen);
+		response_.insert(std::min(headersEndPos, response_.size()), contentLen);
 	}
 	else {
 		std::string contentLen = "\r\nTransfer-Encoding: chunked";

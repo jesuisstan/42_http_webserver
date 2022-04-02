@@ -422,7 +422,7 @@ std::string RequestParser::parseByHeaderName(const std::string &name) {
 
 
 RequestParser::UnsupportedMethodException::UnsupportedMethodException(const std::string &method) {
-    message_ = RED"Method " + method + " is not supported" RESET;
+    message_ = RED"Method " + method + " is not supported" + RESET;
 }
 
 const char *RequestParser::UnsupportedMethodException::what() const throw() {
