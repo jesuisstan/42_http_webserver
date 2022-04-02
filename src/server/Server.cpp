@@ -92,6 +92,12 @@ void	Server::initReqDataStruct(int clientFD) {
 	return ;
 }
 
+long long	get_timestamp(void) {
+	struct timeval	tv;
+	gettimeofday(&tv, NULL);
+	return ((tv.tv_sec));
+}
+
 void	Server::runServer(int timeout) {
 	struct pollfd	*fdsBeginPointer;
 	pollfd			new_Pollfd = {_listenSocket, POLLIN, 0};
@@ -133,7 +139,6 @@ void	Server::runServer(int timeout) {
 	}
 	return ;
 }
-
 
 void	Server::acceptConnection(void) {
 	int newFd = accept(_listenSocket, NULL, NULL);
@@ -177,12 +182,12 @@ void	Server::clearConnections() {
 		}
 }
 
-
 void	Server::receiveRequest(pollfd &pfd) {
 	_message << "Event detected on descriptor:\t" << pfd.fd << " on server " << this->serverID;
 	Logger::printDebugMessage(&_message);
 	int ret = 0;
 	char buffer[BUFFER_SIZE];
+	long long timeStart = get_timestamp();
 	ret = recv(pfd.fd, buffer, BUFFER_SIZE, 0);
 	if (ret > 0)
 	{
@@ -192,6 +197,15 @@ void	Server::receiveRequest(pollfd &pfd) {
 		_message << _clients[pfd.fd].reqLength << " bytes received from sd:\t" << pfd.fd << " on server " << this->serverID <<  std::endl;
 		Logger::printDebugMessage(&_message);
 		// memset(buffer, 0, BUFFER_SIZE);
+		long long timeFinish = get_timestamp();
+		if (timeFinish - timeStart > 3) {
+			std::cout << "TIMEOUT\n" << std::endl;
+			_message << "Request is out of capacity. Connection ended by timeout"
+						<< "Socket " << pfd.fd << " on server " << this->serverID;
+			Logger::printCriticalMessage(&_message);
+			_fdToDel.insert(pfd.fd);
+			return ;
+		}
 		if (findReqEnd(_clients[pfd.fd]))
 			pfd.events = POLLOUT;
 	}

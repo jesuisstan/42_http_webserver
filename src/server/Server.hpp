@@ -68,3 +68,4 @@ public:
 };
 
 char	*getCstring(const std::string &cppString);
+long long	get_timestamp(void) ;

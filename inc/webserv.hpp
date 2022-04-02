@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <fstream> // for getline
 #include <dirent.h> //to get directory content
+#include <sys/time.h>
 
 # define BLACK "\x1b[30m"
 # define RED "\x1b[31m"
