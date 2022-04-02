@@ -410,15 +410,15 @@ std::string RequestParser::parseByHeaderName(const std::string &name) {
     return erasedRequest.substr(0, erasedRequest.find_first_of('\n') - 1);
 }
 
-std::string RequestParser::EraseSpaces(const std::string &string) {
-    size_t spacePos = string.find(' ');
-    std::string result = string;
-    while (spacePos != std::string::npos) {
-        result = result.replace(spacePos, 1, "");
-        spacePos = result.find(' ');
-    }
-    return result;
-}
+// std::string RequestParser::EraseSpaces(const std::string &string) {
+//     size_t spacePos = string.find(' ');
+//     std::string result = string;
+//     while (spacePos != std::string::npos) {
+//         result = result.replace(spacePos, 1, "");
+//         spacePos = result.find(' ');
+//     }
+//     return result;
+// }
 
 
 RequestParser::UnsupportedMethodException::UnsupportedMethodException(const std::string &method) {
