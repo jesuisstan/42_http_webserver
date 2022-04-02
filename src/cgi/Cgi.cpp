@@ -1,47 +1,47 @@
 #include "Cgi.hpp"
 #include <algorithm>
 
-Cgi::Cgi(ServerConfig &serv, RequestParser &req): request_(req)
-{
-	std::stringstream str;
-	req.showHeaders();
-	str << BLUE << "first 500 from total " << req.getBody().size() << ":\n" << RESET << req.getBody().substr(0, 500) << std::endl;
-	Logger::printDebugMessage(&str);
-	env_["SERVER_NAME"] = "webserv"; //serv.getHost();
-	env_["SERVER_SOFTWARE"] = "C.y.b.e.r.s.e.r.v/0.077";
-	env_["GATEWAY_INTERFACE"] = "CGI/1.1";
+Cgi::Cgi(ServerConfig &serv, RequestParser &req) {
+	if (DEBUG > 1) {
+		req.showHeaders();
+		_message << BLUE << "first 500 from total " << req.getBody().size() << ":\n" << RESET << req.getBody().substr(0, 500) << std::endl;
+		Logger::printDebugMessage(&_message);
+	}
+	_env["SERVER_NAME"] = "webserv"; //serv.getHost();
+	_env["SERVER_SOFTWARE"] = "C.y.b.e.r.s.e.r.v/0.077";
+	_env["GATEWAY_INTERFACE"] = "CGI/1.1";
 
-	env_["SERVER_PROTOCOL"] = "HTTP/1.1";
-	env_["SERVER_PORT"] = numberToString(serv.getPort());
-	env_["REQUEST_METHOD"] = req.getMethod(); // req.getMethod()
-	env_["REQUEST_URI"] = req.getPathInfo(); // + req.getQuery(); // req.getRoute() + req.getQuery()
-	env_["PATH_INFO"] = req.getPathInfo();
-	env_["PATH_TRANSLATED"] = req.getPathTranslated();
-	env_["REDIRECT_STATUS"] = "200"; // ??? opyat kakayato hueta
-	env_["SCRIPT_NAME"] = serv.getCgi();
-	env_["QUERY_STRING"] =  req.getQuery();// req.getQuery();
+	_env["SERVER_PROTOCOL"] = "HTTP/1.1";
+	_env["SERVER_PORT"] = numberToString(serv.getPort());
+	_env["REQUEST_METHOD"] = req.getMethod(); // req.getMethod()
+	_env["REQUEST_URI"] = req.getPathInfo(); // + req.getQuery(); // req.getRoute() + req.getQuery()
+	_env["PATH_INFO"] = req.getPathInfo();
+	_env["PATH_TRANSLATED"] = req.getPathTranslated();
+	_env["REDIRECT_STATUS"] = "200"; // ??? opyat kakayato hueta
+	_env["SCRIPT_NAME"] = serv.getCgi();
+	_env["QUERY_STRING"] =  req.getQuery();// req.getQuery();
 
-	env_["AUTH_TYPE"] = ""; //bonus or hz
-	env_["REMOTE_IDENT"] = ""; //bonus
-	env_["REMOTE_USER"] = ""; //bonus
-	env_["REMOTE_ADDR"] = "127.0.0.1";
-	env_["CONTENT_TYPE"] = req.getContentType();
-	env_["CONTENT_LENGTH"] =  numberToString(req.getBody().size());
+	_env["AUTH_TYPE"] = ""; //bonus or hz
+	_env["REMOTE_IDENT"] = ""; //bonus
+	_env["REMOTE_USER"] = ""; //bonus
+	_env["REMOTE_ADDR"] = "127.0.0.1";
+	_env["CONTENT_TYPE"] = req.getContentType();
+	_env["CONTENT_LENGTH"] =  numberToString(req.getBody().size());
 
-	emptyBody = req.getBody().empty(); // todo del
-	body_ = req.getBody();
+	_body = req.getBody();
+	_headers = req.getHeaders();
+	_message.clear();
+
 }
 
 char ** Cgi::getNewEnviroment() const {
-	extern	char **environ;
-	std::string		line;
+	extern char		**environ;
 
 	std::map<std::string, std::string>::const_iterator it;
-	for (it = env_.begin(); it != env_.end(); it++)
+	for (it = _env.begin(); it != _env.end(); it++)
 		setenv(it->first.c_str(), it->second.c_str(), 1);
-	for (it = request_.getHeaders().begin(); it != request_.getHeaders().end(); it++)
-		// if (!it->first.compare(0, 5, "HTTP_"))
-			setenv(("HTTP_" + it->first).c_str(), it->second.c_str(), 1);
+	for (it = _headers.begin(); it != _headers.end(); it++)
+		setenv(("HTTP_" + it->first).c_str(), it->second.c_str(), 1);
 	return environ;
 }
 
@@ -58,16 +58,16 @@ std::pair<int, std::string> Cgi::execute() {
     int fdInput = fileno(fsInput);
     int fdOutput = fileno(fsOutput);
 
-	cgiOut = -1; //todo unset
 
-	if (!emptyBody) {
+	if (_body.size()) {
 		ssize_t record;
-		record = write(fdInput, body_.c_str(), body_.size());
-		if (DEBUG > 2)
-			printf("zapisanot to file %lu\n", record);
+		record = write(fdInput, _body.c_str(), _body.size());
 		if (record <= 0)
-			return error500_(fdInput, fdOutput, fsInput, fsOutput);
-		
+		{
+			_message << "CGI input file record error";
+			Logger::printCriticalMessage(&_message);
+			return _error500(fdInput, fdOutput, fsInput, fsOutput);
+		}
     	lseek(fdInput, 0, SEEK_SET);
 	}
 
@@ -79,14 +79,16 @@ std::pair<int, std::string> Cgi::execute() {
 
 		envs = getNewEnviroment();
 		bzero(args, sizeof(*args) * 4);
-		args[0] = (char *)env_["SCRIPT_NAME"].c_str();
-		args[1] = (char *)env_["PATH_TRANSLATED"].c_str();
-		str << RED << "RUN SGI!!: " << RESET << args[0]
+		args[0] = (char *)_env["SCRIPT_NAME"].c_str();
+		args[1] = (char *)_env["PATH_TRANSLATED"].c_str();
+		if (DEBUG > 1) {
+			_message << RED << "RUN SGI!!: " << RESET << args[0]
 					<< "\n path_name: " << getenv("PATH_INFO") 
 					<< "\n content_lenght: " << getenv("CONTENT_LENGTH") 
-					<< "\n real size: " << body_.size() 
+					<< "\n real size: " << _body.size() 
 					<< "\n content type: " << getenv("CONTENT_TYPE");
-		Logger::printDebugMessage(&str);
+			Logger::printDebugMessage(&str);
+		}
 
 		if (dup2(fdInput, STDIN_FILENO) < 0 || dup2(fdOutput, STDOUT_FILENO) < 0)
 			exit(3);
@@ -95,18 +97,18 @@ std::pair<int, std::string> Cgi::execute() {
 		exit(5);
 	}
 
-	startTime = clock();
-    env_.clear();
+	// startTime = clock();
+    _env.clear();
 
 	
 
 	int closeCode = 0;
 	waitpid(pid, &closeCode, 0);
 	closeCode = WEXITSTATUS(closeCode);
-	if (DEBUG > 2)
-		printf("dogdalis' pid=%d, closecode=%d\n", pid, closeCode);
+	// if (DEBUG > 2)
+	// 	printf("dogdalis' pid=%d, closecode=%d\n", pid, closeCode);
 	if (closeCode)
-		return error500_(fdInput, fdOutput, fsInput, fsOutput);
+		return _error500(fdInput, fdOutput, fsInput, fsOutput);
 		
 	std::string answer;
 	std::string tail;
@@ -115,11 +117,17 @@ std::pair<int, std::string> Cgi::execute() {
 	lseek(fdOutput, 0, SEEK_SET);
 	while (recived) {
 		recived = read(fdOutput, buffer, SIZE_BUF_TO_RCV);
-		if (DEBUG > 2)
-			printf("считали %d байт с %d\n", recived, fdOutput);
+		// if (DEBUG > 2)
+		// 	printf("считали %d байт с %d\n", recived, fdOutput);
 		if (recived < 0) {
+			if (DEBUG > 0)
+			{
+				_message << "CGI output file reading error";
+				Logger::printCriticalMessage(&_message);
+				return _error500(fdInput, fdOutput, fsInput, fsOutput);
+			}
 			close (fdOutput);
-			return error500_(fdInput, fdOutput, fsInput, fsOutput);
+			return _error500(fdInput, fdOutput, fsInput, fsOutput);
 		}
 		else if (recived) {
 			tail = std::string(buffer, recived);
@@ -136,7 +144,7 @@ std::pair<int, std::string> Cgi::execute() {
 	return simple_sgi;
 }
 
-std::pair <int, std::string> Cgi::error500_(int fdInput, int fdOutput, FILE *f1, FILE *f2) {
+std::pair <int, std::string> Cgi::_error500(int fdInput, int fdOutput, FILE *f1, FILE *f2) {
 	std::pair <int, std::string> sgi_answer;
 
 	sgi_answer.first = 500;
@@ -149,58 +157,5 @@ std::pair <int, std::string> Cgi::error500_(int fdInput, int fdOutput, FILE *f1,
 	return sgi_answer;
 }
 
-// int Cgi::exec() {
-// 	char	**envs = getNewEnviroment();
-// 	char	*args[4];
-// 	int		res, pid;
-// 	int		input[2];
-// 	int		output[2];
 
-// 	cgiOut = -1; //todo unset
-// 	bzero(args, sizeof(*args) * 4);
-// 	if (env_["SCRIPT_NAME"] == "python")
-// 		args[0] = "sgi_python.py";
-// 	else if (env_["SCRIPT_NAME"] == "tester")
-// 		args[0] = "cgi_tester";
-// 	else
-// 		args[0] = "php?";
-// 	if (pipe(input) < 0 || pipe(output) < 0)
-//     	return 0;
-// 	pid = fork();
-// 	if (!pid){ 
-		
-// 		send(2, args[0], std::strlen(args[0]), 0); // todo del
-// 		close(input[1]);
-//       	close(output[0]);
-// 		if (dup2(input[0], STDERR_FILENO) < 0 || dup2(output[1], STDOUT_FILENO) < 0) {
-// 			close(output[1]);
-//       		close(input[0]);
-// 			exit(-1);
-// 		}
-//       	close(output[1]);
-//       	close(input[0]);
-
-// 		char cgi_bin[] = "cgi_bin"; // вообще нихуя не понятно зачем это делать :/ мб чтобы скрипт работал только в его папке
-// 		if (chdir(cgi_bin) < 0) { // todo
-// 			exit(-1);
-// 		}
-// 		execve(args[0], args, envs);
-// 		perror("cgi cann't run");
-// 		exit(-1);
-// 	}
-
-// 	startTime = clock();
-// 	close(input[0]);
-//     close(output[1]);
-//     env_.clear();
-// 	cgiOut = output[0];
-// 	fcntl(cgiOut, F_SETFL, O_NONBLOCK);
-// 	if (emptyBody) {
-//     	close(input[1]);
-// 		return 0;
-// 	}
-// 	fcntl(input[1], F_SETFL, O_NONBLOCK);
-// 	return input[1];
-// }
-
-int		Cgi::getCgiOut() const {return cgiOut; }
+// int		Cgi::getCgiOut() const {return cgiOut; }

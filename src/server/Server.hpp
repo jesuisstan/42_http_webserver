@@ -23,6 +23,8 @@ typedef struct s_reqData {
 	bool			foundHeaders;
 	std::string		method;
 	size_t			chunkInd;
+	size_t			lastTime;
+	// bool			keep_alive;
 }	t_reqData;
 
 class Server {
@@ -61,6 +63,7 @@ public:
 	void	sendResponse(pollfd &pfd);
 	void	runServer(int timeout);
 	void	initReqDataStruct(int clientFD);
+	void	endByTimeout(void);
 
 	// static bool findReqEnd(std::string request_buffer, size_t request_len);
 	

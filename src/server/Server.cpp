@@ -88,6 +88,7 @@ void	Server::initReqDataStruct(int clientFD) {
 	req.foundHeaders = false;
 	req.method = "";	
 	req.chunkInd = 0;
+	req.lastTime = clock();
 	_clients[clientFD] = req;
 	return ;
 }
@@ -128,6 +129,7 @@ void	Server::runServer(int timeout) {
 					pollError(_fds[i]);
 			}
 		}
+		endByTimeout();
 		clearConnections();
 		// usleep(10000); // todo включить если тестируете через curl большие файлы
 	}
@@ -167,7 +169,7 @@ void	Server::clearConnections() {
 			fd = _fds[i].fd;
 			close(fd);
 			_message << "Connection has been closed:\t" << fd << " on server " << this->serverID;
-			Logger::printCriticalMessage(&_message);
+			Logger::printInfoMessage(&_message);
 			if (_clients[fd].response)
 				delete _clients[fd].response;
 			_fdToDel.erase(fd);
@@ -179,18 +181,24 @@ void	Server::clearConnections() {
 
 
 void	Server::receiveRequest(pollfd &pfd) {
-	_message << "Event detected on descriptor:\t" << pfd.fd << " on server " << this->serverID;
-	Logger::printDebugMessage(&_message);
+	if (DEBUG >= 0) {
+		_message << "Event detected on descriptor:\t" << pfd.fd << " on server " << this->serverID;
+		Logger::printCriticalMessage(&_message);
+	}
 	int ret = 0;
 	char buffer[BUFFER_SIZE];
 	ret = recv(pfd.fd, buffer, BUFFER_SIZE, 0);
+	_clients[pfd.fd].lastTime = clock();
+	
 	if (ret > 0)
 	{
 		std::string tail = std::string(buffer, ret);
 		_clients[pfd.fd].reqLength += ret;
 		_clients[pfd.fd].reqString += tail;
-		_message << _clients[pfd.fd].reqLength << " bytes received from sd:\t" << pfd.fd << " on server " << this->serverID <<  std::endl;
-		Logger::printDebugMessage(&_message);
+		if (DEBUG >= 0) {
+			_message << _clients[pfd.fd].reqLength << " bytes received from sd:\t" << pfd.fd << " on server " << this->serverID;
+			Logger::printCriticalMessage(&_message);
+		}
 		// memset(buffer, 0, BUFFER_SIZE);
 		if (findReqEnd(_clients[pfd.fd]))
 			pfd.events = POLLOUT;
@@ -198,11 +206,11 @@ void	Server::receiveRequest(pollfd &pfd) {
 	if (ret == 0 || ret == -1) {
 		
 		_fdToDel.insert(pfd.fd);
-		if (!ret) {
+		if (!ret and DEBUG > 1) {
 			_message << "Request to close connection:\t" << pfd.fd << " on server " << this->serverID;
 			Logger::printDebugMessage(&_message);;
 		}
-		else {
+		else if (DEBUG > 1) {
 			_message << "recv() failed" << " on server " << this->serverID;
 			Logger::printDebugMessage(&_message);
 		}
@@ -211,22 +219,23 @@ void	Server::receiveRequest(pollfd &pfd) {
 }
 
 void	Server::sendResponse(pollfd &pfd) {
-	// if (_fds[socket].revents & POLLNVAL or _fds[socket].revents & POLLHUP or _fds[socket].revents & POLLERR) 
-	// 	return;
 	if (!_clients[pfd.fd].response) {
 		try {
 			RequestParser request = RequestParser(_clients[pfd.fd].reqString, _clients[pfd.fd].reqLength);
-			if (request.getBody().length() > 10000)
-				request.showHeaders();
-			else {
-				_message << "|" << YELLOW  << request.getRequest() << RESET"|";
-				Logger::printInfoMessage(&_message);
+			if (DEBUG > 0) {
+				if (request.getBody().length() > 10000)
+					request.showHeaders();
+				else {
+					_message << "|" << YELLOW  << request.getRequest() << RESET"|";
+					Logger::printInfoMessage(&_message);
+				}
 			}
 			_clients[pfd.fd].reqString = "";
 			_clients[pfd.fd].reqLength = 0;
 			_clients[pfd.fd].foundHeaders = 0;
 			_clients[pfd.fd].chunkInd = 0;
 			_clients[pfd.fd].response =  new Response(request, webConfig);
+			// _clients[pfd.fd].cgi = 
 		}
 		catch (RequestParser::UnsupportedMethodException &e) {
 			_message << e.what();
@@ -249,9 +258,11 @@ void	Server::sendResponse(pollfd &pfd) {
 		
 		responseStr = &(response->getChunks()[chunkInd][0]);
 		responseSize = response->getChunks()[chunkInd].size();
-		_message << "send chunk " << chunkInd << " data:\n" << response->getChunks()[chunkInd].substr(0, 130);
-		Logger::printInfoMessage(&_message);
-		// usleep(50000);
+		if (DEBUG > 1) {
+			_message << "send chunk " << chunkInd << " data:\n" << response->getChunks()[chunkInd].substr(0, 130);
+			Logger::printInfoMessage(&_message);
+		}
+			// usleep(50000);
 		_clients[pfd.fd].chunkInd = ++chunkInd;
 	}
 	else {
@@ -259,16 +270,14 @@ void	Server::sendResponse(pollfd &pfd) {
 		responseStr = &response->getResponse()[0];
 		responseSize = response->getResponse().size();
 	}
-	_message << CYAN << _clients[pfd.fd].response->getResponseCode() << RESET" with size="  << responseSize;
-	Logger::printInfoMessage(&_message);
+	if (DEBUG > 1) {
+		_message << CYAN << _clients[pfd.fd].response->getResponseCode() << RESET" with size="  << responseSize;
+		Logger::printInfoMessage(&_message);
+	}
 	int ret = send(pfd.fd, responseStr, responseSize, 0);
-		// throw("AAAAAA");
+	_clients[pfd.fd].lastTime = clock();
 	_clients[pfd.fd].responseStr = (char *)responseStr + ret;
 	_clients[pfd.fd].responseSize = responseSize - ret;
-	if (ret > 0 and ret < (int)responseSize) {
-		_message << RED << "ret = " << ret << " but must be " << "responceSize" << RESET;
-		Logger::printDebugMessage(&_message);
-	}
 	// free (responseStr);
 	if (ret < 0) {
 		_message << "send() failed " << " on server " << this->serverID;
@@ -287,16 +296,16 @@ void	Server::sendResponse(pollfd &pfd) {
 
 void Server::pollError(pollfd &pfd)
 {
-	_message << "Error in fd = " << pfd.fd << RED ;
-
-	if (pfd.revents & POLLNVAL)
-		_message << " POLLNVAL";
-	else if (pfd.revents & POLLHUP)
-		_message << " POLLHUP";
-	else if (pfd.revents & POLLERR)
-		_message << " POLLERR"	<< std::endl;
-	_message << RESET;
-	Logger::printInfoMessage(&_message);
+	if (DEBUG > 0) {
+		_message << "Error in fd = " << pfd.fd << RED ;
+		if (pfd.revents & POLLNVAL)
+			_message << " POLLNVAL";
+		else if (pfd.revents & POLLHUP)
+			_message << " POLLHUP";
+		else if (pfd.revents & POLLERR)
+			_message << " POLLERR";
+		Logger::printInfoMessage(&_message);
+	}
 	_fdToDel.insert(pfd.fd);
 }
 
@@ -310,10 +319,20 @@ bool Server::isChunked(std::string headers) {
 	return false;
 }
 
-bool Server::endByTimeout(t_reqData &req) {
-	// todo add for too long request 
-	(void)req;
-	return false;
+void Server::endByTimeout(void) {
+	// void	Server::clearConnections() {
+	int fd;
+	size_t	now = clock();
+	for (size_t i = 1; i < _fds.size(); i++) {
+		fd = _fds[i].fd;
+		if ((now - _clients[fd].lastTime) / CLOCKS_PER_SEC > KEEP_ALIVE) {
+			if (DEBUG >= 0) {
+				_message << "fd " << fd << " closed by timeout " << (now - _clients[fd].lastTime)/CLOCKS_PER_SEC;
+				Logger::printCriticalMessage(&_message);
+			}
+			_fdToDel.insert(fd);
+		}
+	}
 }
 
 bool Server::findReqEnd(t_reqData &req) {
@@ -331,7 +350,7 @@ bool Server::findReqEnd(t_reqData &req) {
 	pos = std::max(0, (int)req.reqString.size() - 10);
 	if (req.isTransfer and req.reqString.find("0\r\n\r\n", pos) != std::string::npos)
 		return true;
-	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find("\r\n\r\n") != std::string::npos)
+	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find("\r\n\r\n", pos) != std::string::npos)
 		return true;
 	return false;
 }
