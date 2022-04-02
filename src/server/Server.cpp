@@ -377,7 +377,7 @@ void Server::isChunked(std::string headers, s_reqData *req) {
 			req->isMultipart = true;
 			size_t boundaryStart = typeLine.find("boundary=") + 9;
 			size_t boundaryEnd = typeLine.length();
-			req->bound = typeLine.substr(boundaryStart, boundaryEnd - boundaryStart);
+			req->bound = typeLine.substr(boundaryStart, boundaryEnd - boundaryStart - 1);
 			req->finalBound = req->bound + "--";
 		}
 		// std::cout << BgBLUE << req->bound << RESET << std::endl;
@@ -410,7 +410,7 @@ bool Server::findReqEnd(t_reqData &req) {
 		req.method = req.reqString.substr(0, req.reqString.find_first_of(' '));
 		isChunked(req.reqString.substr(0, headersEnd), &req);
 	}
-	if (!req.isTransfer)
+	if (!req.isTransfer && !req.isMultipart)
 		return true;
 	pos = std::max(0, (int)req.reqString.size() - 10);
 	if (req.isTransfer and req.reqString.find("0\r\n\r\n", pos) != std::string::npos)

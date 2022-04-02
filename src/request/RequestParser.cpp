@@ -36,6 +36,8 @@ RequestParser &RequestParser::operator=(const RequestParser &other) {
         acceptEncoding_   = other.acceptEncoding_;
         pathTranslated_   = other.pathTranslated_;
         isChunked_        = other.isChunked_;
+        isMiltipart_      = other.isMiltipart_;
+        boundary_         = other.boundary_;
 
         path_             = other.path_;
         iterator_         = other.iterator_;
@@ -144,6 +146,14 @@ const std::vector <std::string> &RequestParser::getSupportedMethods() const {
 
 const std::string &RequestParser::getPathTranslated() const {
     return this->pathTranslated_;
+}
+
+const bool &RequestParser::getMultipart() const {
+    return this->isMiltipart_;
+}
+
+const std::string &RequestParser::getBoundary() const {
+    return this->boundary_;
 }
 
 /**************************/
@@ -269,8 +279,6 @@ void RequestParser::setHeaders() {
                 size_t boundaryStart = headerContent.find("boundary=") + 9;
                 size_t boundaryEnd = headerContent.length();
                 boundary_ =  headerContent.substr(boundaryStart, boundaryEnd - boundaryStart);
-                // std::cout << BLUE << boundary_ << RESET << std::endl;
-
             }
                 
 			headers_.insert(std::pair<std::string, std::string> (headerName, headerContent));

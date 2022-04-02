@@ -98,6 +98,8 @@ public:
             const   size_t                              &getContentLength()      const;
             const   std::vector<std::string>            &getPath()               const;
             const   std::vector<std::string>            &getSupportedMethods()   const;
+            const   bool                                &getMultipart()          const;
+            const   std::string                         &getBoundary()           const;
 
             void                                        showHeaders();
             bool                                        isSupportedMethod();
