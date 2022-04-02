@@ -27,7 +27,7 @@ SRC				= $(addsuffix .cpp, main) \
 				$(addprefix request/, $(addsuffix .cpp, $(REQUEST))) \
 				$(addprefix response/, $(addsuffix .cpp, $(RESPONSE))) \
 				$(addprefix cgi/, $(addsuffix .cpp, $(CGI))) \
-				$(addprefix logger/, $(addsuffix .cpp, $(LOGGER))) \
+				$(addprefix logger/, $(addsuffix .cpp, $(LOGGER)))
 
 OBJ_DIR			= obj
 OBJ				= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, main)) \
@@ -36,7 +36,7 @@ OBJ				= $(addprefix $(OBJ_DIR)/, $(addsuffix .o, main)) \
 				$(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(REQUEST))) \
 				$(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(RESPONSE))) \
 				$(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(CGI))) \
-				$(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(LOGGER))) \
+				$(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(LOGGER)))
 
 OBJ_SUBDIR		= $(addprefix $(OBJ_DIR)/, config server request response cgi logger)
 

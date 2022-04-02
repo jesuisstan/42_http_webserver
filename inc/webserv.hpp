@@ -77,5 +77,6 @@ int			stringToNumber (std::string &text);
 bool		isPositiveDigit(std::string &s);
 void		readSemicolon(std::istream &ifs);
 std::string	&cutSemicolon(std::string &line);
+std::string cutStringSpacesAndCr(std::string &str);
 int         hexToDec(std::string hex);
-void        printStrWithUnprintableChars(std::string string);
+void		printStrWithUnprintableChars(std::string string);

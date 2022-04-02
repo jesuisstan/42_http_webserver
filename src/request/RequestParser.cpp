@@ -280,11 +280,12 @@ void RequestParser::setHeaders() {
 	std::stringstream ss(headers);
 	std::string line;
 	while (std::getline(ss, line)) {
-		line = line.substr(0, line.find("\r"));
+		// line = line.substr(0, line.find("\r"));
 		size_t colonPos = line.find(":");
 		if (colonPos != std::string::npos) {
 			std::string headerName = line.substr(0, colonPos);
-			std::string headerContent = line.substr(colonPos + 2);
+			std::string headerContent = line.substr(colonPos + 1);
+			headerContent = cutStringSpacesAndCr(headerContent);
             if (headerName == "Transfer-Encoding" && headerContent == "chunked")
                 isChunked_ = true;
             if (headerName == "Content-Type" && headerContent.find("multipart/form-data;") != std::string::npos) {
@@ -426,19 +427,19 @@ std::string RequestParser::parseByHeaderName(const std::string &name) {
     return erasedRequest.substr(0, erasedRequest.find_first_of('\n') - 1);
 }
 
-std::string RequestParser::EraseSpaces(const std::string &string) {
-    size_t spacePos = string.find(' ');
-    std::string result = string;
-    while (spacePos != std::string::npos) {
-        result = result.replace(spacePos, 1, "");
-        spacePos = result.find(' ');
-    }
-    return result;
-}
+// std::string RequestParser::EraseSpaces(const std::string &string) {
+//     size_t spacePos = string.find(' ');
+//     std::string result = string;
+//     while (spacePos != std::string::npos) {
+//         result = result.replace(spacePos, 1, "");
+//         spacePos = result.find(' ');
+//     }
+//     return result;
+// }
 
 
 RequestParser::UnsupportedMethodException::UnsupportedMethodException(const std::string &method) {
-    message_ = RED"Method " + method + " is not supported" RESET;
+    message_ = RED"Method " + method + " is not supported" + RESET;
 }
 
 const char *RequestParser::UnsupportedMethodException::what() const throw() {
