@@ -70,6 +70,7 @@ class Response {
             std::string                    	getScreen();
             std::string                    	handleMultipartBody();
             void                           	savePostBody();
+            void                           	handleDelete();
             bool                            checkContentLength();
 
 			// cgi block

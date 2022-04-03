@@ -186,7 +186,7 @@ void RequestParser::setRoute() {
         path_.push_back("");
     }
     std::stringstream str;
-    str << BgCYAN << "|" << route_ << "|";
+//    str << BgCYAN << "|" << route_ << "|";
     Logger::printDebugMessage(&str);
 }
 
