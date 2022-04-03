@@ -119,19 +119,15 @@ void Response::setContentType() {
         if (extension == ".css") {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "text/css\n";
-//            trimRequestPath();
         } else if (extension == ".js") {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "application/javascript\n";
-//            trimRequestPath();
         }  else if (extension == ".html") {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "text/html\n";
-//            trimRequestPath();
         } else if (imgExtensions_.count(extension)) {
             requestedFile_ = requestPath_[routeEnd];
             responseContentType_ = "image\n";
-//            trimRequestPath();
         } else if (extension == ServerConfig_.getCgiExt())
             requestedFile_ = requestPath_[routeEnd];
          else
@@ -456,7 +452,6 @@ void Response::fillCgiAnswer_() {
 }
 
 void Response::setCgiCode_() {
-	// "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: 18\n\r\n\rOur sgi is working"
 	size_t	statusPos = response_.find("Status: ");
 	size_t	statusNumberPos = response_.substr(statusPos, 15).find("200", statusPos);
 	if (responseCode_ == 200 and statusPos != std::string::npos and statusNumberPos != std::string::npos)

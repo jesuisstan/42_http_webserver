@@ -2,10 +2,9 @@
 
 Server::Server() {
 	memset(&_servAddr, 0, sizeof(_servAddr));
-	// memset(_fds, 0, sizeof(_fds));
 }
 
-Server::~Server() { //todo rework cleaning
+Server::~Server() {
 	for (size_t i = 0; i < _fds.size(); i++) {
 		if (_fds[i].fd >= 0)
 		{
@@ -29,9 +28,6 @@ int		Server::getTimeout(void) const {
 	return (this->_timeout);
 }
 
-// int		Server::getNumberFds(void) const {
-// 	return (this->_numberFds);
-// }
 
 void	Server::initiate(const char *ipAddr, int port) {
 	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -80,7 +76,6 @@ void	Server::initReqDataStruct(int clientFD) {
 
 	req.reqLength = 0;
 	req.reqString = "";
-	// req.request = NULL;
 	req.response = NULL;
 	req.responseStr = NULL;
 	req.responseSize = 0;
@@ -130,7 +125,7 @@ void	Server::runServer(int timeout) {
 			}
 		}
 		clearConnections();
-		// usleep(10000); // todo включить если тестируете через curl большие файлы
+		// usleep(10000);
 	}
 	return ;
 }
@@ -192,15 +187,8 @@ void	Server::receiveRequest(pollfd &pfd) {
 		_clients[pfd.fd].reqString += tail;
 		_message << _clients[pfd.fd].reqLength << " bytes received from sd:\t" << pfd.fd << " on server " << this->serverID <<  std::endl;
 		Logger::printDebugMessage(&_message);
-		// memset(buffer, 0, BUFFER_SIZE);
 		if (findReqEnd(_clients[pfd.fd]))
-			pfd.events = POLLOUT;
-        else if (_clients[pfd.fd].isMultipart && _clients[pfd.fd].reqString.find(_clients[pfd.fd].finalBound) == std::string::npos) {
-            int asd = send(pfd.fd, "200 OK HTTP/1.1", 15, 0);
-            std::cout << "send res " << asd << std::endl;
-        }
-//        std::cout << BgCYAN << "awsdadeafsrfa "<< _clients[pfd.fd].isMultipart << "|" << ((_clients[pfd.fd].reqString.find(_clients[pfd.fd].finalBound) == std::string::npos)) << RESET << std::endl;
-
+			pfd.events |= POLLOUT;
 	}
 	if (ret == 0 || ret == -1) {
 		
@@ -218,11 +206,8 @@ void	Server::receiveRequest(pollfd &pfd) {
 }
 
 void	Server::sendResponse(pollfd &pfd) {
-	// if (_fds[socket].revents & POLLNVAL or _fds[socket].revents & POLLHUP or _fds[socket].revents & POLLERR) 
-	// 	return;
 	if (!_clients[pfd.fd].response) {
 		try {
-			// sleep(5);
 			RequestParser request = RequestParser(_clients[pfd.fd].reqString, _clients[pfd.fd].reqLength);
 			if (request.getBody().length() > 10000)
 				request.showHeaders();
@@ -239,20 +224,21 @@ void	Server::sendResponse(pollfd &pfd) {
 		catch (RequestParser::UnsupportedMethodException &e) {
 			_message << e.what();
 			Logger::printCriticalMessage(&_message);
+            std::string errReq = "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\nContent-Length: 11\r\n\r\nBad Request\r\n\r\n";
+            send(pfd.fd, &errReq[0], errReq.size(), 0);
+            _fdToDel.insert(pfd.fd);
 			return ;
 		}
 	}
-	Response *response = _clients[pfd.fd].response;
+    Response *response = _clients[pfd.fd].response;
 	const char *responseStr;
 	size_t responseSize;
 	size_t chunkInd;
 	if (_clients[pfd.fd].responseSize) {
-		// не получилось отправить в прошлый раз всю строку
 		responseStr = _clients[pfd.fd].responseStr;
 		responseSize = _clients[pfd.fd].responseSize;
 	}
 	else if (_clients[pfd.fd].response->getChunked()) {
-		// отправляем следующий чанк
 		chunkInd = _clients[pfd.fd].chunkInd;
 		
 		responseStr = &(response->getChunks()[chunkInd][0]);
@@ -263,21 +249,14 @@ void	Server::sendResponse(pollfd &pfd) {
 		_clients[pfd.fd].chunkInd = ++chunkInd;
 	}
 	else {
-		// отправляем весь ответ целиком
 		responseStr = &response->getResponse()[0];
 		responseSize = response->getResponse().size();
 	}
 	_message << CYAN << _clients[pfd.fd].response->getResponseCode() << RESET" with size="  << responseSize;
 	Logger::printInfoMessage(&_message);
 	int ret = send(pfd.fd, responseStr, responseSize, 0);
-		// throw("AAAAAA");
 	_clients[pfd.fd].responseStr = (char *)responseStr + ret;
 	_clients[pfd.fd].responseSize = responseSize - ret;
-	if (ret > 0 and ret < (int)responseSize) {
-		_message << RED << "ret = " << ret << " but must be " << "responceSize" << RESET;
-		Logger::printDebugMessage(&_message);
-	}
-	// free (responseStr);
 	if (ret < 0) {
 		_message << "send() failed " << " on server " << this->serverID;
 		Logger::printCriticalMessage(&_message);
@@ -326,12 +305,10 @@ void Server::isChunked(std::string headers, s_reqData *req) {
 			req->bound = typeLine.substr(boundaryStart, boundaryEnd - boundaryStart - 1);
 			req->finalBound = req->bound + "--";
 		}
-		// std::cout << BgBLUE << req->bound << RESET << std::endl;
 	}
 }
 
 bool Server::endByTimeout(t_reqData &req) {
-	// todo add for too long request 
 	(void)req;
 	return false;
 }
@@ -340,7 +317,7 @@ bool Server::findReqEnd(t_reqData &req) {
 	size_t	pos;
 	if (!req.foundHeaders) {
 	    size_t headersEnd = req.reqString.find(ENDH);
-		if (headersEnd == std::string::npos) // todo заголовок еще не пришел до конца
+		if (headersEnd == std::string::npos)
 			return false;
 		req.foundHeaders = true;
 		req.method = req.reqString.substr(0, req.reqString.find_first_of(' '));

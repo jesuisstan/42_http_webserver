@@ -163,11 +163,9 @@ const std::string &RequestParser::getBoundary() const {
 
 void RequestParser::setMethod() {
     method_ = parseByChar(request_, ' ');
-//    std::cerr << "__METHOD_____________|" << method_ << "|"<<  request_.substr(0, 500) << "|" << std::endl;
 }
 
 void RequestParser::setRoute() {
-    // std::string fistReqStr = request_;
     std::string fistReqStr = request_.substr(0, request_.find('\n') - 1);
     size_t routeStart = fistReqStr.find(' ') + 1;
     size_t routeEnd = fistReqStr.rfind(' ') - 1;
@@ -186,7 +184,6 @@ void RequestParser::setRoute() {
         path_.push_back("");
     }
     std::stringstream str;
-//    str << BgCYAN << "|" << route_ << "|";
     Logger::printDebugMessage(&str);
 }
 
@@ -207,62 +204,50 @@ void RequestParser::setProtocol() {
     size_t protocolStart = fistReqStr.find_last_of(' ') + 1;
     size_t protocolEnd = fistReqStr.find_last_of('/') - 1;
     protocol_ = fistReqStr.substr(protocolStart, protocolEnd);
-//    std::cerr << "__PROTOCOL___________|" <<  protocol_ << "|" << std::endl;
 }
 
 void RequestParser::setHost() {
     host_ = parseByHeaderName("Host:");
-//    std::cerr << "__HOST_______________|" << host_ << "|" << std::endl;
 }
 
 void RequestParser::setUserAgent() {
     userAgent_ = parseByHeaderName("User-Agent:");
-//    std::cerr << "__USER_AGENT_________|" << userAgent_ << "|" << std::endl;
 }
 
 void RequestParser::setAccept() {
     accept_ = parseByHeaderName("Accept:");
-//    std::cerr << "__ACCEPT_____________|" << accept_ << "|" << std::endl;
 }
 
 void RequestParser::setAcceptLanguage() {
     acceptLanguage_ = parseByHeaderName("Accept-Language:");
-//    std::cerr << "__ACCEPT_LANGUAGE____|" << acceptLanguage_ << "|" << std::endl;
 }
 
 void RequestParser::setAcceptEncoding() {
     acceptEncoding_ = parseByHeaderName("Accept-Encoding:");
-//    std::cerr << "__ACCEPT_ENCODING____|" << acceptEncoding_ << "|" << std::endl;
 }
 
 void RequestParser::setConnection() {
     connection_ = parseByHeaderName("Connection:");
-//    std::cerr << "__CONNECTION_________|" << connection_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchDest() {
     secFetchDest_ = parseByHeaderName("Sec-Fetch-Dest:");
-//    std::cerr << "__SEC_FETCH_DEST_____|" << secFetchDest_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchMode() {
     secFetchMode_ = parseByHeaderName("Sec-Fetch-Mode:");
-//    std::cerr << "__SEC_FETCH_MODE_____|" << secFetchMode_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchSite() {
     secFetchSite_ = parseByHeaderName("Sec-Fetch-Site:");
-//    std::cerr << "__SEC_FETCH_SITE_____|" << secFetchSite_ << "|" << std::endl;
 }
 
 void RequestParser::setSecFetchUser() {
     secFetchUser_ = parseByHeaderName("Sec-Fetch-User:");
-//    std::cerr << "__SEC_FETCH_USER_____|" << secFetchUser_ << "|" << std::endl;
 }
 
 void RequestParser::setCacheControl() {
     cacheControl_ = parseByHeaderName("Cache-Control:");
-//    std::cerr << "__CACHE_CONTROL______|" << cacheControl_ << "|" << std::endl;
 }
 
 void RequestParser::setBody() {
@@ -272,7 +257,6 @@ void RequestParser::setBody() {
         body_ = erasedRequest.substr(bodyStart + 4);
         if (isChunked_)
             body_ = handleChunkedBody();
-// std::cerr << "__BODY_______________|"<< body_.length() << "|" << std::endl;
 }}
 
 void RequestParser::setHeaders() {
@@ -280,7 +264,6 @@ void RequestParser::setHeaders() {
 	std::stringstream ss(headers);
 	std::string line;
 	while (std::getline(ss, line)) {
-		// line = line.substr(0, line.find("\r"));
 		size_t colonPos = line.find(":");
 		if (colonPos != std::string::npos) {
 			std::string headerName = line.substr(0, colonPos);
@@ -307,14 +290,12 @@ void RequestParser::setContentLength() {
     } else {
         contentLength_ = body_.length();
     }
-//    std::cerr << "__CONTENT_LENGTH_____|" << contentLength_ << "|" << std::endl;
 }
 
 void RequestParser::setContentType() {
 	if (!headers_.count("Content-Type"))
 		headers_["Content-Type"] = "text/html";
 	contentType_ = headers_["Content-Type"];
-//    std::cerr << "__CONTENT_TYPE_______|" << contentType_ << "|" << std::endl;
 }
 
 void RequestParser::setPathInfo(std::string pathInfo) {
@@ -361,14 +342,12 @@ void RequestParser::parse() {
         if (method_ == "POST" || method_ == "PUT")
             setBody();
         setContentLength();
-    }
-    //  else {
-    //     throw UnsupportedMethodException(method_);
-    // }
+    } else {
+         throw UnsupportedMethodException(method_);
+     }
 }
 
 std::string RequestParser::handleChunkedBody() {
-//    std::string restBody = body_;
     std::string newBody;
     newBody.reserve(body_.length());
     size_t lineEnd;
@@ -405,7 +384,6 @@ void RequestParser::showHeaders() {
 }
 
 std::string RequestParser::parseByChar(const std::string &string, char symbol) {
-    // std::string erasedRequest = request_;
     iterator_ = string.find(symbol);
     if (iterator_ == std::string::npos)
         return "";
@@ -426,17 +404,6 @@ std::string RequestParser::parseByHeaderName(const std::string &name) {
         erasedRequest = erasedRequest.erase(0, iterator_ + 1);
     return erasedRequest.substr(0, erasedRequest.find_first_of('\n') - 1);
 }
-
-// std::string RequestParser::EraseSpaces(const std::string &string) {
-//     size_t spacePos = string.find(' ');
-//     std::string result = string;
-//     while (spacePos != std::string::npos) {
-//         result = result.replace(spacePos, 1, "");
-//         spacePos = result.find(' ');
-//     }
-//     return result;
-// }
-
 
 RequestParser::UnsupportedMethodException::UnsupportedMethodException(const std::string &method) {
     message_ = RED"Method " + method + " is not supported" + RESET;
