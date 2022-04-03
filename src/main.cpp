@@ -4,13 +4,13 @@
 
 bool g_status = false;
 pthread_mutex_t g_write;
-std::stringstream message;
+// std::stringstream message;
 
 static void	interruptHandler(int sig_int) {
 	(void)sig_int;
 	g_status = true;
-	message << BgMAGENTA << "\nAttention! Interruption signal caught.\n";
-	Logger::printCriticalMessage(&message);
+	// message << BgMAGENTA << "\nAttention! Interruption signal caught.\n";
+	// Logger::printCriticalMessage(&message);
 }
 
 static void	*routine(void *webserv) {
@@ -22,8 +22,8 @@ static void	*routine(void *webserv) {
 }
 
 int main(int argc, char *argv[]) {
-	message << "C++ version is " << __cplusplus << std::endl << std::endl;
-	Logger::printCriticalMessage(&message);
+	// message << "C++ version is " << __cplusplus << std::endl << std::endl;
+	// Logger::printCriticalMessage(&message);
 	signal(SIGINT, interruptHandler);
 	Config config(argc, argv);
 	std::vector<ServerConfig> servers = config.getServers();
@@ -36,12 +36,12 @@ int main(int argc, char *argv[]) {
 		pthread_detach(webserv[i].tid);
 	}
 	while(!g_status) {
-		if (g_status) {
-			pthread_mutex_lock(&g_write);
-			message << BgMAGENTA << "Closing connections... ";
-			pthread_mutex_unlock(&g_write);
-			Logger::printCriticalMessage(&message);
-		}
+		// if (g_status) {
+			// pthread_mutex_lock(&g_write);
+			// message << BgMAGENTA << "Closing connections... ";
+			// pthread_mutex_unlock(&g_write);
+			// Logger::printCriticalMessage(&message);
+		// }
 	}
 	pthread_mutex_destroy(&g_write);
 	return 0;

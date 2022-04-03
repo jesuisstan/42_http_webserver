@@ -10,9 +10,9 @@ Server::~Server() { //todo rework cleaning
 		if (_fds[i].fd >= 0)
 		{
 			close(_fds[i].fd);
-			_message << BgMAGENTA << "Web server [" << this->serverID << "]: connection closed on socket "
-						<< _fds[i].fd << " (D)" << RESET;
-			Logger::printCriticalMessage(&_message);
+			// _message << BgMAGENTA << "Web server [" << this->serverID << "]: connection closed on socket "
+						// << _fds[i].fd << " (D)" << RESET;
+			// Logger::printCriticalMessage(&_message);
 		}
 	}
 }
@@ -36,22 +36,22 @@ int		Server::getTimeout(void) const {
 void	Server::initiate(const char *ipAddr, int port) {
 	this->_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (_listenSocket < 0) {
-		_message << "socket() failed" << " on server " << this->serverID;
-		Logger::printCriticalMessage(&_message);
+		// _message << "socket() failed" << " on server " << this->serverID;
+		// Logger::printCriticalMessage(&_message);
 		exit(-1);
 	}
 	int optval = 1;
 	int ret = setsockopt(this->_listenSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval));
 	if (ret < 0) {
-		_message << "setsockopt() failed" << " on server " << this->serverID;
-		Logger::printCriticalMessage(&_message);
+		// _message << "setsockopt() failed" << " on server " << this->serverID;
+		// Logger::printCriticalMessage(&_message);
 		close(this->_listenSocket);
 		exit(-1);
 	}
 	ret = fcntl(this->_listenSocket, F_SETFL, O_NONBLOCK);
 	if (ret < 0) {
-		_message << "fcntl() failed" << " on server " << this->serverID;
-		Logger::printCriticalMessage(&_message);
+		// _message << "fcntl() failed" << " on server " << this->serverID;
+		// Logger::printCriticalMessage(&_message);
 		close(this->_listenSocket);
 		exit(-1);
 	}
@@ -60,15 +60,15 @@ void	Server::initiate(const char *ipAddr, int port) {
 	this->_servAddr.sin_port = htons(port);
 	ret = bind(this->_listenSocket, (struct sockaddr *)&this->_servAddr, sizeof(this->_servAddr));
 	if (ret < 0) {
-		_message << "bind() failed" << " on server " << this->serverID;
-		Logger::printCriticalMessage(&_message);
+		// _message << "bind() failed" << " on server " << this->serverID;
+		// Logger::printCriticalMessage(&_message);
 		close(this->_listenSocket);
 		exit(-1);
 	}
 	ret = listen(this->_listenSocket, BACKLOG);
 	if (ret < 0) {
-		_message << "listen() failed" << " on server " << this->serverID;
-		Logger::printCriticalMessage(&_message);
+		// _message << "listen() failed" << " on server " << this->serverID;
+		// Logger::printCriticalMessage(&_message);
 		close(this->_listenSocket);
 		exit(-1);
 	}
@@ -100,18 +100,18 @@ void	Server::runServer(int timeout) {
 	_fds.push_back(new_Pollfd);
 	this->setTimeout(timeout);
 	while (true) {
-		_message <<"Waiting on poll() [server " << this->serverID << "]...\n";
-		Logger::printDebugMessage(&_message);
+		// _message <<"Waiting on poll() [server " << this->serverID << "]...\n";
+		// Logger::printDebugMessage(&_message);
 		fdsBeginPointer = &_fds[0];
 		int ret = poll(fdsBeginPointer, _fds.size(), _timeout);
 		if (ret < 0) {
-			_message << "poll() failed" << " on server " << this->serverID;
-			Logger::printCriticalMessage(&_message);
+			// _message << "poll() failed" << " on server " << this->serverID;
+			// Logger::printCriticalMessage(&_message);
 			break;
 		}
 		if (ret == 0) {
-			_message << "poll() timed out. End program." << " on server " << this->serverID; ;
-			Logger::printCriticalMessage(&_message);
+			// _message << "poll() timed out. End program." << " on server " << this->serverID; ;
+			// Logger::printCriticalMessage(&_message);
 			break;
 		}
 		for (size_t i = 0; i < _fds.size(); i++) {
@@ -142,13 +142,13 @@ void	Server::acceptConnection(void) {
 		return ;
 	int ret = fcntl(newFd, F_SETFL, O_NONBLOCK);
 	if (ret < 0) {
-		_message << "fcntl() failed" << " on server " << this->serverID;
-		Logger::printCriticalMessage(&_message);
+		// _message << "fcntl() failed" << " on server " << this->serverID;
+		// Logger::printCriticalMessage(&_message);
 		close(_listenSocket);
 		exit(-1);
 	}
-	_message << "New incoming connection:\t" << newFd << " on server " << this->serverID;
-	Logger::printCriticalMessage(&_message);
+	// _message << "New incoming connection:\t" << newFd << " on server " << this->serverID;
+	// Logger::printCriticalMessage(&_message);
 
 	pollfd	newConnect = {newFd, POLLIN, 0};
 	_fds.push_back(newConnect);
@@ -167,8 +167,8 @@ void	Server::clearConnections() {
 		{
 			fd = _fds[i].fd;
 			close(fd);
-			_message << "Connection has been closed:\t" << fd << " on server " << this->serverID;
-			Logger::printCriticalMessage(&_message);
+			// _message << "Connection has been closed:\t" << fd << " on server " << this->serverID;
+			// Logger::printCriticalMessage(&_message);
 			if (_clients[fd].response)
 				delete _clients[fd].response;
 			_fdToDel.erase(fd);
@@ -180,8 +180,8 @@ void	Server::clearConnections() {
 
 
 void	Server::receiveRequest(pollfd &pfd) {
-	_message << "Event detected on descriptor:\t" << pfd.fd << " on server " << this->serverID;
-	Logger::printDebugMessage(&_message);
+	// _message << "Event detected on descriptor:\t" << pfd.fd << " on server " << this->serverID;
+	// Logger::printDebugMessage(&_message);
 	int ret = 0;
 	char buffer[BUFFER_SIZE];
 	ret = recv(pfd.fd, buffer, BUFFER_SIZE, 0);
@@ -190,15 +190,11 @@ void	Server::receiveRequest(pollfd &pfd) {
 		std::string tail = std::string(buffer, ret);
 		_clients[pfd.fd].reqLength += ret;
 		_clients[pfd.fd].reqString += tail;
-		_message << _clients[pfd.fd].reqLength << " bytes received from sd:\t" << pfd.fd << " on server " << this->serverID <<  std::endl;
-		Logger::printDebugMessage(&_message);
+		// _message << _clients[pfd.fd].reqLength << " bytes received from sd:\t" << pfd.fd << " on server " << this->serverID <<  std::endl;
+		// Logger::printDebugMessage(&_message);
 		// memset(buffer, 0, BUFFER_SIZE);
 		if (findReqEnd(_clients[pfd.fd]))
 			pfd.events = POLLOUT;
-        else if (_clients[pfd.fd].isMultipart && _clients[pfd.fd].reqString.find(_clients[pfd.fd].finalBound) == std::string::npos) {
-            int asd = send(pfd.fd, "200 OK HTTP/1.1", 15, 0);
-            std::cout << "send res " << asd << std::endl;
-        }
 //        std::cout << BgCYAN << "awsdadeafsrfa "<< _clients[pfd.fd].isMultipart << "|" << ((_clients[pfd.fd].reqString.find(_clients[pfd.fd].finalBound) == std::string::npos)) << RESET << std::endl;
 
 	}
@@ -206,12 +202,12 @@ void	Server::receiveRequest(pollfd &pfd) {
 		
 		_fdToDel.insert(pfd.fd);
 		if (!ret) {
-			_message << "Request to close connection:\t" << pfd.fd << " on server " << this->serverID;
-			Logger::printDebugMessage(&_message);;
+			// _message << "Request to close connection:\t" << pfd.fd << " on server " << this->serverID;
+			// Logger::printDebugMessage(&_message);;
 		}
 		else {
-			_message << "recv() failed" << " on server " << this->serverID;
-			Logger::printDebugMessage(&_message);
+			// _message << "recv() failed" << " on server " << this->serverID;
+			// Logger::printDebugMessage(&_message);
 		}
 	}
 	return ;
@@ -227,8 +223,8 @@ void	Server::sendResponse(pollfd &pfd) {
 			if (request.getBody().length() > 10000)
 				request.showHeaders();
 			else {
-				_message << "|" << YELLOW  << request.getRequest() << RESET"|";
-				Logger::printInfoMessage(&_message);
+				// _message << "|" << YELLOW  << request.getRequest() << RESET"|";
+				// Logger::printInfoMessage(&_message);
 			}
 			_clients[pfd.fd].reqString = "";
 			_clients[pfd.fd].reqLength = 0;
@@ -237,8 +233,8 @@ void	Server::sendResponse(pollfd &pfd) {
 			_clients[pfd.fd].response =  new Response(request, webConfig);
 		}
 		catch (RequestParser::UnsupportedMethodException &e) {
-			_message << e.what();
-			Logger::printCriticalMessage(&_message);
+			// _message << e.what();
+			// Logger::printCriticalMessage(&_message);
 			return ;
 		}
 	}
@@ -257,8 +253,8 @@ void	Server::sendResponse(pollfd &pfd) {
 		
 		responseStr = &(response->getChunks()[chunkInd][0]);
 		responseSize = response->getChunks()[chunkInd].size();
-		_message << "send chunk " << chunkInd << " data:\n" << response->getChunks()[chunkInd].substr(0, 130);
-		Logger::printInfoMessage(&_message);
+		// _message << "send chunk " << chunkInd << " data:\n" << response->getChunks()[chunkInd].substr(0, 130);
+		// Logger::printInfoMessage(&_message);
 		// usleep(50000);
 		_clients[pfd.fd].chunkInd = ++chunkInd;
 	}
@@ -267,20 +263,20 @@ void	Server::sendResponse(pollfd &pfd) {
 		responseStr = &response->getResponse()[0];
 		responseSize = response->getResponse().size();
 	}
-	_message << CYAN << _clients[pfd.fd].response->getResponseCode() << RESET" with size="  << responseSize;
-	Logger::printInfoMessage(&_message);
+	// _message << CYAN << _clients[pfd.fd].response->getResponseCode() << RESET" with size="  << responseSize;
+	// Logger::printInfoMessage(&_message);
 	int ret = send(pfd.fd, responseStr, responseSize, 0);
 		// throw("AAAAAA");
 	_clients[pfd.fd].responseStr = (char *)responseStr + ret;
 	_clients[pfd.fd].responseSize = responseSize - ret;
 	if (ret > 0 and ret < (int)responseSize) {
-		_message << RED << "ret = " << ret << " but must be " << "responceSize" << RESET;
-		Logger::printDebugMessage(&_message);
+		// _message << RED << "ret = " << ret << " but must be " << "responceSize" << RESET;
+		// Logger::printDebugMessage(&_message);
 	}
 	// free (responseStr);
 	if (ret < 0) {
-		_message << "send() failed " << " on server " << this->serverID;
-		Logger::printCriticalMessage(&_message);
+		// _message << "send() failed " << " on server " << this->serverID;
+		// Logger::printCriticalMessage(&_message);
 		_fdToDel.insert(pfd.fd);
 		return ;
 	}
@@ -295,16 +291,16 @@ void	Server::sendResponse(pollfd &pfd) {
 
 void Server::pollError(pollfd &pfd)
 {
-	_message << "Error in fd = " << pfd.fd << RED ;
+	// _message << "Error in fd = " << pfd.fd << RED ;
 
-	if (pfd.revents & POLLNVAL)
-		_message << " POLLNVAL";
-	else if (pfd.revents & POLLHUP)
-		_message << " POLLHUP";
-	else if (pfd.revents & POLLERR)
-		_message << " POLLERR"	<< std::endl;
-	_message << RESET;
-	Logger::printInfoMessage(&_message);
+	// if (pfd.revents & POLLNVAL)
+		// _message << " POLLNVAL";
+	// else if (pfd.revents & POLLHUP)
+		// _message << " POLLHUP";
+	// else if (pfd.revents & POLLERR)
+		// _message << " POLLERR"	<< std::endl;
+	// _message << RESET;
+	// Logger::printInfoMessage(&_message);
 	_fdToDel.insert(pfd.fd);
 }
 

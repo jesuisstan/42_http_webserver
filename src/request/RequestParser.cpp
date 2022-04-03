@@ -185,9 +185,9 @@ void RequestParser::setRoute() {
         route_ = "./";
         path_.push_back("");
     }
-    std::stringstream str;
-    str << BgCYAN << "|" << route_ << "|";
-    Logger::printDebugMessage(&str);
+    // std::stringstream str;
+    // str << BgCYAN << "|" << route_ << "|";
+    // Logger::printDebugMessage(&str);
 }
 
 void RequestParser::setPath() {
@@ -398,10 +398,10 @@ bool RequestParser::isSupportedMethod() {
 void RequestParser::showHeaders() {
     std::map<std::string, std::string>::iterator it;
     std::stringstream str;
-    for (it=headers_.begin(); it!=headers_.end(); it++) {
-        str << GREEN << it->first << RESET <<": " << BLUE << it->second << RESET << std::endl;
-        Logger::printDebugMessage(&str);
-    }
+    // for (it=headers_.begin(); it!=headers_.end(); it++) {
+    //     str << GREEN << it->first << RESET <<": " << BLUE << it->second << RESET << std::endl;
+    //     Logger::printDebugMessage(&str);
+    // }
 }
 
 std::string RequestParser::parseByChar(const std::string &string, char symbol) {

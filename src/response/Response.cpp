@@ -363,8 +363,8 @@ int Response::checkPathForLocation() {
             std::string path = (std::string) cwd;
             std::stringstream str;
             RequestParser_.setPathTranslated(cwd + stringFilename.substr(1));
-			str << BgRED << "CGI START" << RESET << std::endl;
-	        Logger::printDebugMessage(&str);
+			// str << BgRED << "CGI START" << RESET << std::endl;
+	        // Logger::printDebugMessage(&str);
             Cgi cgi = Cgi(ServerConfig_, RequestParser_);
             cgiFlags_ &= CGI; 
 			// int fd_to_write = cgi->exec();
@@ -409,25 +409,25 @@ int Response::checkPathForLocation() {
 }
 
 void Response::fillCgiAnswer_() {
-	std::string ans;
+	// std::string ans;
 	// ans = "HTTP/1.1 " + responseCodes_.find(responseCode_)->second;
 	// ans += "Content-Length: " + numberToString(response_.size()) + "\n";
 	// ans += "\n\r";
 	// response_ = response_ += "\n\r";
-    std::stringstream str;
-    ans = response_.substr(0, std::min(500, (int)response_.size()));
-    str << BLUE << "Cgi response. First 500 from " 
-                << ans.size() << " chars\n" << RESET << ans;
-    Logger::printInfoMessage(&str);
+    // std::stringstream str;
+    // ans = response_.substr(0, std::min(500, (int)response_.size()));
+    // str << BLUE << "Cgi response. First 500 from " 
+    //             << ans.size() << " chars\n" << RESET << ans;
+    // Logger::printInfoMessage(&str);
 	setCgiCode_();
 	setCgiBodyLength_();
-    if (chunked_)
-        ans = chunks_[0].substr(0, 500);
-    else
-        ans = response_.substr(0, 500);
-    str << BLUE << "Cgi after procceccing. First 500 from " 
-                << ans.size() << " chars\n" << RESET << ans << std::endl;
-    Logger::printInfoMessage(&str);
+    // if (chunked_)
+    //     ans = chunks_[0].substr(0, 500);
+    // else
+    //     ans = response_.substr(0, 500);
+    // str << BLUE << "Cgi after procceccing. First 500 from " 
+    //             << ans.size() << " chars\n" << RESET << ans << std::endl;
+    // Logger::printInfoMessage(&str);
 }
 
 void Response::setCgiCode_() {
@@ -470,23 +470,26 @@ void Response::splitToChunks_() {
     std::stringstream str;
 	
 	chunked_ = true;
-	headersEndPos = response_.find(ENDH) + 4;
-
-	
+	headersEndPos = response_.find(ENDH);
+	if (headersEndPos == std::string::npos) {
+		std::cerr << "herota! 4ini" << std::endl;
+		exit(1);
+	}
+	headersEndPos += 4;
 	leftSizeChunk = CHUNK_SIZE - headersEndPos;
 	hexString = getHex(leftSizeChunk) + CRLF;
 	first_chunk = response_.substr(0, headersEndPos) + hexString + response_.substr(headersEndPos, leftSizeChunk) + CRLF;
 	chunks_.push_back(first_chunk);
-	str << "chunks size: " << first_chunk.size() << ", first 50:\n" << first_chunk.substr(0, 50) << std::endl;
-	Logger::printDebugMessage(&str);
+	// str << "chunks size: " << first_chunk.size() << ", first 50:\n" << first_chunk.substr(0, 50) << std::endl;
+	// Logger::printDebugMessage(&str);
     pos = CHUNK_SIZE;
 	while (1) {
 		std::string chunk;
 		leftSizeChunk = std::min(response_.size() - pos, (size_t)CHUNK_SIZE);
 		hexString = getHex(leftSizeChunk) + CRLF;
 		chunk = hexString + response_.substr(pos, leftSizeChunk) + CRLF;
-		str << "chunks size: " << chunk.size() << ", first 50:\n" << chunk.substr(0, 50) << std::endl;
-        Logger::printDebugMessage(&str);
+		// str << "chunks size: " << chunk.size() << ", first 50:\n" << chunk.substr(0, 50) << std::endl;
+        // Logger::printDebugMessage(&str);
         chunks_.push_back(chunk);
 		pos += leftSizeChunk;
 		if (!leftSizeChunk)
