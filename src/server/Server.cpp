@@ -2,6 +2,7 @@
 
 Server::Server() {
 	memset(&_servAddr, 0, sizeof(_servAddr));
+	_cntLargeCgi = 0;
 	// memset(_fds, 0, sizeof(_fds));
 }
 
@@ -89,6 +90,7 @@ void	Server::initReqDataStruct(int clientFD) {
 	req.foundHeaders = false;
 	req.method = "";	
 	req.chunkInd = 0;
+	req.cntCgi = 0;
 	_clients[clientFD] = req;
 	return ;
 }
@@ -160,6 +162,8 @@ void	Server::clearConnections() {
 	int fd;
 	std::vector<struct pollfd>::iterator it;
 
+	if (!_fdToDel.size())
+		return ;
 	it = _fds.begin();
 
 	for (size_t i = 0; i < _fds.size(); i++)
@@ -265,7 +269,9 @@ void	Server::sendResponse(pollfd &pfd) {
 	}
 	// _message << CYAN << _clients[pfd.fd].response->getResponseCode() << RESET" with size="  << responseSize;
 	// Logger::printInfoMessage(&_message);
-	int ret = send(pfd.fd, responseStr, responseSize, 0);
+	int ret = send(pfd.fd, responseStr, responseSize, 0x80000);
+			usleep(10000);
+
 		// throw("AAAAAA");
 	_clients[pfd.fd].responseStr = (char *)responseStr + ret;
 	_clients[pfd.fd].responseSize = responseSize - ret;
@@ -274,15 +280,26 @@ void	Server::sendResponse(pollfd &pfd) {
 		// Logger::printDebugMessage(&_message);
 	}
 	// free (responseStr);
-	if (ret < 0) {
+	if (ret <= 0) {
 		// _message << "send() failed " << " on server " << this->serverID;
 		// Logger::printCriticalMessage(&_message);
 		_fdToDel.insert(pfd.fd);
 		return ;
 	}
-	if (!response->getChunked() or chunkInd == response->getChunks().size()) {
-		delete _clients[pfd.fd].response;
-		_clients[pfd.fd].response = NULL;
+	if (!_clients[pfd.fd].responseSize and (!response->getChunked() or chunkInd == response->getChunks().size())) {
+		// if (response->getChunks().size())
+		// 	std::cerr << GREEN"Sended total large CGI: " << _cntLargeCgi << ", fd: " << pfd.fd << RESET << std::endl;
+		if (chunkInd == response->getChunks().size()) {
+			std::cerr << "Sended total large CGI: " << ++_cntLargeCgi << ", fd: " << pfd.fd << " ,total send from this fd: " << ++_clients[pfd.fd].cntCgi << std::endl;
+			if (_cntLargeCgi == 102)
+				std::cerr << RED"end tests\n";
+			// if (++_clients[pfd.fd].cntCgi == 5)
+			// 	_fdToDel.insert(pfd.fd);
+		}
+		if (_clients[pfd.fd].response) {
+			delete _clients[pfd.fd].response;
+			_clients[pfd.fd].response = NULL;
+		}
 		pfd.events = POLLIN;
 	}
 	return ;
@@ -301,6 +318,7 @@ void Server::pollError(pollfd &pfd)
 		// _message << " POLLERR"	<< std::endl;
 	// _message << RESET;
 	// Logger::printInfoMessage(&_message);
+	// close(pfd.fd);
 	_fdToDel.insert(pfd.fd);
 }
 
@@ -344,12 +362,15 @@ bool Server::findReqEnd(t_reqData &req) {
 	}
 	if (!req.isTransfer && !req.isMultipart)
 		return true;
-	pos = std::max(0, (int)req.reqString.size() - 10);
+	pos = std::max(0, (int)req.reqString.size() - 100);
 	if (req.isTransfer and req.reqString.find("0\r\n\r\n", pos) != std::string::npos)
+	{
+		std::cerr << YELLOW"new CGI request \n"RESET << req.reqString.substr(0, 500) << std::endl;
 		return true;
-	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find(ENDH) != std::string::npos)
+	}
+	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find(ENDH, pos) != std::string::npos)
 		return true;
-	if (req.isMultipart && req.reqString.find(req.finalBound) != std::string::npos)
+	if (req.isMultipart && req.reqString.find(req.finalBound, pos) != std::string::npos)
 		return true;
 	return false;
 }

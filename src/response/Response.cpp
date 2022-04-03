@@ -269,12 +269,21 @@ void Response::checkFileRequested() {
     }
 }
 
+
 std::string Response::handleMultipartBody() {
-    size_t fileNameStart = requestBody_.find("filename=") + 10;
-    size_t fileNameEnd = requestBody_.find('\"', fileNameStart) + 1;
-    size_t bodyStart = requestBody_.find(ENDH) + 4;
+    size_t fileNameStart = requestBody_.find("filename=");
+	if (fileNameStart != std::string::npos)
+		fileNameStart += 10;
+    size_t fileNameEnd = requestBody_.find('\"', fileNameStart);
+	if (fileNameEnd != std::string::npos)
+		fileNameEnd += 1;
+    size_t bodyStart = requestBody_.find(ENDH);
+	if (bodyStart != std::string::npos)
+		bodyStart += 4;
     std::string finalBoundary = RequestParser_.getBoundary() + "--";
-    size_t bodyEnd = requestBody_.find(finalBoundary) - 4;
+    size_t bodyEnd = requestBody_.find(finalBoundary);
+	if (bodyEnd != std::string::npos)
+		bodyEnd -= 4;
     if (fileNameStart != std::string::npos && fileNameEnd != std::string::npos)
         requestedFile_ = requestBody_.substr(fileNameStart, fileNameEnd - fileNameStart);
     if (bodyStart != std::string::npos && bodyEnd != std::string::npos)
@@ -366,7 +375,7 @@ int Response::checkPathForLocation() {
 			// str << BgRED << "CGI START" << RESET << std::endl;
 	        // Logger::printDebugMessage(&str);
             Cgi cgi = Cgi(ServerConfig_, RequestParser_);
-            cgiFlags_ &= CGI; 
+            cgiFlags_ |= CGI; 
 			// int fd_to_write = cgi->exec();
             // setResponseCode(55);
 
@@ -495,6 +504,7 @@ void Response::splitToChunks_() {
 		if (!leftSizeChunk)
 			break;
 	}
+	// chunks_[chunks_.size() - 1] += CRLF;
 }
 
 std::string Response::findFileWithExtension(std::string extension, std::string dir) {

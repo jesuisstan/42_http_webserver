@@ -26,6 +26,7 @@ typedef struct s_reqData {
 	std::string     bound;
 	std::string     finalBound;
 	size_t			chunkInd;
+	size_t			cntCgi;
 }	t_reqData;
 
 class Server {
@@ -37,7 +38,8 @@ private:
 	// int							_numberFds;
 	std::map<long, t_reqData>	_clients;
 	std::set<int>				_fdToDel;
-	std::stringstream 			_message;
+	size_t						_cntLargeCgi;
+	// std::stringstream 			_message;
 
 	void	isChunked(std::string headers, s_reqData *req);
 	bool	findReqEnd(t_reqData &req);
