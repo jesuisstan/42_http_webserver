@@ -115,7 +115,6 @@ void	Server::runServer(int timeout) {
 			if (_fds[i].revents) {
 				if (_fds[i].revents & POLLIN && _fds[i].fd == _listenSocket)
 					acceptConnection();
-				// if ()
 				else if (_fds[i].revents & POLLIN && _fds[i].fd != _listenSocket)
 					receiveRequest(_fds[i]);
 				else if (_fds[i].revents & POLLOUT && _fds[i].fd != _listenSocket)
@@ -125,7 +124,6 @@ void	Server::runServer(int timeout) {
 			}
 		}
 		clearConnections();
-		// usleep(10000);
 	}
 	return ;
 }
@@ -245,7 +243,6 @@ void	Server::sendResponse(pollfd &pfd) {
 		responseSize = response->getChunks()[chunkInd].size();
 		_message << "send chunk " << chunkInd << " data:\n" << response->getChunks()[chunkInd].substr(0, 130);
 		Logger::printInfoMessage(&_message);
-		// usleep(50000);
 		_clients[pfd.fd].chunkInd = ++chunkInd;
 	}
 	else {
@@ -264,9 +261,9 @@ void	Server::sendResponse(pollfd &pfd) {
 		return ;
 	}
 	if (!response->getChunked() or chunkInd == response->getChunks().size()) {
+		pfd.events = POLLIN;
 		delete _clients[pfd.fd].response;
 		_clients[pfd.fd].response = NULL;
-		pfd.events = POLLIN;
 	}
 	return ;
 }
@@ -282,7 +279,6 @@ void Server::pollError(pollfd &pfd)
 		_message << " POLLHUP";
 	else if (pfd.revents & POLLERR)
 		_message << " POLLERR"	<< std::endl;
-	_message << RESET;
 	Logger::printInfoMessage(&_message);
 	_fdToDel.insert(pfd.fd);
 }
@@ -325,12 +321,12 @@ bool Server::findReqEnd(t_reqData &req) {
 	}
 	if (!req.isTransfer && !req.isMultipart)
 		return true;
-	pos = std::max(0, (int)req.reqString.size() - 10);
+	pos = std::max(0, (int)req.reqString.size() - 100);
 	if (req.isTransfer and req.reqString.find("0\r\n\r\n", pos) != std::string::npos)
 		return true;
-	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find(ENDH) != std::string::npos)
+	if (req.isTransfer and req.method != "POST" and req.method != "PUT" and req.reqString.find(ENDH, pos) != std::string::npos)
 		return true;
-	if (req.isMultipart && req.reqString.find(req.finalBound) != std::string::npos)
+	if (req.isMultipart && req.reqString.find(req.finalBound, pos) != std::string::npos)
 		return true;
 	return false;
 }

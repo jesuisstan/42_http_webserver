@@ -26,4 +26,3 @@ with open("py_cgi_out.txt", "w") as f:
     for key in sorted(os.environ):
         f.write(f"{key} = |{os.environ.get(key)}|{len(os.environ.get(key))}\n")
 exit(0);
-# print(MAIN_PAGE)
