@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<meta charset="UTF-8">
+
+	<title>Webserver</title>
+	<link rel="icon" href=
+			"https://emoji.slack-edge.com/TE6FVDN1Y/peeposwing/5c6b407c5d7e3623.gif"
+		  type="image/x-icon">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+<header>
+	<div class="header">
+		<a href="/" class="title" id="title">Welcome to CyberServ</a>
+	</div>
+</header>
+<body>
+
+<div class="mainContainer">
+	<div class="container">
+		<img src="images/doge2.png" class="doge"/>
+		<img src="images/doge3.png" class="doge"/>
+		<img src="images/doge4.png" class="doge"/>
+		<img src="images/doge.png" class="doge delete"/>
+	</div>
+	<input type="file" id="fileUpload" />
+<script type="text/javascript">
+const handleImageUpload = event => {
+  const files = event.target.files
+  const formData = new FormData()
+  formData.append('myFile', files[0])
+
+  fetch('/put_image/', {
+	method: 'POST',
+	body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+	console.log(data.path)
+  })
+  .catch(error => {
+	console.error(error)
+  })
+}
+
+document.querySelector('#fileUpload').addEventListener('change', event => {
+  handleImageUpload(event)
+})
+</script>
+</div>
+</body>
+<style>
+	@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap');
+
+	body {
+		margin: 0;
+		width: 100vw;
+	}
+
+	h1 {
+		color: white;
+		font-family: 'Open Sans', cursive;
+		text-shadow: 1px 2px #000065;
+	}
+
+	a {
+		text-decoration: none;
+		color: white;
+		font-size: 18px;
+		text-shadow: 1px 2px #000065;
+		font-family: 'Open Sans', cursive;
+	}
+
+	input {
+		font-family: 'Open Sans', cursive;
+		font-size: 17px;
+		margin: 5px;
+		border-radius: 7px;
+		padding: 3px;
+	}
+
+	a:hover {
+		color: rgba(101, 8, 97, 0.91);
+		text-shadow: 1px 1px rgba(110, 10, 105, 0.6);
+		font-size: 24px;
+	}
+
+	.header {
+		width: 100vw;
+		height: 80px;
+		background: linear-gradient(90deg, rgba(159, 80, 60, 0.56) 0%, rgb(151, 2, 64) 54%, rgb(60, 0, 0) 100%);
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		box-shadow: 15px 15px 50px 0 rgba(153, 87, 87, 0.8);
+	}
+
+	.title {
+		cursor: pointer;
+		font-family: 'Open Sans', cursive;
+		font-size: 25px;
+		padding-left: 20px;
+		font-weight: bold;
+		color: #FFF;
+		text-shadow: 1px 1px rgba(110, 10, 105, 0.6);
+	}
+
+	.mainContainer {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.container {
+		border: 2px solid white;
+		border-radius: 100px;
+		background-image: url("images/background.jpg");
+		padding: 60px;
+		width: 650px;
+		height: 400px;
+		box-shadow: 13px 15px 31px 2px rgb(206, 226, 255);
+	}
+
+	.doge {
+		width: 150px;
+		height: 280px;
+	}
+
+	@media (max-width: 800px) {
+		.container {
+			width: 500px;
+		}
+
+		.delete {
+			visibility: collapse;
+		}
+
+		h1 {
+			font-size: 26px;
+		}
+	}
+</style>
+
+</html>
