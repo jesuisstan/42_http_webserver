@@ -1,34 +1,17 @@
-# http_webserver
-implementation of a simple http web server in c++
+# 42_http_webserver
 ## Foreword
 This is one of the Ecole 42 common core projects.\
-It is about implementing a simple shell (bash) in team of 3 students.\
-The project is written with holly C language and provides good understanding of processes, file descriptors and popular bash commands.
+It is about implementing a simple http web server in c++ in team of 3 students.\
+The project is written with the C++98 standard and provides good understanding of http protocol, basic html and threading.
 
 ## Description
-The final 42_minishell includes:
-- Show a prompt when waiting for a new command.
-- Have a working History.
-- Search and launch the right executable (based on the PATH variable)
-- Implemented the builtins:
-1. `echo` with option -n
-2. `cd`
-3. `pwd` with no options
-4. `export` with no options
-5. `unset` with no options
-6. `env` with no options or arguments
-7. `exit` with no options
-- `’` inhibit all interpretation of a sequence of characters.
-- `"` inhibit all interpretation of a sequence of characters except for $.
-- Redirections:
-1. `<` redirects input.
-2. `>` redirects output.
-3. `<<` reads input from the current source until a line containing only the delimiter is seen.
-4. `>>` redirects output with append mode.
-- Pipes | The output of each command in the pipeline is connected via a pipe to the input of the next command.
-- Environment variables ($ followed by characters) expands to their values.
-- `$?` expands to the exit status of the most recently executed foreground pipeline.
-- `ctrl-C` `ctrl-D` `ctrl-\` works like in bash.
+The final 42_http_webserver includes:
+- Compatibility with the Chrome and Mozilla web browsers.
+- HTTP response status codes is accurate.
+- Server has default error pages if none are provided.
+- Clients are able to upload files.
+- Implemented GET, POST and DELETE methods.
+- Server is able to listen to multiple ports.
 
 Full project description you can find in `en.subject.pdf`.
 
