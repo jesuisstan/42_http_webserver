@@ -1,6 +1,6 @@
 NAME			= webserv
 
-CXX				= g++
+CXX				= clang++
 
 FLAGS			= -MMD -Wall -g -pthread
 FLAGS			= -MMD -Wall -Wextra -Werror -g -pthread -std=c++98
@@ -64,6 +64,7 @@ clean:
 fclean:			clean
 				$(RM) $(NAME)
 				$(RM) client
+				$(RM) ./www/put_image/*
 				@echo "\033[33;1mAll created files were deleted\n\033[0m"
 
 re:				fclean $(NAME)
